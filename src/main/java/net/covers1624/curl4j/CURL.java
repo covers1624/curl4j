@@ -34,6 +34,8 @@ public class CURL {
     private static @Nullable String LIB_CURL_OVERRIDE;
     private static @Nullable SharedLibrary CURL;
 
+    private CURL() { }
+
     /**
      * Call this before using any cURL functions to override the curl library name if 'libcurl' is
      * not valid for your platform/use case.
