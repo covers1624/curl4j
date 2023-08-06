@@ -3169,11 +3169,11 @@ public class CURL {
      * @return The CURLcode response.
      */
     @NativeType ("CURLcode")
-    public static int curl_mime_name(@NativeType ("curl_mime *") long mime, String name) {
+    public static int curl_mime_name(@NativeType ("curl_mime *") long mime, @Nullable String name) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nName = stack.UTF8(name);
+            ByteBuffer nName = stack.UTF8Safe(name);
 
-            return invokePPI(mime, memAddress(nName), Functions.curl_mime_name);
+            return invokePPI(mime, memAddressSafe(nName), Functions.curl_mime_name);
         }
     }
 
@@ -3187,11 +3187,11 @@ public class CURL {
      * @return The CURLcode response.
      */
     @NativeType ("CURLcode")
-    public static int curl_mime_filename(@NativeType ("curl_mime *") long mime, String filename) {
+    public static int curl_mime_filename(@NativeType ("curl_mime *") long mime, @Nullable String filename) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nFilename = stack.UTF8(filename);
+            ByteBuffer nFilename = stack.UTF8Safe(filename);
 
-            return invokePPI(mime, memAddress(nFilename), Functions.curl_mime_filename);
+            return invokePPI(mime, memAddressSafe(nFilename), Functions.curl_mime_filename);
         }
     }
 
