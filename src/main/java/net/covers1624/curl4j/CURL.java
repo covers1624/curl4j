@@ -28,6 +28,7 @@ import static org.lwjgl.system.MemoryUtil.*;
  *
  * @author covers1624
  */
+@SuppressWarnings ("unused") // Hey! This is library.
 public class CURL {
 
     private static @Nullable String LIB_CURL_OVERRIDE;
@@ -192,7 +193,7 @@ public class CURL {
      * <p>
      * For large file support, there is also a _LARGE version of the key
      * which takes an off_t type, allowing platforms with larger off_t
-     * sizes to handle larger files.  See below for {@link #INFILESIZE_LARGE}.
+     * sizes to handle larger files.  See below for {@link #CURLOPT_INFILESIZE_LARGE}.
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_INFILESIZE.html">documentation</a>.
      */
@@ -253,7 +254,7 @@ public class CURL {
      * <p>
      * Note there is also a _LARGE version of this key which use
      * off_t types, allowing for large file offsets on platforms which
-     * use larger-than-32-bit off_t's. Look bellow for {@link #RESUME_FROM_LARGE}
+     * use larger-than-32-bit off_t's. Look bellow for {@link #CURLOPT_RESUME_FROM_LARGE}
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_RESUME_FROM.html">documentation</a>.
      */
@@ -894,7 +895,7 @@ public class CURL {
      * an HTTP or FTP server.
      * <p>
      * Note there is also _LARGE version which adds large file support for
-     * platforms which have larger off_t sizes.  See {@link #MAXFILESIZE_LARGE} below.
+     * platforms which have larger off_t sizes.  See {@link #CURLOPT_MAXFILESIZE_LARGE} below.
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_MAXFILESIZE.html">documentation</a>.
      */
@@ -2093,7 +2094,7 @@ public class CURL {
     /**
      * the EC curves requested by the TLS client (RFC 8422, 5.1);
      * OpenSSL support via 'set_groups'/'set_curves':
-     * https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set1_groups.html
+     * <a href="https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set1_groups.html">OpenSSL docs</a>
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_SSL_EC_CURVES.html">documentation</a>.
      */
@@ -2699,6 +2700,7 @@ public class CURL {
     /**
      * IPv6-enabled
      */
+    @SuppressWarnings ("PointlessBitwiseExpression")
     public static final int CURL_VERSION_IPV6 = (1 << 0);
     /**
      * Kerberos V4 auth is supported (deprecated)
