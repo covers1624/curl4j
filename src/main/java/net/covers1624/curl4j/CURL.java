@@ -2369,6 +2369,63 @@ public class CURL {
         return invokePPI(curl, target, default_headers, Functions.curl_easy_impersonate);
     }
 
+    @NativeType ("curl_mime *")
+    public static long curl_mime_init(@NativeType ("CURL *") long curl) {
+        return invokePP(curl, Functions.curl_mime_init);
+    }
+
+    public static void curl_mime_free(@NativeType ("curl_mime *") long mime) {
+        invokePV(mime, Functions.curl_mime_free);
+    }
+
+    @NativeType ("curl_mimepart *")
+    public static long curl_mime_addpart(@NativeType ("curl_mime *") long mime) {
+        return invokePP(mime, Functions.curl_mime_addpart);
+    }
+
+    @NativeType ("CURLcode")
+    public static int curl_mime_name(@NativeType ("curl_mime *") long mime, String name) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nName = stack.UTF8(name);
+
+            return invokePPI(mime, memAddress(nName), Functions.curl_mime_name);
+        }
+    }
+
+    @NativeType ("CURLcode")
+    public static int curl_mime_filename(@NativeType ("curl_mime *") long mime, String filename) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nFilename = stack.UTF8(filename);
+
+            return invokePPI(mime, memAddress(nFilename), Functions.curl_mime_filename);
+        }
+    }
+
+    @NativeType ("CURLcode")
+    public static int curl_mime_type(@NativeType ("curl_mime *") long mime, String mimetype) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nMimetype = stack.UTF8(mimetype);
+
+            return invokePPI(mime, memAddress(nMimetype), Functions.curl_mime_type);
+        }
+    }
+
+    @NativeType ("CURLcode")
+    public static int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nMimetype = stack.bytes(data);
+
+            return invokePPI(mime, memAddress(nMimetype), data.length, Functions.curl_mime_data);
+        }
+    }
+
+    @NativeType ("CURLcode")
+    public static int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
+        // Technically we want PJPPPPI, but LWJGL doesn't give us that. This will only support 32bit's of datasize on 32bit systems.
+        // Or it will break spectacularly, 50-50 imo.
+        return invokePPPPPPI(mime, datasize, readfunc.address(), NULL, NULL, NULL, Functions.curl_mime_data_cb);
+    }
+
     public static final class Functions {
 
         private Functions() { }
@@ -2387,6 +2444,14 @@ public class CURL {
                 curl_easy_cleanup = apiGetFunctionAddress(CURL, "curl_easy_cleanup"),
                 curl_easy_impersonate = apiGetFunctionAddressOptional(CURL, "curl_easy_impersonate"),
                 curl_slist_append = apiGetFunctionAddress(CURL, "curl_slist_append"),
-                curl_slist_free_all = apiGetFunctionAddress(CURL, "curl_slist_free_all");
+                curl_slist_free_all = apiGetFunctionAddress(CURL, "curl_slist_free_all"),
+                curl_mime_init = apiGetFunctionAddress(CURL, "curl_mime_init"),
+                curl_mime_free = apiGetFunctionAddress(CURL, "curl_mime_free"),
+                curl_mime_addpart = apiGetFunctionAddress(CURL, "curl_mime_addpart"),
+                curl_mime_name = apiGetFunctionAddress(CURL, "curl_mime_name"),
+                curl_mime_filename = apiGetFunctionAddress(CURL, "curl_mime_filename"),
+                curl_mime_type = apiGetFunctionAddress(CURL, "curl_mime_type"),
+                curl_mime_data = apiGetFunctionAddress(CURL, "curl_mime_data"),
+                curl_mime_data_cb = apiGetFunctionAddress(CURL, "curl_mime_data_cb");
     }
 }
