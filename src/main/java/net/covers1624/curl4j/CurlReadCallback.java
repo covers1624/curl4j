@@ -7,7 +7,12 @@ import java.io.IOException;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
- * Created by covers1624 on 4/8/23.
+ * A function callback for reading POST/PUT data.
+ * <p>
+ * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">documentation</a>.
+ *
+ * @author covers1624
+ * @see CurlReadCallbackI
  */
 public abstract class CurlReadCallback extends CURLCallback implements CurlReadCallbackI {
 

@@ -4,7 +4,9 @@ import org.lwjgl.system.Callback;
 import org.lwjgl.system.libffi.FFICIF;
 
 /**
- * Created by covers1624 on 4/8/23.
+ * Parent class to all CURL callbacks. Mostly to simplify function sigs.
+ *
+ * @author covers1624
  */
 public abstract class CURLCallback extends Callback {
 

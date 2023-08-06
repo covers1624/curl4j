@@ -9,7 +9,10 @@ import java.util.Set;
 import static org.lwjgl.system.MemoryUtil.*;
 
 /**
- * Created by covers1624 on 3/15/22.
+ * curl_version_info_data struct.
+ *
+ * @author covers1624
+ * @see CURL#curl_version_info
  */
 public class curl_version_info_data extends Struct {
 

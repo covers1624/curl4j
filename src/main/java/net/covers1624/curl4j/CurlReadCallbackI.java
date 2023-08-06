@@ -13,11 +13,12 @@ import static org.lwjgl.system.libffi.LibFFI.FFI_DEFAULT_ABI;
 import static org.lwjgl.system.libffi.LibFFI.ffi_type_pointer;
 
 /**
- * Functional interface to handle {@link CURL#CURLOPT_READFUNCTION}.
- * See <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">the curl documentation.</a>
+ * A functional interface callback for reading POST/PUT data.
  * <p>
+ * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">documentation</a>.
  *
  * @author covers1624
+ * @see CurlReadCallback
  */
 @FunctionalInterface
 public interface CurlReadCallbackI extends CallbackI {
@@ -49,34 +50,9 @@ public interface CurlReadCallbackI extends CallbackI {
     }
 
     /**
-     * This callback function gets called by libcurl as soon as it needs to read data in order to send it to the peer -
-     * like if you ask it to upload or post data to the server. The data area pointed at by the pointer buffer should be
-     * filled up with at most size multiplied with nitems number of bytes by your function. size is always 1.
+     * Called to fill the curl buffer with data.
      * <p>
-     * Set the userdata argument with the {@link CURL#CURLOPT_READDATA} option.
-     * <p>
-     * Your function must return the actual number of bytes that it stored in the data area pointed at by the pointer
-     * buffer. Returning 0 will signal end-of-file to the library and cause it to stop the current transfer.
-     * <p>
-     * If you stop the current transfer by returning 0 "pre-maturely" (i.e before the server expected it, like when you
-     * have said you will upload N bytes and you upload less than N bytes), you may experience that the server
-     * "hangs" waiting for the rest of the data that will not come.
-     * <p>
-     * The read callback may return {@link CURL#CURL_READFUNC_ABORT} to stop the current operation immediately,
-     * resulting in a {@link CURL#CURLE_ABORTED_BY_CALLBACK} error code from the transfer.
-     * <p>
-     * The callback can return {@link CURL#CURL_READFUNC_PAUSE} to cause reading from this connection to pause. See
-     * curl_easy_pause for further details.
-     * <p>
-     * Bugs: when doing TFTP uploads, you must return the exact amount of data that the callback wants, or it will
-     * be considered the final packet by the server end and the transfer will end there.
-     * <p>
-     * If you set this callback pointer to NULL, or do not set it at all, the default internal read function will be used. It
-     * is doing an fread() on the FILE * userdata set with {@link CURL#CURLOPT_READDATA}.
-     * <p>
-     * You can set the total size of the data you are sending by using {@link CURL#CURLOPT_INFILESIZE_LARGE} or
-     * {@link CURL#CURLOPT_POSTFIELDSIZE_LARGE}, depending on the type of transfer. For some transfer types it may be
-     * required and it allows for better error checking.
+     * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">documentation</a>.
      *
      * @throws IOException If an error occurred whilst processing the bytes,
      *                     this will be propagated out the curl command used to start the transfer.

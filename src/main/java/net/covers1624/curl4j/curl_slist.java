@@ -8,7 +8,11 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.system.MemoryUtil.*;
 
 /**
+ * curl_slist struct.
+ *
  * @author covers1624
+ * @see CURL#curl_slist_append
+ * @see CURL#curl_slist_free_all
  */
 public class curl_slist extends Struct {
 

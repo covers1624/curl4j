@@ -7,7 +7,12 @@ import java.io.IOException;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
- * Created by covers1624 on 4/8/23.
+ * A function callback for receiving progress stats.
+ * <p>
+ * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_XFERINFOFUNCTION.html">documentation</a>.
+ *
+ * @author covers1624
+ * @see CurlXferInfoCallbackI
  */
 public abstract class CurlXferInfoCallback extends CURLCallback implements CurlXferInfoCallbackI {
 

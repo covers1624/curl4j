@@ -5,7 +5,12 @@ import org.lwjgl.system.Callback;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
- * Created by covers1624 on 4/8/23.
+ * A function callback for handling curl headers.
+ * <p>
+ * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html">documentation</a>.
+ *
+ * @author covers1624
+ * @see CurlHeaderCallbackI
  */
 public abstract class CurlHeaderCallback extends CURLCallback implements CurlHeaderCallbackI {
 
