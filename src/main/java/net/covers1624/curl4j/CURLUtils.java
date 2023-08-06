@@ -3,14 +3,7 @@ package net.covers1624.curl4j;
 /**
  * Created by covers1624 on 4/8/23.
  */
-public class CURLUtils {
-
-    /**
-     * Can be used to override the CURL library name.
-     * <p>
-     * May also be set to an absolute path to use a specific curl library.
-     */
-    public static String CURL_LIBRARY_NAME = System.getProperty("net.covers1624.curl4j.libname", "curl");
+class CURLUtils {
 
     /**
      * Re-throw a Throwable unchecked.

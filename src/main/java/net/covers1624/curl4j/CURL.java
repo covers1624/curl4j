@@ -30,7 +30,43 @@ import static org.lwjgl.system.MemoryUtil.*;
  */
 public class CURL {
 
-    public static final SharedLibrary CURL = Library.loadNative(CURL.class, "net.covers1624.curl4j", CURLUtils.CURL_LIBRARY_NAME, false);
+    private static @Nullable String LIB_CURL_OVERRIDE;
+    private static @Nullable SharedLibrary CURL;
+
+    /**
+     * Call this before using any cURL functions to override the curl library name if 'libcurl' is
+     * not valid for your platform/use case.
+     * <p>
+     * This may be an absolute path to a libcurl library if required.
+     *
+     * @param name The name.
+     */
+    public static void setLibCurlName(String name) {
+        if (CURL != null) {
+            throw new IllegalStateException("CURL already initialized.");
+        }
+        LIB_CURL_OVERRIDE = name;
+    }
+
+    /**
+     * Get the {@link SharedLibrary} handle for libCURL.
+     * <p>
+     * You can use this to lookup functions that are not exposed here if required.
+     * <p>
+     * This function will initialize curl, making it impossible to override the library name.
+     *
+     * @return The {@link SharedLibrary} for curl.
+     */
+    public static SharedLibrary getLbCURL() {
+        if (CURL == null) {
+            String lib = System.getProperty("net.covers1624.curl4j.libname", "libcurl");
+            if (LIB_CURL_OVERRIDE != null) {
+                lib = LIB_CURL_OVERRIDE;
+            }
+            CURL = Library.loadNative(CURL.class, "net.covers1624.curl4j", lib, false);
+        }
+        return CURL;
+    }
 
     // region cURL global init
     /**
@@ -2400,9 +2436,17 @@ public class CURL {
         return invokePPPPPPI(mime, datasize, readfunc.address(), NULL, NULL, NULL, Functions.curl_mime_data_cb);
     }
 
+    /**
+     * Class to hold all the libCURL function pointers.
+     * <p>
+     * Due to class loading rules, this will only be loaded (and thus, libcurl loaded), when
+     * a curl function is called.
+     */
     public static final class Functions {
 
         private Functions() { }
+
+        private static final SharedLibrary CURL = getLbCURL();
 
         public static final long curl_version = apiGetFunctionAddress(CURL, "curl_version");
         public static final long curl_version_info = apiGetFunctionAddress(CURL, "curl_version_info");
