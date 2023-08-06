@@ -2112,17 +2112,6 @@ public class CURL {
     }
 
     /**
-     * Unsafe version of all {@link #curl_easy_setopt} overloads.
-     *
-     * @param curl  The curl pointer.
-     * @param opt   The option being set.
-     * @param value The value to set.
-     */
-    public static void ncurl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
-        invokePPV(curl, opt, value, Functions.curl_easy_setopt);
-    }
-
-    /**
      * Set a generic curl option.
      *
      * @param curl  The curl pointer.
@@ -2130,7 +2119,7 @@ public class CURL {
      * @param value The value.
      */
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
-        ncurl_easy_setopt(curl, opt, value);
+        invokePPV(curl, opt, value, Functions.curl_easy_setopt);
     }
 
     /**
@@ -2141,7 +2130,7 @@ public class CURL {
      * @param value The value.
      */
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, boolean value) {
-        ncurl_easy_setopt(curl, opt, value ? 1 : 0);
+        curl_easy_setopt(curl, opt, value ? 1 : 0);
     }
 
     /**
@@ -2154,7 +2143,7 @@ public class CURL {
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             ByteBuffer nValue = stack.UTF8(value);
-            ncurl_easy_setopt(curl, opt, memAddress(nValue));
+            curl_easy_setopt(curl, opt, memAddress(nValue));
         }
     }
 
@@ -2166,7 +2155,7 @@ public class CURL {
      * @param func The function.
      */
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CURLCallback func) {
-        ncurl_easy_setopt(curl, opt, memAddressSafe(func));
+        curl_easy_setopt(curl, opt, memAddressSafe(func));
     }
 
     /**
@@ -2177,18 +2166,7 @@ public class CURL {
      * @param slist The {@link curl_slist}.
      */
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
-        ncurl_easy_setopt(curl, opt, memAddressSafe(slist));
-    }
-
-    /**
-     * Unsafe version of all {@link #curl_easy_getinfo} overloads.
-     *
-     * @param curl  The curl pointer.
-     * @param opt   The option being set.
-     * @param value The value to set.
-     */
-    public static int ncurl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
-        return invokePPI(curl, opt, value, Functions.curl_easy_getinfo);
+        curl_easy_setopt(curl, opt, memAddressSafe(slist));
     }
 
     /**
@@ -2204,7 +2182,7 @@ public class CURL {
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer buffer = stack.mallocPointer(1);
-            int ret = ncurl_easy_getinfo(curl, opt, buffer.address());
+            int ret = invokePPI(curl, opt, buffer.address(), Functions.curl_easy_getinfo);
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
@@ -2224,7 +2202,7 @@ public class CURL {
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer buffer = stack.mallocPointer(1);
-            int ret = ncurl_easy_getinfo(curl, opt, buffer.address());
+            int ret = invokePPI(curl, opt, buffer.address(), Functions.curl_easy_getinfo);
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
@@ -2327,7 +2305,7 @@ public class CURL {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             ByteBuffer nTarget = stack.UTF8(target);
 
-            ncurl_easy_impersonate(curl, memAddress(nTarget), default_headers ? 1 : 0);
+            invokePPI(curl, memAddress(nTarget), default_headers ? 1 : 0, Functions.curl_easy_impersonate);
         }
     }
 
@@ -2363,10 +2341,6 @@ public class CURL {
      */
     public static void curl_slist_free_all(@Nullable curl_slist list) {
         invokePV(memAddressSafe(list), Functions.curl_slist_free_all);
-    }
-
-    public static int ncurl_easy_impersonate(long curl, long target, int default_headers) {
-        return invokePPI(curl, target, default_headers, Functions.curl_easy_impersonate);
     }
 
     @NativeType ("curl_mime *")
