@@ -4,6 +4,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.*;
 
+import java.nio.ByteBuffer;
+
 import static org.lwjgl.system.APIUtil.apiGetFunctionAddress;
 import static org.lwjgl.system.APIUtil.apiGetFunctionAddressOptional;
 import static org.lwjgl.system.JNI.*;
@@ -2150,16 +2152,9 @@ public class CURL {
      * @param value The value to set.
      */
     public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
-        MemoryStack stack = MemoryStack.stackGet();
-        int stackPointer = stack.getPointer();
-
-        try {
-            stack.nUTF8(value, true);
-            long valueEncoded = stack.getPointerAddress();
-
-            ncurl_easy_setopt(curl, opt, valueEncoded);
-        } finally {
-            stack.setPointer(stackPointer);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nValue = stack.UTF8(value);
+            ncurl_easy_setopt(curl, opt, memAddress(nValue));
         }
     }
 
@@ -2329,16 +2324,10 @@ public class CURL {
      * @param default_headers If the default headers should be applied. You probably want true here.
      */
     public static void curl_easy_impersonate(long curl, String target, boolean default_headers) {
-        MemoryStack stack = MemoryStack.stackGet();
-        int stackPointer = stack.getPointer();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nTarget = stack.UTF8(target);
 
-        try {
-            stack.nUTF8(target, true);
-            long valueEncoded = stack.getPointerAddress();
-
-            ncurl_easy_impersonate(curl, valueEncoded, default_headers ? 1 : 0);
-        } finally {
-            stack.setPointer(stackPointer);
+            ncurl_easy_impersonate(curl, memAddress(nTarget), default_headers ? 1 : 0);
         }
     }
 
@@ -2357,20 +2346,13 @@ public class CURL {
     public static curl_slist curl_slist_append(@Nullable curl_slist list, String data) {
         long listPtr = memAddressSafe(list);
 
-        MemoryStack stack = MemoryStack.stackGet();
-        int stackPointer = stack.getPointer();
-
-        try {
-            stack.nUTF8(data, true);
-            long valueEncoded = stack.getPointerAddress();
-
-            long ptr = invokePPP(listPtr, valueEncoded, Functions.curl_slist_append);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer nData = stack.UTF8(data);
+            long ptr = invokePPP(listPtr, memAddress(nData), Functions.curl_slist_append);
             if (ptr == listPtr) {
                 return list;
             }
             return curl_slist.createSafe(ptr);
-        } finally {
-            stack.setPointer(stackPointer);
         }
     }
 
