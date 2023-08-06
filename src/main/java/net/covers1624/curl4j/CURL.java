@@ -2404,28 +2404,27 @@ public class CURL {
 
         private Functions() { }
 
-        public static final long
-                curl_version = apiGetFunctionAddress(CURL, "curl_version"),
-                curl_version_info = apiGetFunctionAddress(CURL, "curl_version_info"),
-                curl_global_init = apiGetFunctionAddress(CURL, "curl_global_init"),
-                curl_global_cleanup = apiGetFunctionAddress(CURL, "curl_global_cleanup"),
-                curl_easy_init = apiGetFunctionAddress(CURL, "curl_easy_init"),
-                curl_easy_reset = apiGetFunctionAddress(CURL, "curl_easy_reset"),
-                curl_easy_perform = apiGetFunctionAddress(CURL, "curl_easy_perform"),
-                curl_easy_setopt = apiGetFunctionAddress(CURL, "curl_easy_setopt"),
-                curl_easy_getinfo = apiGetFunctionAddress(CURL, "curl_easy_getinfo"),
-                curl_easy_strerror = apiGetFunctionAddress(CURL, "curl_easy_strerror"),
-                curl_easy_cleanup = apiGetFunctionAddress(CURL, "curl_easy_cleanup"),
-                curl_easy_impersonate = apiGetFunctionAddressOptional(CURL, "curl_easy_impersonate"),
-                curl_slist_append = apiGetFunctionAddress(CURL, "curl_slist_append"),
-                curl_slist_free_all = apiGetFunctionAddress(CURL, "curl_slist_free_all"),
-                curl_mime_init = apiGetFunctionAddress(CURL, "curl_mime_init"),
-                curl_mime_free = apiGetFunctionAddress(CURL, "curl_mime_free"),
-                curl_mime_addpart = apiGetFunctionAddress(CURL, "curl_mime_addpart"),
-                curl_mime_name = apiGetFunctionAddress(CURL, "curl_mime_name"),
-                curl_mime_filename = apiGetFunctionAddress(CURL, "curl_mime_filename"),
-                curl_mime_type = apiGetFunctionAddress(CURL, "curl_mime_type"),
-                curl_mime_data = apiGetFunctionAddress(CURL, "curl_mime_data"),
-                curl_mime_data_cb = apiGetFunctionAddress(CURL, "curl_mime_data_cb");
+        public static final long curl_version = apiGetFunctionAddress(CURL, "curl_version");
+        public static final long curl_version_info = apiGetFunctionAddress(CURL, "curl_version_info");
+        public static final long curl_global_init = apiGetFunctionAddress(CURL, "curl_global_init");
+        public static final long curl_global_cleanup = apiGetFunctionAddress(CURL, "curl_global_cleanup");
+        public static final long curl_easy_init = apiGetFunctionAddress(CURL, "curl_easy_init");
+        public static final long curl_easy_reset = apiGetFunctionAddress(CURL, "curl_easy_reset");
+        public static final long curl_easy_perform = apiGetFunctionAddress(CURL, "curl_easy_perform");
+        public static final long curl_easy_setopt = apiGetFunctionAddress(CURL, "curl_easy_setopt");
+        public static final long curl_easy_getinfo = apiGetFunctionAddress(CURL, "curl_easy_getinfo");
+        public static final long curl_easy_strerror = apiGetFunctionAddress(CURL, "curl_easy_strerror");
+        public static final long curl_easy_cleanup = apiGetFunctionAddress(CURL, "curl_easy_cleanup");
+        public static final long curl_easy_impersonate = apiGetFunctionAddressOptional(CURL, "curl_easy_impersonate");
+        public static final long curl_slist_append = apiGetFunctionAddress(CURL, "curl_slist_append");
+        public static final long curl_slist_free_all = apiGetFunctionAddress(CURL, "curl_slist_free_all");
+        public static final long curl_mime_init = apiGetFunctionAddress(CURL, "curl_mime_init");
+        public static final long curl_mime_free = apiGetFunctionAddress(CURL, "curl_mime_free");
+        public static final long curl_mime_addpart = apiGetFunctionAddress(CURL, "curl_mime_addpart");
+        public static final long curl_mime_name = apiGetFunctionAddress(CURL, "curl_mime_name");
+        public static final long curl_mime_filename = apiGetFunctionAddress(CURL, "curl_mime_filename");
+        public static final long curl_mime_type = apiGetFunctionAddress(CURL, "curl_mime_type");
+        public static final long curl_mime_data = apiGetFunctionAddress(CURL, "curl_mime_data");
+        public static final long curl_mime_data_cb = apiGetFunctionAddress(CURL, "curl_mime_data_cb");
     }
 }
