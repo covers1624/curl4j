@@ -33,11 +33,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
-      - uses: pguyot/arm-runner-action@v2
+      - uses: uraimo/run-on-arch-action@v2
         with:
-          cpu: cortex-a53
-          base_image: https://cdimage.ubuntu.com/releases/22.04.1/release/ubuntu-22.04.3-preinstalled-server-arm64+raspi.img.xz
-          commands: |
+          arch: aarch64
+          distro: ubuntu22.04
+          run: |
             sudo apt update && sudo apt install -y openjdk-8-jdk-headless autoconf texinfo build-essential libtool
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary -si
