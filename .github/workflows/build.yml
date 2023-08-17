@@ -34,7 +34,7 @@ jobs:
       - uses: pguyot/arm-runner-action@v2
         with:
           cpu: cortex-a53
-          base_image: raspios_lite_arm64:latest
+          base_image: https://cdimage.ubuntu.com/releases/22.04.1/release/ubuntu-22.04.1-preinstalled-server-arm64+raspi.img.xz
           commands: |
             sudo apt update && sudo apt install -y openjdk-8-jdk
             ls -alh /usr/lib/jvm/
