@@ -35,6 +35,5 @@ jobs:
         with:
           cpu: cortex-a53
           base_image: raspios_lite_arm64:latest
-          cpu_info: raspberrypi_4b
           commands: |
             uname -a
