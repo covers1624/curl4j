@@ -19,7 +19,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt update && sudo apt install -y texinfo
       - name: Build
-        run: ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary
+        run: ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -38,4 +38,4 @@ jobs:
           commands: |
             sudo apt update && sudo apt install -y openjdk-8-jdk-headless
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
-            ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary
+            ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary -si
