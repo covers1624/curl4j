@@ -15,7 +15,7 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
       - name: Install Dependencies
-        run: apt update && apt install -y texinfo
+        run: sudo apt update && sudo apt install -y texinfo
       - name: Build
         run: ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary
       - name: Upload Artifacts
