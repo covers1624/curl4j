@@ -28,6 +28,11 @@ dependencies {
 }
 
 model {
+    toolChains {
+        gcc(Gcc) {
+            targets 'linux_arm64'
+        }
+    }
     components {
         curl4j(NativeLibrarySpec) {
             targetPlatform "windows_x86_64"
