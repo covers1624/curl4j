@@ -36,7 +36,7 @@ jobs:
           cpu: cortex-a53
           base_image: raspios_lite_arm64:latest
           commands: |
-            sudo apt update && sudo apt install -y openjdk-8-jdk-headless
+            sudo apt update && sudo apt install -y openjdk-8-jdk
             ls -alh /usr/lib/jvm/
 #            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk
 #            ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary
