@@ -38,7 +38,7 @@ jobs:
           arch: aarch64
           distro: ubuntu22.04
           run: |
-            sudo apt update && sudo apt install -y openjdk-8-jdk-headless autoconf texinfo build-essential libtool
+            apt update && apt install -y openjdk-8-jdk-headless autoconf texinfo build-essential libtool
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary -si
       - name: Upload Artifacts
