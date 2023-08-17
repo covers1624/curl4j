@@ -36,4 +36,4 @@ jobs:
           cpu: cortex-a53
           base_image: raspios_lite_arm64:latest
           commands: |
-            uname -a
+            ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary
