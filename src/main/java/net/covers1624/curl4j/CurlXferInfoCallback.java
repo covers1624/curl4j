@@ -1,10 +1,8 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
-import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for receiving progress stats.
@@ -14,41 +12,35 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author covers1624
  * @see CurlXferInfoCallbackI
  */
-public abstract class CurlXferInfoCallback extends CURLCallback implements CurlXferInfoCallbackI {
+public class CurlXferInfoCallback extends CurlCallback {
 
-    public static CurlXferInfoCallback create(long functionPointer) {
-        CurlXferInfoCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlXferInfoCallback ? (CurlXferInfoCallback) instance : new Container(functionPointer, instance);
+    private static final long cif = ffi_prep_cif(
+            ffi_type_int,
+            ffi_type_pointer, ffi_type_long, ffi_type_long, ffi_type_long, ffi_type_long
+    );
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlXferInfoCallbackI.class, "update", long.class, long.class, long.class, long.class, long.class));
+
+    public CurlXferInfoCallback(CurlXferInfoCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
-    public static CurlXferInfoCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
+    private static native long ffi_callback(Method method);
 
-    public static CurlXferInfoCallback create(CurlXferInfoCallbackI instance) {
-        return instance instanceof CurlXferInfoCallback ? (CurlXferInfoCallback) instance : new Container(instance.address(), instance);
-    }
+    public interface CurlXferInfoCallbackI extends CallbackInterface {
 
-    protected CurlXferInfoCallback() {
-        super(CIF);
-    }
-
-    CurlXferInfoCallback(long address) {
-        super(address);
-    }
-
-    private static final class Container extends CurlXferInfoCallback {
-
-        private final CurlXferInfoCallbackI delegate;
-
-        private Container(long functionPointer, CurlXferInfoCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public int invoke(long ptr, long dltotal, long dlnow, long ultotal, long ulnow) {
-            return delegate.invoke(ptr, dltotal, dlnow, ultotal, ulnow);
-        }
+        /**
+         * Called to receive the transfer progress statistics.
+         * <p>
+         * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_XFERINFOFUNCTION.html">documentation</a>.
+         *
+         * @param ptr     User pointer set by {@link CURL#CURLOPT_XFERINFODATA}.
+         * @param dltotal The total expected to be downloaded.
+         * @param dlnow   The amount downloaded.
+         * @param ultotal The total expected to be uploaded.
+         * @param ulnow   The amount uploaded.
+         * @return {@link CURL#CURLE_OK} or {@link CURL#CURL_PROGRESSFUNC_CONTINUE},
+         * negative values fail the transfer with {@link CURL#CURLE_ABORTED_BY_CALLBACK}.
+         */
+        int update(long ptr, long dltotal, long dlnow, long ultotal, long ulnow);
     }
 }

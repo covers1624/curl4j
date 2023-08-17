@@ -19,20 +19,36 @@ repositories {
 }
 
 dependencies {
-    api 'org.lwjgl:lwjgl:3.3.2'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-linux'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-windows'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-macos'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-macos-arm64'
-
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     compileOnly 'org.jetbrains:annotations:24.0.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
 test {
     useJUnitPlatform()
 }
 
+compileJava {
+    options.compilerArgs += ['-h', file('src/generated/c')]
+}
+
+tasks.register('compileNative') {
+    doFirst {
+        def dir = file('build/native/')
+        delete(dir)
+        dir.mkdirs()
+        exec {
+            commandLine(['cmake', '../..'])
+            workingDir(dir)
+        }
+        exec {
+            commandLine("make")
+            workingDir(dir)
+        }
+    }
+}
 
 publishing {
     repositories {

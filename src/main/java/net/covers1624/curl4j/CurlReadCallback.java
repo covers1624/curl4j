@@ -1,10 +1,10 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
 import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for reading POST/PUT data.
@@ -12,43 +12,32 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">documentation</a>.
  *
  * @author covers1624
- * @see CurlReadCallbackI
  */
-public abstract class CurlReadCallback extends CURLCallback implements CurlReadCallbackI {
+public class CurlReadCallback extends Callback {
 
-    public static CurlReadCallback create(long functionPointer) {
-        CurlReadCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlReadCallback ? (CurlReadCallback) instance : new Container(functionPointer, instance);
+    private static final long cif = ffi_prep_cif(
+            ffi_type_pointer,
+            ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
+    );
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlReadCallback.CurlReadCallbackI.class, "read", long.class, long.class, long.class, long.class));
+
+    public CurlReadCallback(CurlReadCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
-    public static CurlReadCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
+    private static native long ffi_callback(Method method);
 
-    public static CurlReadCallback create(CurlReadCallbackI instance) {
-        return instance instanceof CurlReadCallback ? (CurlReadCallback) instance : new Container(instance.address(), instance);
-    }
+    public interface CurlReadCallbackI extends CallbackInterface {
 
-    protected CurlReadCallback() {
-        super(CIF);
-    }
-
-    CurlReadCallback(long address) {
-        super(address);
-    }
-
-    private static final class Container extends CurlReadCallback {
-
-        private final CurlReadCallbackI delegate;
-
-        private Container(long functionPointer, CurlReadCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public long invoke(long ptr, long size, long nmemb, long userdata) throws IOException {
-            return delegate.invoke(ptr, size, nmemb, userdata);
-        }
+        /**
+         * Called to fill the curl buffer with data.
+         * <p>
+         * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">documentation</a>.
+         *
+         * @throws IOException If an error occurred whilst processing the bytes.
+         *                     If the curl operation is running on a Java thread, this will bubble out. Otherwise, it will
+         *                     be printed to stderr, and ignored.
+         */
+        void read(long ptr, long size, long nmemb, long userdata) throws IOException;
     }
 }

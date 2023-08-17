@@ -1,11 +1,8 @@
 package net.covers1624.curl4j;
 
+import net.covers1624.curl4j.core.Pointer;
+import net.covers1624.curl4j.core.Struct;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.Struct;
-
-import java.nio.ByteBuffer;
-
-import static org.lwjgl.system.MemoryUtil.*;
 
 /**
  * curl_slist struct.
@@ -14,52 +11,24 @@ import static org.lwjgl.system.MemoryUtil.*;
  * @see CURL#curl_slist_append
  * @see CURL#curl_slist_free_all
  */
-public class curl_slist extends Struct {
+public class curl_slist extends Pointer {
 
-    public static final int SIZEOF;
-    public static final int ALIGNOF;
+    private static final Struct STRUCT = new Struct();
 
-    public static final int DATA;
-    public static final int NEXT;
+    public static final Struct.Member<@Nullable String> DATA = STRUCT.stringMember("data");
+    public static final Struct.Member<@Nullable curl_slist> NEXT = STRUCT.structPointerMember("next", p -> new curl_slist(p.address));
 
-    static {
-        Layout layout = __struct(
-                __member(POINTER_SIZE),
-                __member(POINTER_SIZE)
-        );
-
-        SIZEOF = layout.getSize();
-        ALIGNOF = layout.getAlignment();
-
-        DATA = layout.offsetof(0);
-        NEXT = layout.offsetof(1);
-    }
-
-    public curl_slist(ByteBuffer container) {
-        super(memAddress(container), __checkContainer(container, SIZEOF));
-    }
-
-    @Override
-    public int sizeof() {
-        return SIZEOF;
-    }
-
-    public static curl_slist create(long address) {
-        return wrap(curl_slist.class, address);
-    }
-
-    @Nullable
-    public static curl_slist createSafe(long address) {
-        return address == NULL ? null : wrap(curl_slist.class, address);
+    public curl_slist(long address) {
+        super(address);
     }
 
     @Nullable
     public String data() {
-        return memUTF8Safe(address() + DATA);
+        return DATA.read(address);
     }
 
     @Nullable
     public curl_slist next() {
-        return createSafe(address() + NEXT);
+        return NEXT.read(address);
     }
 }

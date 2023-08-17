@@ -1,10 +1,10 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
 import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for writing data.
@@ -12,43 +12,33 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html">documentation</a>.
  *
  * @author covers1624
- * @see CurlWriteCallbackI
  */
-public abstract class CurlWriteCallback extends CURLCallback implements CurlWriteCallbackI {
+public class CurlWriteCallback extends Callback {
 
-    public static CurlWriteCallback create(long functionPointer) {
-        CurlWriteCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlWriteCallback ? (CurlWriteCallback) instance : new Container(functionPointer, instance);
+    private static final long cif = ffi_prep_cif(
+            ffi_type_pointer,
+            ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
+    );
+
+    private static final long callback = ffi_callback(Reflect.getMethod(WriteCallbackI.class, "write", long.class, long.class, long.class, long.class));
+
+    public CurlWriteCallback(WriteCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
-    public static CurlWriteCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
+    private static native long ffi_callback(Method method);
 
-    public static CurlWriteCallback create(CurlWriteCallbackI instance) {
-        return instance instanceof CurlWriteCallback ? (CurlWriteCallback) instance : new Container(instance.address(), instance);
-    }
+    public interface WriteCallbackI extends CallbackInterface {
 
-    protected CurlWriteCallback() {
-        super(CIF);
-    }
-
-    CurlWriteCallback(long address) {
-        super(address);
-    }
-
-    private static final class Container extends CurlWriteCallback {
-
-        private final CurlWriteCallbackI delegate;
-
-        private Container(long functionPointer, CurlWriteCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public long invoke(long ptr, long size, long nmemb, long userdata) throws IOException {
-            return delegate.invoke(ptr, size, nmemb, userdata);
-        }
+        /**
+         * Called to empty the curl buffer.
+         * <p>
+         * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html">documentation</a>.
+         *
+         * @throws IOException If an error occurred whilst processing the bytes.
+         *                     If the curl operation is running on a Java thread, this will bubble out. Otherwise, it will
+         *                     be printed to stderr, and ignored.
+         */
+        long write(long ptr, long size, long nmemb, long userdata) throws IOException;
     }
 }
