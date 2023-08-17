@@ -31,6 +31,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - uses: pguyot/arm-runner-action@v2
         with:
           cpu: cortex-a53
