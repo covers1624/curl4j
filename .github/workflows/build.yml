@@ -41,3 +41,9 @@ jobs:
             sudo apt update && sudo apt install -y openjdk-8-jdk-headless autoconf texinfo build-essential libtool
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary -si
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux_x64
+          path: |
+            build/**/*.so
