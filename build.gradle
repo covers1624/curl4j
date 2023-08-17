@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'c'
 }
 
 java {
@@ -26,12 +27,83 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
+model {
+    components {
+        curl4j(NativeLibrarySpec) {
+            targetPlatform "windows_x86_64"
+            targetPlatform "linux_x86_64"
+            targetPlatform "linux_arm64"
+            targetPlatform "macos_x86_64"
+            targetPlatform "macos_arm64"
+
+            sources {
+                c {
+                    source {
+                        srcDir 'src/main/c'
+                        include '**/*.c'
+                    }
+                    exportedHeaders {
+                        srcDir 'src/generated/c'
+                        srcDir "${System.properties['java.home']}/../include"
+                        srcDir "${System.properties['java.home']}/../include/linux"
+                        srcDir "${System.properties['java.home']}/../include/darwin"
+                        srcDir "${System.properties['java.home']}/../include/win32"
+                        srcDir "thirdparty/libffi/build_/include"
+                    }
+                }
+            }
+            binaries {
+                all {
+                    linker.args "-L${projectDir}/thirdparty/libffi/build_/.libs", "-lffi"
+                }
+            }
+        }
+    }
+
+    platforms {
+        windows_x86_64 {
+            architecture "x86_64"
+        }
+        linux_x86_64 {
+            architecture "x86_64"
+        }
+        linux_arm64 {
+            architecture "arm64"
+        }
+        macos_x86_64 {
+            architecture "x86_64"
+        }
+        macos_arm64 {
+            architecture "arm64"
+        }
+    }
+
+    buildTypes {
+        debug
+        release
+    }
+}
+
 test {
     useJUnitPlatform()
 }
 
 compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
+}
+
+tasks.withType(CCompile) {
+    it.dependsOn('compileLibFFI')
+}
+
+tasks.register('compileLibFFI') {
+    doFirst {
+        def dir = file('thirdparty/libffi')
+        def buildDir = cleanDir(new File(dir, 'build_'))
+        runIn(dir, "./autogen.sh")
+        runIn(buildDir, '../configure', '--enable-static', '--disable-shared', '--with-pic')
+        runIn(buildDir, 'make')
+    }
 }
 
 tasks.register('compileNative') {
@@ -70,5 +142,19 @@ publishing {
 
             from components.java
         }
+    }
+}
+
+
+File cleanDir(File dir) {
+    delete(dir)
+    dir.mkdirs()
+    return dir
+}
+
+def runIn(File dir, Object... args) {
+    exec {
+        commandLine(args)
+        workingDir(dir)
     }
 }
