@@ -30,7 +30,7 @@ dependencies {
 model {
     toolChains {
         gcc(Gcc) {
-            targets 'linux_arm64'
+            targets 'linux_x86_64', 'linux_arm64'
         }
     }
     components {
