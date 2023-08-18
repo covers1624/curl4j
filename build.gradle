@@ -107,6 +107,21 @@ compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
+jar {
+    def natives = [
+            ['windows', 'x64'],
+            ['linux', 'x64'],
+            ['linux', 'arm64'],
+            ['macos', 'x64'],
+            ['macos', 'arm64'],
+    ]
+    natives.each {o ->
+        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
+            into "META-INF/natives/${o[0]}/${o[1]}/"
+        }
+    }
+}
+
 tasks.withType(CCompile).configureEach {
     it.dependsOn('compileLibFFI')
 }

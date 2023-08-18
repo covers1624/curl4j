@@ -55,3 +55,31 @@ jobs:
           name: linux_arm64
           path: |
             build/**/*.so
+
+  package:
+    runs-on: ubuntu-22.04
+    needs: [ build_linux_x64, build_linux_arm64 ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_x64
+          path: ./build/
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_arm64
+          path: ./build/
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Build
+        run: ./gradlew jar -si && find .
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jars
+          path: |
+            build/**/*.jar
