@@ -76,7 +76,7 @@ jobs:
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
       - name: Build
-        run: ./gradlew jar -si && find .
+        run: ./gradlew jar -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
