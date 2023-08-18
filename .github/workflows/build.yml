@@ -89,15 +89,15 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
       - run: |
-          export JAVA_HOME=${cygpath $JAVA_HOME}
-          cd ${cygpath $RUNNER_WORKSPACE }
+          export JAVA_HOME=$(cygpath $JAVA_HOME)
+          cd $(cygpath $RUNNER_WORKSPACE)
           cd thirdparty/libffi
           autoreconf -f -v -i
           mkdir build_
           cd build_
           CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ ../configure --enable-static --disable-shared --with-pic
           make
-          cd ${cygpath $RUNNER_WORKSPACE }
+          cd $(cygpath $RUNNER_WORKSPACE)
           ./gradlew curl4jWindows_x64ReleaseSharedLibrary
         shell: msys2 {0}
       - name: Upload Artifacts
