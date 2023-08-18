@@ -49,11 +49,15 @@ model {
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
-                        srcDir "${System.properties['java.home']}/../include"
-                        srcDir "${System.properties['java.home']}/../include/linux"
-                        srcDir "${System.properties['java.home']}/../include/darwin"
-                        srcDir "${System.properties['java.home']}/../include/win32"
                         srcDir "thirdparty/libffi/build_/include"
+
+                        var jdkDir = javaToolchains.compilerFor {
+                            languageVersion = JavaLanguageVersion.of(8)
+                        }.get().getMetadata().getInstallationPath()
+                        srcDir jdkDir.file('include')
+                        srcDir jdkDir.file('include/linux')
+                        srcDir jdkDir.file('include/darwin')
+                        srcDir jdkDir.file('include/win32')
                     }
                 }
             }
