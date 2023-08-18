@@ -16,7 +16,6 @@ add_library(curl4j SHARED
 )
 
 find_package(JNI REQUIRED)
-find_package(CURL REQUIRED)
 include_directories(src/generated/c ${JNI_INCLUDE_DIRS} thirdparty/libffi/build_/include/)
 
 target_link_libraries(curl4j ${PROJECT_SOURCE_DIR}/thirdparty/libffi/build_/.libs/libffi.a)
