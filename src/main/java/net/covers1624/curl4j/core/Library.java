@@ -100,19 +100,29 @@ public abstract class Library {
             super(name);
         }
 
-        @Override
-        protected long lookupAddr(String name) {
-            return 0;
-        }
+        private static native long GetModuleHandle(String name);
+
+        private static native int GetLastError();
+
+        private static native long GetProcAddress(long handle, String name);
 
         @Override
         protected long open(String name) throws UnsatisfiedLinkError {
-            return 0;
+            long handle = GetModuleHandle(name);
+            if (handle == Memory.NULL) {
+                throw new UnsatisfiedLinkError("Failed to load dynamically linked library: '" + name + "', Error: " + GetLastError());
+            }
+            return handle;
         }
 
         @Override
         protected void close() {
 
+        }
+
+        @Override
+        protected long lookupAddr(String name) {
+            return GetProcAddress(address, name);
         }
     }
 }

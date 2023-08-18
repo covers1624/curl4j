@@ -52,7 +52,10 @@ public class MemoryTests {
         Memory.putDouble(addr, 17.817649374D);
         assertEquals(17.817649374D, Memory.getDouble(addr));
 
-        long clong = NativeTypes.CLONG_SIZE == 8 ? 0x7CFA69B27D59AF1CL : 0xECFA69B2L;
+        Memory.putInt(addr, 0xECFA69B2);
+        assertEquals(0xECFA69B2, Memory.getInt(addr));
+
+        long clong = NativeTypes.CLONG_SIZE == 8 ? 0x7CFA69B27D59AF1CL : 0x7CFA69B2L;
         Memory.putCLong(addr, clong);
         assertEquals(clong, Memory.getCLong(addr));
 

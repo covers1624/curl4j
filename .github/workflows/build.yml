@@ -56,9 +56,60 @@ jobs:
           path: |
             build/**/*.so
 
+  build_windows_x64:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Setup JDK 8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+      - name: Setup Msys2
+        uses: msys2/setup-msys2@v
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            autoconf-wrapper
+            autoconf
+            automake
+            libtool
+            make
+            dejangnu
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-libs
+      - run: |
+          export JAVA_HOME=${cygpath $JAVA_HOME}
+          cd ${cygpath $RUNNER_WORKSPACE }
+          cd thirdparty/libffi
+          autoreconf -f -v -i
+          mkdir build_
+          cd build_
+          CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ ../configure --enable-static --disable-shared --with-pic
+          make
+          cd ${cygpath $RUNNER_WORKSPACE }
+          ./gradlew curl4jWindows_x64ReleaseSharedLibrary
+        shell: msys2 {0}
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows_x64
+          path: |
+            build/**/*.dll
+
   package:
     runs-on: ubuntu-22.04
-    needs: [ build_linux_x64, build_linux_arm64 ]
+    needs: [ build_linux_x64, build_linux_arm64, build_windows_x64 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
@@ -68,6 +119,10 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_arm64
+          path: ./build/
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows_x64
           path: ./build/
       - name: Gradle Cache
         uses: actions/cache@v3

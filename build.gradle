@@ -33,7 +33,7 @@ dependencies {
 model {
     toolChains {
         gcc(Gcc) {
-            targets 'linux_x64', 'linux_arm64'
+            targets 'linux_x64', 'linux_arm64', 'windows_x64'
         }
     }
     components {
@@ -48,7 +48,12 @@ model {
                 c {
                     source {
                         srcDir 'src/main/c'
-                        include '**/*.c'
+                        include '*.c'
+                        if (os == 'windows') {
+                            include 'windows/*.c'
+                        } else {
+                            include 'unix/*.c'
+                        }
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
@@ -122,17 +127,20 @@ jar {
     }
 }
 
-tasks.withType(CCompile).configureEach {
-    it.dependsOn('compileLibFFI')
-}
+// TODO dont do this on linux as well, make action build libffi
+if (os != 'windows') {
+    tasks.withType(CCompile).configureEach {
+        it.dependsOn('compileLibFFI')
+    }
 
-tasks.register('compileLibFFI') {
-    doFirst {
-        def dir = file('thirdparty/libffi')
-        def buildDir = cleanDir(new File(dir, 'build_'))
-        runIn(dir, "./autogen.sh")
-        runIn(buildDir, '../configure', '--enable-static', '--disable-shared', '--with-pic')
-        runIn(buildDir, 'make')
+    tasks.register('compileLibFFI') {
+        doFirst {
+            def dir = file('thirdparty/libffi')
+            def buildDir = cleanDir(new File(dir, 'build_'))
+            runIn(dir, "./autogen.sh")
+            runIn(buildDir, '../configure', '--enable-static', '--disable-shared', '--with-pic')
+            runIn(buildDir, 'make')
+        }
     }
 }
 
