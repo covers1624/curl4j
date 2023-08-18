@@ -97,7 +97,7 @@ jobs:
           cd build_
           CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ ../configure --enable-static --disable-shared --with-pic
           make
-          cd $(cygpath $RUNNER_WORKSPACE)
+          cd ../../../
           ./gradlew curl4jWindows_x64ReleaseSharedLibrary
         shell: msys2 {0}
       - name: Upload Artifacts
