@@ -89,6 +89,7 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
       - run: |
+          find .
           export JAVA_HOME=$(cygpath $JAVA_HOME)
           cd $(cygpath $RUNNER_WORKSPACE)
           cd thirdparty/libffi
