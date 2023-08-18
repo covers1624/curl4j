@@ -14,6 +14,9 @@ java {
 group 'net.covers1624'
 version '1.0-SNAPSHOT'
 
+def os = getOsName()
+def arch = getArchName()
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -30,15 +33,15 @@ dependencies {
 model {
     toolChains {
         gcc(Gcc) {
-            targets 'linux_x86_64', 'linux_arm64'
+            targets 'linux_x64', 'linux_arm64'
         }
     }
     components {
         curl4j(NativeLibrarySpec) {
-            targetPlatform "windows_x86_64"
-            targetPlatform "linux_x86_64"
+            targetPlatform "windows_x64"
+            targetPlatform "linux_x64"
             targetPlatform "linux_arm64"
-            targetPlatform "macos_x86_64"
+            targetPlatform "macos_x64"
             targetPlatform "macos_arm64"
 
             sources {
@@ -70,17 +73,17 @@ model {
     }
 
     platforms {
-        windows_x86_64 {
-            architecture "x86_64"
+        windows_x64 {
+            architecture "x64"
         }
-        linux_x86_64 {
-            architecture "x86_64"
+        linux_x64 {
+            architecture "x64"
         }
         linux_arm64 {
             architecture "arm64"
         }
-        macos_x86_64 {
-            architecture "x86_64"
+        macos_x64 {
+            architecture "x64"
         }
         macos_arm64 {
             architecture "arm64"
@@ -101,7 +104,7 @@ compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
-tasks.withType(CCompile) {
+tasks.withType(CCompile).configureEach {
     it.dependsOn('compileLibFFI')
 }
 
@@ -165,5 +168,35 @@ def runIn(File dir, Object... args) {
     exec {
         commandLine(args)
         workingDir(dir)
+    }
+}
+
+def getOsName() {
+    def name = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    if (name.contains("windows")) return 'windows'
+    if (name.contains("linux")) return 'linux'
+    if (name.contains("osx") || name.contains("os x") || name.contains("darwin")) return 'macos'
+    if (name.contains("freebsd")) return 'freebsd'
+    return 'unknown'
+}
+
+def getArchName() {
+    switch (System.getProperty("os.arch").toLowerCase(Locale.ROOT)) {
+        case 'i386':
+        case 'x86':
+            return 'x32'
+        case 'x64':
+        case 'x86_64':
+        case 'amd64':
+            return 'x64'
+        case 'arm':
+        case 'armv7':
+        case 'armv7l':
+            return 'arm32'
+        case 'armv8':
+        case 'aarch64':
+            return 'arm64'
+        default:
+            return UNKNOWN
     }
 }

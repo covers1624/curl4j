@@ -20,7 +20,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt update && sudo apt install -y texinfo
       - name: Build
-        run: ./gradlew curl4jLinux_x86_64ReleaseSharedLibrary -si
+        run: ./gradlew curl4jLinux_x64ReleaseSharedLibrary -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
