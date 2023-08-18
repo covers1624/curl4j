@@ -85,7 +85,7 @@ jobs:
             automake
             libtool
             make
-            dejangnu
+            dejagnu
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
       - run: |
