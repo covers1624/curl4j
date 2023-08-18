@@ -91,7 +91,6 @@ jobs:
       - run: |
           find .
           export JAVA_HOME=$(cygpath $JAVA_HOME)
-          cd $(cygpath $RUNNER_WORKSPACE)
           cd thirdparty/libffi
           autoreconf -f -v -i
           mkdir build_
