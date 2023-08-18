@@ -136,22 +136,6 @@ tasks.register('compileLibFFI') {
     }
 }
 
-tasks.register('compileNative') {
-    doFirst {
-        def dir = file('build/native/')
-        delete(dir)
-        dir.mkdirs()
-        exec {
-            commandLine(['cmake', '../..'])
-            workingDir(dir)
-        }
-        exec {
-            commandLine("make")
-            workingDir(dir)
-        }
-    }
-}
-
 publishing {
     repositories {
         if (System.getenv('MAVEN_PASS')) {
