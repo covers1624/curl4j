@@ -28,7 +28,7 @@ jobs:
           path: |
             build/**/*.so
 
-  build_linux_aarch64:
+  build_linux_arm64:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
