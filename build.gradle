@@ -35,6 +35,9 @@ model {
         gcc(Gcc) {
             targets 'linux_x64', 'linux_arm64', 'windows_x64'
         }
+        clang(Clang) {
+            targets 'macos_x64'
+        }
     }
     components {
         curl4j(NativeLibrarySpec) {
