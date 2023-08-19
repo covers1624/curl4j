@@ -1,3 +1,0 @@
-[submodule "thirdparty/libffi"]
-	path = thirdparty/libffi
-	url = https://github.com/libffi/libffi.git
