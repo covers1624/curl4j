@@ -39,7 +39,14 @@ model {
             targets 'linux_x64', 'linux_arm64', 'windows_x64'
         }
         clang(Clang) {
-            targets 'macos_x64'
+            targets('macos_x64', 'macos_arm64')
+
+            eachPlatform {
+                if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != 'arm64') {
+                    cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                    linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                }
+            }
         }
     }
     components {
