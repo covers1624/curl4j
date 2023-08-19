@@ -31,3 +31,27 @@ jobs:
             export FILE_SERVER_PASSWORD=${{ secrets.FILE_SERVER_PASSWORD }}
             apt update && apt install -y git zip unzip curl autoconf build-essential libtool
             .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c linux_arm64
+
+  build_windows_x64:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            autoconf-wrapper
+            autoconf
+            automake
+            libtool
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-libs
+            curl
+            zip
+            unzip
+      - run: .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c windows_x64
+        shell: msys2 {0}
