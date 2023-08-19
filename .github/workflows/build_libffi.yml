@@ -53,5 +53,6 @@ jobs:
             curl
             zip
             unzip
+            git
       - run: .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c windows_x64
         shell: msys2 {0}
