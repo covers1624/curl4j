@@ -1,0 +1,24 @@
+name: Build libffi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_linux_x64:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c x64
+
+  build_linux_aarch64:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          run: |
+            apt update && apt install -y autoconf build-essential libtool
+            .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c arm64
