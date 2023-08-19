@@ -20,7 +20,7 @@ git checkout "$commit"
 # Build
 mkdir build
 cd build
-../configure --disable-docs --disable-shared --enable-static --with-pic "${@:2}"
+../configure --disable-docs --disable-shared --enable-static --with-pic "${@:3}"
 make
 
 # Build package zip
