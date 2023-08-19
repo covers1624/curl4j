@@ -1,8 +1,7 @@
 name: Build libffi
 
 on:
-#  workflow_dispatch:
-  push:
+  workflow_dispatch:
 
 env:
   FILE_SERVER: ${{ secrets.FILE_SERVER }}
