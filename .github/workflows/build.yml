@@ -17,8 +17,6 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Install Dependencies
-        run: sudo apt update && sudo apt install -y texinfo
       - name: Build and Test
         run: ./gradlew curl4jLinux_x64ReleaseSharedLibrary test -si
       - name: Upload Artifacts
@@ -45,7 +43,7 @@ jobs:
           arch: aarch64
           distro: ubuntu22.04
           githubToken: ${{ github.token }}
-          install: apt update && apt install -y openjdk-8-jdk-headless autoconf texinfo build-essential libtool
+          install: apt update && apt install -y openjdk-8-jdk-headless build-essential
           run: |
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary test -si --console=plain
@@ -80,24 +78,10 @@ jobs:
           update: true
           install: >-
             base-devel
-            autoconf-wrapper
-            autoconf
-            automake
-            libtool
-            make
-            dejagnu
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
       - run: |
-          find .
           export JAVA_HOME=$(cygpath $JAVA_HOME)
-          cd thirdparty/libffi
-          autoreconf -f -v -i
-          mkdir build_
-          cd build_
-          CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ ../configure --enable-static --disable-shared --with-pic
-          make
-          cd ../../../
           ./gradlew curl4jWindows_x64ReleaseSharedLibrary
         shell: msys2 {0}
       - name: Upload Artifacts
