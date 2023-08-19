@@ -30,5 +30,8 @@ mkdir libffi/include
 cp include/*.h libffi/include/
 zip -r libffi-"$SHORT_COMMIT"-"$ARCH".zip libffi
 
+# Print checksum
+sha256sum ./*.zip
+
 #Test code
 unzip -l libffi-"$SHORT_COMMIT"-"$ARCH".zip
