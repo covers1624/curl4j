@@ -7,7 +7,7 @@ commit=$1
 # shellcheck disable=SC2086
 short_commit=$(echo $commit | cut -c -7)
 
-arch=$2
+suffix=$2
 
 # Clone
 git clone https://github.com/libffi/libffi.git
@@ -28,10 +28,10 @@ mkdir libffi
 cp .libs/libffi.a libffi/libffi.a
 mkdir libffi/include
 cp include/*.h libffi/include/
-zip_name=libffi-"$short_commit"-"$arch".zip
+zip_name=libffi-"$short_commit"-"$suffix".zip
 zip -r "$zip_name" libffi
 # Print zip contents for giggles.
-unzip -l libffi-"$short_commit"-"$arch".zip
+unzip -l "$zip_name"
 
 checksum=$(sha256sum "$zip_name" | cut -d " " -f 1)
 echo "SHA256: $checksum"
