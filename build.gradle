@@ -19,6 +19,10 @@ def libffiVersion = "1d0a28a"
 
 def os = getOsName()
 def arch = getArchName()
+def crossArch = getArchName(project.findProperty("cross_arch"))
+println("OS: " + os)
+println("Host Architecutre: " + arch)
+println("Cross Architecutre: " + crossArch)
 
 repositories {
     mavenLocal()
@@ -42,7 +46,7 @@ model {
             targets('macos_x64', 'macos_arm64')
 
             eachPlatform {
-                if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != 'arm64') {
+                if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != crossArch) {
                     cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
                     linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
                 }
@@ -151,7 +155,7 @@ jar {
     }
 }
 
-def libffiZipName = "libffi-$libffiVersion-${os}_${arch}.zip"
+def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
 def libffiZipDest = new File(buildDir, libffiZipName)
 def libffiExtracted = new File(buildDir, "extractLibffi")
 tasks.register('downloadLibffi', Download) {
@@ -218,8 +222,11 @@ def getOsName() {
     return 'unknown'
 }
 
-def getArchName() {
-    switch (System.getProperty("os.arch").toLowerCase(Locale.ROOT)) {
+def getArchName(arch = null) {
+    if (arch == null) {
+        arch = System.getProperty("os.arch")
+    }
+    switch (arch.toLowerCase(Locale.ROOT)) {
         case 'i386':
         case 'x86':
             return 'x32'
@@ -231,10 +238,11 @@ def getArchName() {
         case 'armv7':
         case 'armv7l':
             return 'arm32'
+        case 'arm64':
         case 'armv8':
         case 'aarch64':
             return 'arm64'
         default:
-            return UNKNOWN
+            throw new RuntimeException("Unknown architecture: " + arch)
     }
 }
