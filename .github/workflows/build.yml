@@ -110,7 +110,7 @@ jobs:
           java-version: '8'
       - name: Build and Test
         run: |
-          brew install automake autoconf libtool dejagnu
+          brew install automake autoconf libtool
           ./gradlew curl4jMacos_x64ReleaseSharedLibrary test testJ17 -si --no-daemon
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
