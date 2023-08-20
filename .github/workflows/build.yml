@@ -149,7 +149,7 @@ jobs:
 
   package:
     runs-on: ubuntu-22.04
-    needs: [ build_linux_x64, build_linux_arm64, build_windows_x64, build_macos_x64 ]
+    needs: [ build_linux_x64, build_linux_arm64, build_windows_x64, build_macos_x64, build_macos_arm64 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
