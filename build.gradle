@@ -70,7 +70,7 @@ model {
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
-                        srcDir "build/libffi/include"
+                        srcDir "build/extractLibffi/libffi/include"
 
                         var jdkDir = javaToolchains.compilerFor {
                             languageVersion = JavaLanguageVersion.of(8)
@@ -84,7 +84,7 @@ model {
             }
             binaries {
                 all {
-                    linker.args "-L${buildDir}/libffi", "-lffi"
+                    linker.args "-L${buildDir}/extractLibffi/libffi", "-lffi"
                 }
             }
         }
@@ -142,19 +142,23 @@ jar {
 
 def libffiZipName = "libffi-$libffiVersion-${os}_${arch}.zip"
 def libffiZipDest = new File(buildDir, libffiZipName)
+def libffiExtracted = new File(buildDir, "extractLibffi")
 tasks.register('downloadLibffi', Download) {
-    finalizedBy('extractLibffi')
     src "https://covers1624.net/Files/libffi/$libffiZipName"
     dest libffiZipDest
 }
+
 tasks.register('extractLibffi', Copy) {
+    inputs.file(libffiZipDest)
+    outputs.dir(libffiExtracted)
     dependsOn('downloadLibffi')
     from(zipTree(libffiZipDest))
-    into(buildDir)
+    into(libffiExtracted)
 }
 
 tasks.withType(CCompile).configureEach {
-    it.dependsOn('downloadLibffi')
+    it.dependsOn('extractLibffi')
+    it.inputs.dir(libffiExtracted)
 }
 
 publishing {
