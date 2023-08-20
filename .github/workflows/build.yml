@@ -18,7 +18,7 @@ jobs:
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
       - name: Build and Test
-        run: ./gradlew curl4jLinux_x64ReleaseSharedLibrary test testJ17 -si
+        run: ./gradlew curl4jLinux_x64ReleaseSharedLibrary test testJ17 -si --no-daemon
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -46,7 +46,7 @@ jobs:
           install: apt update && apt install -y openjdk-8-jdk-headless build-essential
           run: |
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
-            ./gradlew curl4jLinux_arm64ReleaseSharedLibrary test testJ17 -si --console=plain
+            ./gradlew curl4jLinux_arm64ReleaseSharedLibrary test testJ17 -si --console=plain --no-daemon
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -82,7 +82,7 @@ jobs:
             mingw-w64-x86_64-gcc-libs
       - run: |
           export JAVA_HOME=$(cygpath $JAVA_HOME)
-          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17
+          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17 --no-daemon
         shell: msys2 {0}
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -111,7 +111,7 @@ jobs:
       - name: Build and Test
         run: |
           brew install automake autoconf libtool dejagnu
-          ./gradlew curl4jMacos_x64ReleaseSharedLibrary test testJ17 -si
+          ./gradlew curl4jMacos_x64ReleaseSharedLibrary test testJ17 -si --no-daemon
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
