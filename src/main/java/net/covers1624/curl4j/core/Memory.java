@@ -94,7 +94,7 @@ public final class Memory {
 
     public static native long newGlobalRef(Object obj);
 
-    public static native void deleteGlobalRef(Object obj);
+    public static native void deleteGlobalRef(long ref);
 
     public static native <T> T getGlobalRefValue(long ref);
 

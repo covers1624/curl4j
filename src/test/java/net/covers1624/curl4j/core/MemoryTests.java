@@ -16,7 +16,7 @@ public class MemoryTests {
         Object obj = new Object();
         long ref = Memory.newGlobalRef(obj);
         assertEquals(obj, Memory.getGlobalRefValue(ref));
-        Memory.deleteGlobalRef(obj);
+        Memory.deleteGlobalRef(ref);
     }
 
     @Test
