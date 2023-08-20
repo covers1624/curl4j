@@ -48,7 +48,7 @@ public abstract class Callback implements AutoCloseable {
             ffi_closure_free(closure);
             closure = Memory.NULL;
             code = Memory.NULL;
-            Memory.deleteGlobalRef(delegate);
+            Memory.deleteGlobalRef(delegateRef);
             delegateRef = Memory.NULL;
         }
     }

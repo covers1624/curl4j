@@ -44,10 +44,10 @@ JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Memory_newGlobalRef
 /*
  * Class:     net_covers1624_curl4j_core_Memory
  * Method:    deleteGlobalRef
- * Signature: (Ljava/lang/Object;)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Memory_deleteGlobalRef
-  (JNIEnv *, jclass, jobject);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     net_covers1624_curl4j_core_Memory

@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'c'
+    id "de.undercouch.download" version "5.4.0"
 }
 
 java {
@@ -14,8 +15,14 @@ java {
 group 'net.covers1624'
 version '1.0-SNAPSHOT'
 
+def libffiVersion = "1d0a28a"
+
 def os = getOsName()
 def arch = getArchName()
+def crossArch = getArchName(project.findProperty("cross_arch"))
+println("OS: " + os)
+println("Host Architecutre: " + arch)
+println("Cross Architecutre: " + crossArch)
 
 repositories {
     mavenLocal()
@@ -36,7 +43,14 @@ model {
             targets 'linux_x64', 'linux_arm64', 'windows_x64'
         }
         clang(Clang) {
-            targets 'macos_x64'
+            targets('macos_x64', 'macos_arm64')
+
+            eachPlatform {
+                if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != crossArch) {
+                    cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                    linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                }
+            }
         }
     }
     components {
@@ -60,7 +74,7 @@ model {
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
-                        srcDir "thirdparty/libffi/build_/include"
+                        srcDir "build/extractLibffi/libffi/include"
 
                         var jdkDir = javaToolchains.compilerFor {
                             languageVersion = JavaLanguageVersion.of(8)
@@ -74,7 +88,7 @@ model {
             }
             binaries {
                 all {
-                    linker.args "-L${projectDir}/thirdparty/libffi/build_/.libs", "-lffi"
+                    linker.args "-L${buildDir}/extractLibffi/libffi", "-lffi"
                 }
             }
         }
@@ -111,6 +125,16 @@ test {
     systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
 }
 
+tasks.register('testJ17', Test) {
+    // We need the shared library
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    useJUnitPlatform()
+    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
@@ -130,21 +154,25 @@ jar {
     }
 }
 
-// TODO dont do this on linux as well, make action build libffi
-if (os != 'windows') {
-    tasks.withType(CCompile).configureEach {
-        it.dependsOn('compileLibFFI')
-    }
+def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
+def libffiZipDest = new File(buildDir, libffiZipName)
+def libffiExtracted = new File(buildDir, "extractLibffi")
+tasks.register('downloadLibffi', Download) {
+    src "https://covers1624.net/Files/libffi/$libffiZipName"
+    dest libffiZipDest
+}
 
-    tasks.register('compileLibFFI') {
-        doFirst {
-            def dir = file('thirdparty/libffi')
-            def buildDir = cleanDir(new File(dir, 'build_'))
-            runIn(dir, "./autogen.sh")
-            runIn(buildDir, '../configure', '--enable-static', '--disable-shared', '--with-pic')
-            runIn(buildDir, 'make')
-        }
-    }
+tasks.register('extractLibffi', Copy) {
+    inputs.file(libffiZipDest)
+    outputs.dir(libffiExtracted)
+    dependsOn('downloadLibffi')
+    from(zipTree(libffiZipDest))
+    into(libffiExtracted)
+}
+
+tasks.withType(CCompile).configureEach {
+    it.dependsOn('extractLibffi')
+    it.inputs.dir(libffiExtracted)
 }
 
 publishing {
@@ -193,8 +221,11 @@ def getOsName() {
     return 'unknown'
 }
 
-def getArchName() {
-    switch (System.getProperty("os.arch").toLowerCase(Locale.ROOT)) {
+def getArchName(arch = null) {
+    if (arch == null) {
+        arch = System.getProperty("os.arch")
+    }
+    switch (arch.toLowerCase(Locale.ROOT)) {
         case 'i386':
         case 'x86':
             return 'x32'
@@ -206,10 +237,11 @@ def getArchName() {
         case 'armv7':
         case 'armv7l':
             return 'arm32'
+        case 'arm64':
         case 'armv8':
         case 'aarch64':
             return 'arm64'
         default:
-            return UNKNOWN
+            throw new RuntimeException("Unknown architecture: " + arch)
     }
 }
