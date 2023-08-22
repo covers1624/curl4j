@@ -26,7 +26,6 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1prep_1cif(J
     jint nargs = (*env)->GetArrayLength(env, atypes);
     jlong *atypesPtr = (*env)->GetLongArrayElements(env, atypes, NULL);
     int ret = ffi_prep_cif((ffi_cif *)cif, FFI_DEFAULT_ABI, nargs, (ffi_type *) rtype, (ffi_type **) atypesPtr);
-    (*env)->ReleaseLongArrayElements(env, atypes, atypesPtr, JNI_ABORT);
     return ret;
 }
 
