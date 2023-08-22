@@ -2955,7 +2955,7 @@ public class CURL {
      * @param slist The {@link curl_slist}.
      */
     public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, slist.address);
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, slist != null ? slist.address : Memory.NULL);
     }
 
     /**
@@ -3000,7 +3000,7 @@ public class CURL {
     }
 
     /**
-     * Overload of {@link #curl_easy_getinfo(long, int, PointerBuffer)} for
+     * Overload of {@link #curl_easy_getinfo(long, int, Pointer)} for
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
