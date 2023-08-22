@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
  * @author covers1624
  * @see CurlXferInfoCallbackI
  */
-public class CurlXferInfoCallback extends CurlCallback {
+public class CurlXferInfoCallback extends CurlCallback implements CurlXferInfoCallbackI {
 
     private static final long cif = ffi_prep_cif(
             ffi_type_int,
@@ -24,23 +24,14 @@ public class CurlXferInfoCallback extends CurlCallback {
         super(cif, callback, delegate);
     }
 
-    private static native long ffi_callback(Method method);
-
-    public interface CurlXferInfoCallbackI extends CallbackInterface {
-
-        /**
-         * Called to receive the transfer progress statistics.
-         * <p>
-         * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_XFERINFOFUNCTION.html">documentation</a>.
-         *
-         * @param ptr     User pointer set by {@link CURL#CURLOPT_XFERINFODATA}.
-         * @param dltotal The total expected to be downloaded.
-         * @param dlnow   The amount downloaded.
-         * @param ultotal The total expected to be uploaded.
-         * @param ulnow   The amount uploaded.
-         * @return {@link CURL#CURLE_OK} or {@link CURL#CURL_PROGRESSFUNC_CONTINUE},
-         * negative values fail the transfer with {@link CURL#CURLE_ABORTED_BY_CALLBACK}.
-         */
-        int update(long ptr, long dltotal, long dlnow, long ultotal, long ulnow);
+    protected CurlXferInfoCallback() {
+        super(cif, callback, null);
     }
+
+    @Override
+    public int update(long ptr, long dltotal, long dlnow, long ultotal, long ulnow) {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
+    }
+
+    private static native long ffi_callback(Method method);
 }

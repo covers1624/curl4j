@@ -1,5 +1,8 @@
 package net.covers1624.curl4j.core;
 
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Created by covers1624 on 15/8/23.
  */
@@ -17,10 +20,17 @@ public abstract class Callback implements AutoCloseable {
     private long delegateRef = Memory.NULL;
     private long code = Memory.NULL;
 
-    protected Callback(long cif, long callback, CallbackInterface delegate) {
+    protected Callback(long cif, long callback, @Nullable CallbackInterface delegate) {
         this.cif = cif;
         this.callback = callback;
-        this.delegate = delegate;
+        if (delegate == null) {
+            if (!(this instanceof CallbackInterface)) {
+                throw new IllegalArgumentException("When delegate is null, expected this object to be a CallbackInterface");
+            }
+            this.delegate = (CallbackInterface) this;
+        } else {
+            this.delegate = delegate;
+        }
     }
 
     public final long getFunctionAddress() {
@@ -43,7 +53,8 @@ public abstract class Callback implements AutoCloseable {
     }
 
     @Override
-    public final void close() {
+    @MustBeInvokedByOverriders
+    public void close() {
         if (closure != Memory.NULL) {
             ffi_closure_free(closure);
             closure = Memory.NULL;
@@ -51,10 +62,12 @@ public abstract class Callback implements AutoCloseable {
             Memory.deleteGlobalRef(delegateRef);
             delegateRef = Memory.NULL;
         }
-        try {
-            delegate.close();
-        } catch (Throwable ex) {
-            throwUnchecked(ex);
+        if (delegate != this) {
+            try {
+                delegate.close();
+            } catch (Throwable ex) {
+                throwUnchecked(ex);
+            }
         }
     }
 

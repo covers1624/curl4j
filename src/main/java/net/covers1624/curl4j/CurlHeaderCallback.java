@@ -1,6 +1,5 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.NativeType;
 import net.covers1624.curl4j.core.Reflect;
 
 import java.lang.reflect.Method;
@@ -13,7 +12,7 @@ import java.lang.reflect.Method;
  * @author covers1624
  * @see CurlHeaderCallbackI
  */
-public class CurlHeaderCallback extends CurlCallback {
+public class CurlHeaderCallback extends CurlCallback implements CurlHeaderCallbackI {
 
     private static final long cif = ffi_prep_cif(
             ffi_type_pointer,
@@ -25,15 +24,14 @@ public class CurlHeaderCallback extends CurlCallback {
         super(cif, callback, delegate);
     }
 
-    private static native long ffi_callback(Method method);
-
-    public interface CurlHeaderCallbackI extends CallbackInterface {
-
-        /**
-         * Called for each header.
-         * <p>
-         * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html">documentation</a>.
-         */
-        void onHeader(String header, @NativeType ("void *") long userdata);
+    protected CurlHeaderCallback() {
+        super(cif, callback, null);
     }
+
+    @Override
+    public void onHeader(String header, long userdata) {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
+    }
+
+    private static native long ffi_callback(Method method);
 }
