@@ -140,6 +140,7 @@ compileJava {
 }
 
 jar {
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     def natives = [
             ['windows', 'x64'],
             ['linux', 'x64'],
