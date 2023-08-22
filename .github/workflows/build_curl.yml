@@ -1,4 +1,4 @@
-name: Build libffi
+name: Build curl
 
 on:
   push:
