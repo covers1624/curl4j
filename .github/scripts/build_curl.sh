@@ -7,7 +7,7 @@
 #  Static libraries: nghttp2, boringssl, quiche, brotli, libz, zstd
 
 #  Expected to be run on ubuntu with the following installed:
-#  build-essential (gcc, make), git autoreconf, libtool, cmake, zip, unzip, rustup/rustc, golang, python?
+#  build-essential (gcc, make), git autoreconf, libtool, cmake, ninja-build zip, unzip, rustup/rustc, golang, python?
 
 # If anything breaks, abort.
 set -e

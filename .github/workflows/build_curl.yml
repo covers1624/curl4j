@@ -9,6 +9,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - name: Install build dependencies.
+        run: |
+          apt update
+          apt install -y ninja-build
       - run: |
           .github/scripts/build_curl.sh
 
