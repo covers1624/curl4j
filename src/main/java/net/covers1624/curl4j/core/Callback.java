@@ -51,6 +51,16 @@ public abstract class Callback implements AutoCloseable {
             Memory.deleteGlobalRef(delegateRef);
             delegateRef = Memory.NULL;
         }
+        try {
+            delegate.close();
+        } catch (Throwable ex) {
+            throwUnchecked(ex);
+        }
+    }
+
+    @SuppressWarnings ("unchecked")
+    private static <T extends Throwable> void throwUnchecked(Throwable t) throws T {
+        throw (T) t;
     }
 
     private static native long ffi_type_pointer();
@@ -84,6 +94,6 @@ public abstract class Callback implements AutoCloseable {
 
     private static native void ffi_closure_free(long closure);
 
-    public interface CallbackInterface {
+    public interface CallbackInterface extends AutoCloseable {
     }
 }
