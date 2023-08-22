@@ -28,4 +28,5 @@ jobs:
             apt update
             apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip golang python3
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            source "$HOME/.cargo/env"
             .github/scripts/build_curl.sh
