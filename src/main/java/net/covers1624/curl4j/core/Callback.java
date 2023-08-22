@@ -95,5 +95,8 @@ public abstract class Callback implements AutoCloseable {
     private static native void ffi_closure_free(long closure);
 
     public interface CallbackInterface extends AutoCloseable {
+
+        @Override
+        default void close() throws Exception { }
     }
 }
