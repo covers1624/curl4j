@@ -1,0 +1,42 @@
+#include "net_covers1624_curl4j_core_Callback.h"
+#include "stdlib.h"
+#include "ffi.h"
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1type_1pointer(JNIEnv *, jclass) {
+    return (jlong) &ffi_type_pointer;
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1type_1int(JNIEnv *, jclass) {
+    return (jlong) &ffi_type_uint32;
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1type_1long(JNIEnv *, jclass) {
+    return (jlong) &ffi_type_uint64;
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1cif_1alloc(JNIEnv *, jclass) {
+    return (jlong) malloc(sizeof(ffi_cif));
+}
+
+JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1cif_1free(JNIEnv *, jclass, jlong cif) {
+    free((void *) cif);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1prep_1cif(JNIEnv *env, jclass, jlong cif, jlong rtype, jlongArray atypes) {
+    jint nargs = (*env)->GetArrayLength(env, atypes);
+    jlong *atypesPtr = (*env)->GetLongArrayElements(env, atypes, NULL);
+    int ret = ffi_prep_cif((ffi_cif *)cif, FFI_DEFAULT_ABI, nargs, (ffi_type *) rtype, (ffi_type **) atypesPtr);
+    return ret;
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1closure_1alloc(JNIEnv *, jclass, jlong code) {
+    return (jlong) ffi_closure_alloc(sizeof(ffi_closure), (void *) code);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1prep_1closure_1loc(JNIEnv *, jclass, jlong closure, jlong cif, jlong callback, jlong data, jlong code) {
+    return ffi_prep_closure_loc((ffi_closure *) closure, (ffi_cif *) cif, (void *) callback, (void *) data, (void *) code);
+}
+
+JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1closure_1free(JNIEnv *, jclass, jlong closure) {
+    ffi_closure_free((void *) closure);
+}

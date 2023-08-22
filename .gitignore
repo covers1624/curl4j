@@ -1,6 +1,7 @@
 /*
 
 !src/
+!thirdparty/
 
 !LICENSE.txt
 !README.MD
@@ -10,6 +11,8 @@
 !gradlew.bat
 !build.gradle
 !settings.gradle
+
+!CMakeLists.txt
 
 !.gitignore
 !.gitmodules

@@ -1,10 +1,8 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
-import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for receiving progress stats.
@@ -14,41 +12,26 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author covers1624
  * @see CurlXferInfoCallbackI
  */
-public abstract class CurlXferInfoCallback extends CURLCallback implements CurlXferInfoCallbackI {
+public class CurlXferInfoCallback extends CurlCallback implements CurlXferInfoCallbackI {
 
-    public static CurlXferInfoCallback create(long functionPointer) {
-        CurlXferInfoCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlXferInfoCallback ? (CurlXferInfoCallback) instance : new Container(functionPointer, instance);
-    }
+    private static final long cif = ffi_prep_cif(
+            ffi_type_int,
+            ffi_type_pointer, ffi_type_long, ffi_type_long, ffi_type_long, ffi_type_long
+    );
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlXferInfoCallbackI.class, "update", long.class, long.class, long.class, long.class, long.class));
 
-    public static CurlXferInfoCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
-
-    public static CurlXferInfoCallback create(CurlXferInfoCallbackI instance) {
-        return instance instanceof CurlXferInfoCallback ? (CurlXferInfoCallback) instance : new Container(instance.address(), instance);
+    public CurlXferInfoCallback(CurlXferInfoCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
     protected CurlXferInfoCallback() {
-        super(CIF);
+        super(cif, callback, null);
     }
 
-    CurlXferInfoCallback(long address) {
-        super(address);
+    @Override
+    public int update(long ptr, long dltotal, long dlnow, long ultotal, long ulnow) {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
     }
 
-    private static final class Container extends CurlXferInfoCallback {
-
-        private final CurlXferInfoCallbackI delegate;
-
-        private Container(long functionPointer, CurlXferInfoCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public int invoke(long ptr, long dltotal, long dlnow, long ultotal, long ulnow) {
-            return delegate.invoke(ptr, dltotal, dlnow, ultotal, ulnow);
-        }
-    }
+    private static native long ffi_callback(Method method);
 }

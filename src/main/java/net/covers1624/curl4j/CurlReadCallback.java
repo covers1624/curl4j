@@ -1,10 +1,9 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
 import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for reading POST/PUT data.
@@ -14,41 +13,26 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author covers1624
  * @see CurlReadCallbackI
  */
-public abstract class CurlReadCallback extends CURLCallback implements CurlReadCallbackI {
+public class CurlReadCallback extends CurlCallback implements CurlReadCallbackI {
 
-    public static CurlReadCallback create(long functionPointer) {
-        CurlReadCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlReadCallback ? (CurlReadCallback) instance : new Container(functionPointer, instance);
-    }
+    private static final long cif = ffi_prep_cif(
+            ffi_type_pointer,
+            ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
+    );
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlReadCallbackI.class, "read", long.class, long.class, long.class, long.class));
 
-    public static CurlReadCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
-
-    public static CurlReadCallback create(CurlReadCallbackI instance) {
-        return instance instanceof CurlReadCallback ? (CurlReadCallback) instance : new Container(instance.address(), instance);
+    public CurlReadCallback(CurlReadCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
     protected CurlReadCallback() {
-        super(CIF);
+        super(cif, callback, null);
     }
 
-    CurlReadCallback(long address) {
-        super(address);
+    @Override
+    public long read(long ptr, long size, long nmemb, long userdata) throws IOException {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
     }
 
-    private static final class Container extends CurlReadCallback {
-
-        private final CurlReadCallbackI delegate;
-
-        private Container(long functionPointer, CurlReadCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public long invoke(long ptr, long size, long nmemb, long userdata) throws IOException {
-            return delegate.invoke(ptr, size, nmemb, userdata);
-        }
-    }
+    private static native long ffi_callback(Method method);
 }

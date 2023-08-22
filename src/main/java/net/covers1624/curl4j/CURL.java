@@ -1,15 +1,9 @@
 package net.covers1624.curl4j;
 
+import net.covers1624.curl4j.core.*;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.PointerBuffer;
-import org.lwjgl.system.*;
 
-import java.nio.ByteBuffer;
-
-import static org.lwjgl.system.APIUtil.apiGetFunctionAddress;
-import static org.lwjgl.system.APIUtil.apiGetFunctionAddressOptional;
-import static org.lwjgl.system.JNI.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static net.covers1624.curl4j.CURL.Functions.*;
 
 /**
  * Native bindings to the <a href="https://curl.se/libcurl">libcurl</a> library.
@@ -32,7 +26,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class CURL {
 
     private static @Nullable String LIB_CURL_OVERRIDE;
-    private static @Nullable SharedLibrary CURL;
+    private static @Nullable Library CURL;
 
     private CURL() { }
 
@@ -52,21 +46,21 @@ public class CURL {
     }
 
     /**
-     * Get the {@link SharedLibrary} handle for libCURL.
+     * Get the {@link Library} handle for libCURL.
      * <p>
      * You can use this to lookup functions that are not exposed here if required.
      * <p>
      * This function will initialize curl, making it impossible to override the library name.
      *
-     * @return The {@link SharedLibrary} for curl.
+     * @return The {@link Library} for curl.
      */
-    public static SharedLibrary getLbCURL() {
+    public static Library getLbCURL() {
         if (CURL == null) {
             String lib = System.getProperty("net.covers1624.curl4j.libname", "libcurl");
             if (LIB_CURL_OVERRIDE != null) {
                 lib = LIB_CURL_OVERRIDE;
             }
-            CURL = Library.loadNative(CURL.class, "net.covers1624.curl4j", lib, false);
+            CURL = LibraryLoader.loadLibrary(lib);
         }
         return CURL;
     }
@@ -2830,7 +2824,7 @@ public class CURL {
      * @return a static ascii string of the libcurl version.
      */
     public static String curl_version() {
-        return memUTF8Safe(invokeP(Functions.curl_version));
+        return ncurl_version(Functions.curl_version);
     }
 
     /**
@@ -2842,7 +2836,7 @@ public class CURL {
      */
     @NativeType ("curl_version_info_data *")
     public static curl_version_info_data curl_version_info() {
-        return curl_version_info_data.create(invokeP(CURLVERSION_NOW, Functions.curl_version_info));
+        return new curl_version_info_data(ncurl_version_info(Functions.curl_version_info));
     }
 
     /**
@@ -2855,7 +2849,7 @@ public class CURL {
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_init.html">documentation</a>.
      */
     public static void curl_global_init(long flags) {
-        invokePV(flags, Functions.curl_global_init);
+        ncurl_global_init(Functions.curl_global_init, flags);
     }
 
     /**
@@ -2867,7 +2861,7 @@ public class CURL {
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_cleanup.html">documentation</a>.
      */
     public static void curl_global_cleanup() {
-        invokeV(Functions.curl_global_cleanup);
+        ncurl_global_cleanup(Functions.curl_global_cleanup);
     }
 
     /**
@@ -2879,7 +2873,7 @@ public class CURL {
      */
     @NativeType ("CURL *")
     public static long curl_easy_init() {
-        return invokeP(Functions.curl_easy_init);
+        return ncurl_easy_init(Functions.curl_easy_init);
     }
 
     /**
@@ -2894,7 +2888,7 @@ public class CURL {
      * @param curl The CURL handle.
      */
     public static void curl_easy_reset(@NativeType ("CURL *") long curl) {
-        invokePV(curl, Functions.curl_easy_reset);
+        ncurl_easy_reset(Functions.curl_easy_reset, curl);
     }
 
     /**
@@ -2906,8 +2900,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value.
      */
-    public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
-        invokePPV(curl, opt, value, Functions.curl_easy_setopt);
+    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
     }
 
     /**
@@ -2934,11 +2928,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value to set.
      */
-    public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nValue = stack.UTF8(value);
-            curl_easy_setopt(curl, opt, memAddress(nValue));
-        }
+    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
     }
 
     /**
@@ -2950,8 +2941,8 @@ public class CURL {
      * @param opt  The option being set.
      * @param func The function.
      */
-    public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CURLCallback func) {
-        curl_easy_setopt(curl, opt, memAddressSafe(func));
+    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CurlCallback func) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, func.getFunctionAddress());
     }
 
     /**
@@ -2963,8 +2954,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param slist The {@link curl_slist}.
      */
-    public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
-        curl_easy_setopt(curl, opt, memAddressSafe(slist));
+    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, slist != null ? slist.address : Memory.NULL);
     }
 
     /**
@@ -2983,12 +2974,12 @@ public class CURL {
      * @param value Pointer to store the value in.
      */
     @NativeType ("CURLcode")
-    public static int curl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt, PointerBuffer value) {
-        return invokePPI(curl, opt, value.address(), Functions.curl_easy_getinfo);
+    public static int curl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt, Pointer value) {
+        return ncurl_easy_getinfo(Functions.curl_easy_getinfo, curl, opt, value.address);
     }
 
     /**
-     * Overload of {@link #curl_easy_getinfo(long, int, PointerBuffer)} for {@link #CURLINFO_STRING} types.
+     * Overload of {@link #curl_easy_getinfo(long, int, Pointer)} for {@link #CURLINFO_STRING} types.
      *
      * @param curl The CURL handle.
      * @param opt  The info to select.
@@ -2998,18 +2989,18 @@ public class CURL {
     public static String curl_easy_getinfo_String(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
         assert (opt & CURLINFO_TYPEMASK) == CURLINFO_STRING;
 
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            PointerBuffer buffer = stack.mallocPointer(1);
-            int ret = curl_easy_getinfo(curl, opt, buffer);
+        try (Memory.Stack stack = Memory.pushStack()) {
+            Pointer pointer = stack.mallocPointer();
+            int ret = curl_easy_getinfo(curl, opt, pointer);
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
-            return MemoryUtil.memUTF8Safe(buffer.get());
+            return pointer.readUtf8Safe();
         }
     }
 
     /**
-     * Overload of {@link #curl_easy_getinfo(long, int, PointerBuffer)} for
+     * Overload of {@link #curl_easy_getinfo(long, int, Pointer)} for
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
@@ -3019,13 +3010,13 @@ public class CURL {
     public static long curl_easy_getinfo_long(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
         assert (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
 
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            PointerBuffer buffer = stack.mallocPointer(1);
-            int ret = curl_easy_getinfo(curl, opt, buffer);
+        try (Memory.Stack stack = Memory.pushStack()) {
+            Pointer pointer = stack.mallocPointer();
+            int ret = curl_easy_getinfo(curl, opt, pointer);
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
-            return buffer.get();
+            return pointer.readLong();
         }
     }
 
@@ -3039,7 +3030,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_easy_perform(@NativeType ("CURL *") long curl) {
-        return invokePI(curl, Functions.curl_easy_perform);
+        return ncurl_easy_perform(curl_easy_perform, curl);
     }
 
     /**
@@ -3053,7 +3044,7 @@ public class CURL {
      * @return The string.
      */
     public static String curl_easy_strerror(@NativeType ("CURLcode") int errornum) {
-        return memUTF8Safe(invokeP(errornum, Functions.curl_easy_strerror));
+        return ncurl_easy_strerror(Functions.curl_easy_strerror, errornum);
     }
 
     /**
@@ -3062,7 +3053,7 @@ public class CURL {
      * @param curl The curl handle destroy.
      */
     public static void curl_easy_cleanup(@NativeType ("CURL *") long curl) {
-        invokePV(curl, Functions.curl_easy_cleanup);
+        ncurl_easy_cleanup(Functions.curl_easy_cleanup, curl);
     }
 
     /**
@@ -3071,7 +3062,7 @@ public class CURL {
      * @return If curl-impersonate is supported.
      */
     public static boolean isCurlImpersonateSupported() {
-        return Functions.curl_easy_impersonate != NULL;
+        return Functions.curl_easy_impersonate != Memory.NULL;
     }
 
     /**
@@ -3081,12 +3072,8 @@ public class CURL {
      * @param target          The impersonation target. E.g. "chrome110"
      * @param default_headers If the default headers should be applied. You probably want true here.
      */
-    public static void curl_easy_impersonate(long curl, String target, boolean default_headers) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nTarget = stack.UTF8(target);
-
-            invokePPI(curl, memAddress(nTarget), default_headers ? 1 : 0, Functions.curl_easy_impersonate);
-        }
+    public static int curl_easy_impersonate(long curl, String target, boolean default_headers) {
+        return ncurl_easy_impersonate(Functions.curl_easy_impersonate, curl, target, default_headers);
     }
 
     /**
@@ -3101,16 +3088,14 @@ public class CURL {
      */
     @Nullable
     public static curl_slist curl_slist_append(@Nullable curl_slist list, String data) {
-        long listPtr = memAddressSafe(list);
+        long listPtr = list != null ? list.address : Memory.NULL;
 
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nData = stack.UTF8(data);
-            long ptr = invokePPP(listPtr, memAddress(nData), Functions.curl_slist_append);
-            if (ptr == listPtr) {
-                return list;
-            }
-            return curl_slist.createSafe(ptr);
+        long ptr = ncurl_slist_append(Functions.curl_slist_append, listPtr, data);
+        if (ptr == listPtr) {
+            return list;
         }
+        if (ptr == Memory.NULL) return null;
+        return new curl_slist(ptr);
     }
 
     /**
@@ -3121,7 +3106,8 @@ public class CURL {
      * @param list The list to free.
      */
     public static void curl_slist_free_all(@Nullable curl_slist list) {
-        invokePV(memAddressSafe(list), Functions.curl_slist_free_all);
+        if (list == null) return;
+        ncurl_slist_free_all(Functions.curl_slist_free_all, list.address);
     }
 
     /**
@@ -3135,7 +3121,7 @@ public class CURL {
      */
     @NativeType ("curl_mime *")
     public static long curl_mime_init(@NativeType ("CURL *") long curl) {
-        return invokePP(curl, Functions.curl_mime_init);
+        return ncurl_mime_init(Functions.curl_mime_init, curl);
     }
 
     /**
@@ -3146,7 +3132,7 @@ public class CURL {
      * @param mime The curl_mime handle.
      */
     public static void curl_mime_free(@NativeType ("curl_mime *") long mime) {
-        invokePV(mime, Functions.curl_mime_free);
+        ncurl_mime_free(Functions.curl_mime_free, mime);
     }
 
     /**
@@ -3160,7 +3146,7 @@ public class CURL {
      */
     @NativeType ("curl_mimepart *")
     public static long curl_mime_addpart(@NativeType ("curl_mime *") long mime) {
-        return invokePP(mime, Functions.curl_mime_addpart);
+        return ncurl_mime_addpart(Functions.curl_mime_addpart, mime);
     }
 
     /**
@@ -3174,11 +3160,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_mime_name(@NativeType ("curl_mime *") long mime, @Nullable String name) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nName = stack.UTF8Safe(name);
-
-            return invokePPI(mime, memAddressSafe(nName), Functions.curl_mime_name);
-        }
+        return ncurl_mime_name(Functions.curl_mime_name, mime, name);
     }
 
     /**
@@ -3192,11 +3174,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_mime_filename(@NativeType ("curl_mime *") long mime, @Nullable String filename) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nFilename = stack.UTF8Safe(filename);
-
-            return invokePPI(mime, memAddressSafe(nFilename), Functions.curl_mime_filename);
-        }
+        return ncurl_mime_filename(Functions.curl_mime_filename, mime, filename);
     }
 
     /**
@@ -3210,11 +3188,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_mime_type(@NativeType ("curl_mime *") long mime, String mimetype) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nMimetype = stack.UTF8(mimetype);
-
-            return invokePPI(mime, memAddress(nMimetype), Functions.curl_mime_type);
-        }
+        return ncurl_mime_type(Functions.curl_mime_type, mime, mimetype);
     }
 
     /**
@@ -3228,11 +3202,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer nMimetype = stack.bytes(data);
-
-            return invokePPI(mime, memAddress(nMimetype), data.length, Functions.curl_mime_data);
-        }
+        return ncurl_mime_data(Functions.curl_mime_filename, mime, data);
     }
 
     /**
@@ -3247,9 +3217,7 @@ public class CURL {
      */
     @NativeType ("CURLcode")
     public static int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
-        // Technically we want PJPPPPI, but LWJGL doesn't give us that. This will only support 32bit's of datasize on 32bit systems.
-        // Or it will break spectacularly, 50-50 imo.
-        return invokePPPPPPI(mime, datasize, readfunc.address(), NULL, NULL, NULL, Functions.curl_mime_data_cb);
+        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), Memory.NULL, Memory.NULL, Memory.NULL);
     }
 
     /**
@@ -3262,29 +3230,55 @@ public class CURL {
 
         private Functions() { }
 
-        private static final SharedLibrary CURL = getLbCURL();
+        private static final net.covers1624.curl4j.core.Library CURL = getLbCURL();
 
-        public static final long curl_version = apiGetFunctionAddress(CURL, "curl_version");
-        public static final long curl_version_info = apiGetFunctionAddress(CURL, "curl_version_info");
-        public static final long curl_global_init = apiGetFunctionAddress(CURL, "curl_global_init");
-        public static final long curl_global_cleanup = apiGetFunctionAddress(CURL, "curl_global_cleanup");
-        public static final long curl_easy_init = apiGetFunctionAddress(CURL, "curl_easy_init");
-        public static final long curl_easy_reset = apiGetFunctionAddress(CURL, "curl_easy_reset");
-        public static final long curl_easy_perform = apiGetFunctionAddress(CURL, "curl_easy_perform");
-        public static final long curl_easy_setopt = apiGetFunctionAddress(CURL, "curl_easy_setopt");
-        public static final long curl_easy_getinfo = apiGetFunctionAddress(CURL, "curl_easy_getinfo");
-        public static final long curl_easy_strerror = apiGetFunctionAddress(CURL, "curl_easy_strerror");
-        public static final long curl_easy_cleanup = apiGetFunctionAddress(CURL, "curl_easy_cleanup");
-        public static final long curl_easy_impersonate = apiGetFunctionAddressOptional(CURL, "curl_easy_impersonate");
-        public static final long curl_slist_append = apiGetFunctionAddress(CURL, "curl_slist_append");
-        public static final long curl_slist_free_all = apiGetFunctionAddress(CURL, "curl_slist_free_all");
-        public static final long curl_mime_init = apiGetFunctionAddress(CURL, "curl_mime_init");
-        public static final long curl_mime_free = apiGetFunctionAddress(CURL, "curl_mime_free");
-        public static final long curl_mime_addpart = apiGetFunctionAddress(CURL, "curl_mime_addpart");
-        public static final long curl_mime_name = apiGetFunctionAddress(CURL, "curl_mime_name");
-        public static final long curl_mime_filename = apiGetFunctionAddress(CURL, "curl_mime_filename");
-        public static final long curl_mime_type = apiGetFunctionAddress(CURL, "curl_mime_type");
-        public static final long curl_mime_data = apiGetFunctionAddress(CURL, "curl_mime_data");
-        public static final long curl_mime_data_cb = apiGetFunctionAddress(CURL, "curl_mime_data_cb");
+        public static final long curl_version = CURL.getFunction("curl_version");
+        public static final long curl_version_info = CURL.getFunction("curl_version_info");
+        public static final long curl_global_init = CURL.getFunction("curl_global_init");
+        public static final long curl_global_cleanup = CURL.getFunction("curl_global_cleanup");
+        public static final long curl_easy_init = CURL.getFunction("curl_easy_init");
+        public static final long curl_easy_reset = CURL.getFunction("curl_easy_reset");
+        public static final long curl_easy_perform = CURL.getFunction("curl_easy_perform");
+        public static final long curl_easy_setopt = CURL.getFunction("curl_easy_setopt");
+        public static final long curl_easy_getinfo = CURL.getFunction("curl_easy_getinfo");
+        public static final long curl_easy_strerror = CURL.getFunction("curl_easy_strerror");
+        public static final long curl_easy_cleanup = CURL.getFunction("curl_easy_cleanup");
+        public static final long curl_easy_impersonate = CURL.getOptionalFunction("curl_easy_impersonate");
+        public static final long curl_slist_append = CURL.getFunction("curl_slist_append");
+        public static final long curl_slist_free_all = CURL.getFunction("curl_slist_free_all");
+        public static final long curl_mime_init = CURL.getFunction("curl_mime_init");
+        public static final long curl_mime_free = CURL.getFunction("curl_mime_free");
+        public static final long curl_mime_addpart = CURL.getFunction("curl_mime_addpart");
+        public static final long curl_mime_name = CURL.getFunction("curl_mime_name");
+        public static final long curl_mime_filename = CURL.getFunction("curl_mime_filename");
+        public static final long curl_mime_type = CURL.getFunction("curl_mime_type");
+        public static final long curl_mime_data = CURL.getFunction("curl_mime_data");
+        public static final long curl_mime_data_cb = CURL.getFunction("curl_mime_data_cb");
+
+        // @formatter:off
+        public static native String ncurl_version(long func);
+        public static native long ncurl_version_info(long func);
+        public static native int ncurl_global_init(long func, long flags);
+        public static native void ncurl_global_cleanup(long func);
+        public static native long ncurl_easy_init(long func);
+        public static native void ncurl_easy_reset(long func, long curl);
+        public static native int ncurl_easy_perform(long func, long curl);
+        public static native int ncurl_easy_setopt(long func, long curl, int opt, long value);
+        public static native int ncurl_easy_setopt(long func, long curl, int opt, String value);
+        public static native int ncurl_easy_getinfo(long func, long curl, int info, long value);
+        public static native String ncurl_easy_strerror(long func, int code);
+        public static native void ncurl_easy_cleanup(long func, long curl);
+        public static native int ncurl_easy_impersonate(long func, long curl, String target, boolean defaultHeaders);
+        public static native long ncurl_slist_append(long func, long list, String data);
+        public static native void ncurl_slist_free_all(long func, long list);
+        public static native long ncurl_mime_init(long func, long curl);
+        public static native void ncurl_mime_free(long func, long mime);
+        public static native long ncurl_mime_addpart(long func, long mime);
+        public static native int ncurl_mime_name(long func, long part, String name);
+        public static native int ncurl_mime_filename(long func, long part, String fileName);
+        public static native int ncurl_mime_type(long func, long part, String mimeType);
+        public static native int ncurl_mime_data(long func, long part, byte[] data);
+        public static native int ncurl_mime_data_cb(long func, long part, long dataSize, long readFunc, long seekFunc, long freeFunc, long userData);
+        // @formatter:on
     }
 }

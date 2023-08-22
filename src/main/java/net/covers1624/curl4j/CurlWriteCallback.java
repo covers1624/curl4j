@@ -1,10 +1,9 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
 import java.io.IOException;
-
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for writing data.
@@ -14,41 +13,27 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author covers1624
  * @see CurlWriteCallbackI
  */
-public abstract class CurlWriteCallback extends CURLCallback implements CurlWriteCallbackI {
+public class CurlWriteCallback extends CurlCallback implements CurlWriteCallbackI {
 
-    public static CurlWriteCallback create(long functionPointer) {
-        CurlWriteCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlWriteCallback ? (CurlWriteCallback) instance : new Container(functionPointer, instance);
-    }
+    private static final long cif = ffi_prep_cif(
+            ffi_type_pointer,
+            ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
+    );
 
-    public static CurlWriteCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlWriteCallbackI.class, "write", long.class, long.class, long.class, long.class));
 
-    public static CurlWriteCallback create(CurlWriteCallbackI instance) {
-        return instance instanceof CurlWriteCallback ? (CurlWriteCallback) instance : new Container(instance.address(), instance);
+    public CurlWriteCallback(CurlWriteCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
     protected CurlWriteCallback() {
-        super(CIF);
+        super(cif, callback, null);
     }
 
-    CurlWriteCallback(long address) {
-        super(address);
+    @Override
+    public long write(long ptr, long size, long nmemb, long userdata) throws IOException {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
     }
 
-    private static final class Container extends CurlWriteCallback {
-
-        private final CurlWriteCallbackI delegate;
-
-        private Container(long functionPointer, CurlWriteCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public long invoke(long ptr, long size, long nmemb, long userdata) throws IOException {
-            return delegate.invoke(ptr, size, nmemb, userdata);
-        }
-    }
+    private static native long ffi_callback(Method method);
 }

@@ -1,8 +1,8 @@
 package net.covers1624.curl4j;
 
-import org.lwjgl.system.Callback;
+import net.covers1624.curl4j.core.Reflect;
 
-import static org.lwjgl.system.MemoryUtil.NULL;
+import java.lang.reflect.Method;
 
 /**
  * A function callback for handling curl headers.
@@ -12,41 +12,26 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author covers1624
  * @see CurlHeaderCallbackI
  */
-public abstract class CurlHeaderCallback extends CURLCallback implements CurlHeaderCallbackI {
+public class CurlHeaderCallback extends CurlCallback implements CurlHeaderCallbackI {
 
-    public static CurlHeaderCallback create(long functionPointer) {
-        CurlHeaderCallbackI instance = Callback.get(functionPointer);
-        return instance instanceof CurlHeaderCallback ? (CurlHeaderCallback) instance : new Container(functionPointer, instance);
-    }
+    private static final long cif = ffi_prep_cif(
+            ffi_type_pointer,
+            ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
+    );
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlHeaderCallbackI.class, "onHeader", String.class, long.class));
 
-    public static CurlHeaderCallback createSafe(long functionPointer) {
-        return functionPointer == NULL ? null : create(functionPointer);
-    }
-
-    public static CurlHeaderCallback create(CurlHeaderCallbackI instance) {
-        return instance instanceof CurlHeaderCallback ? (CurlHeaderCallback) instance : new Container(instance.address(), instance);
+    public CurlHeaderCallback(CurlHeaderCallbackI delegate) {
+        super(cif, callback, delegate);
     }
 
     protected CurlHeaderCallback() {
-        super(CIF);
+        super(cif, callback, null);
     }
 
-    CurlHeaderCallback(long address) {
-        super(address);
+    @Override
+    public void onHeader(String header, long userdata) {
+        throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
     }
 
-    private static final class Container extends CurlHeaderCallback {
-
-        private final CurlHeaderCallbackI delegate;
-
-        private Container(long functionPointer, CurlHeaderCallbackI delegate) {
-            super(functionPointer);
-            this.delegate = delegate;
-        }
-
-        @Override
-        public void invoke(String header, long userdata) {
-            delegate.invoke(header, userdata);
-        }
-    }
+    private static native long ffi_callback(Method method);
 }

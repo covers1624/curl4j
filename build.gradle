@@ -1,6 +1,8 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'c'
+    id "de.undercouch.download" version "5.4.0"
 }
 
 java {
@@ -11,7 +13,16 @@ java {
 }
 
 group 'net.covers1624'
-version '1.0-SNAPSHOT'
+version '2.0-SNAPSHOT'
+
+def libffiVersion = "1d0a28a"
+
+def os = getOsName()
+def arch = getArchName()
+def crossArch = getArchName(project.findProperty("cross_arch"))
+println("OS: " + os)
+println("Host Architecutre: " + arch)
+println("Cross Architecutre: " + crossArch)
 
 repositories {
     mavenLocal()
@@ -19,20 +30,151 @@ repositories {
 }
 
 dependencies {
-    api 'org.lwjgl:lwjgl:3.3.2'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-linux'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-windows'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-macos'
-    api 'org.lwjgl:lwjgl:3.3.2:natives-macos-arm64'
-
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     compileOnly 'org.jetbrains:annotations:24.0.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+model {
+    toolChains {
+        gcc(Gcc) {
+            targets 'linux_x64', 'linux_arm64', 'windows_x64'
+        }
+        clang(Clang) {
+            targets('macos_x64', 'macos_arm64')
+
+            eachPlatform {
+                if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != crossArch) {
+                    cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                    linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                }
+            }
+        }
+    }
+    components {
+        curl4j(NativeLibrarySpec) {
+            targetPlatform "windows_x64"
+            targetPlatform "linux_x64"
+            targetPlatform "linux_arm64"
+            targetPlatform "macos_x64"
+            targetPlatform "macos_arm64"
+
+            sources {
+                c {
+                    source {
+                        srcDir 'src/main/c'
+                        include '*.c'
+                        if (os == 'windows') {
+                            include 'windows/*.c'
+                        } else {
+                            include 'unix/*.c'
+                        }
+                    }
+                    exportedHeaders {
+                        srcDir 'src/generated/c'
+                        srcDir "build/extractLibffi/libffi/include"
+
+                        var jdkDir = javaToolchains.compilerFor {
+                            languageVersion = JavaLanguageVersion.of(8)
+                        }.get().getMetadata().getInstallationPath()
+                        srcDir jdkDir.file('include')
+                        srcDir jdkDir.file('include/linux')
+                        srcDir jdkDir.file('include/darwin')
+                        srcDir jdkDir.file('include/win32')
+                    }
+                }
+            }
+            binaries {
+                all {
+                    linker.args "-L${buildDir}/extractLibffi/libffi", "-lffi"
+                }
+            }
+        }
+    }
+
+    platforms {
+        windows_x64 {
+            architecture "x64"
+        }
+        linux_x64 {
+            architecture "x64"
+        }
+        linux_arm64 {
+            architecture "arm64"
+        }
+        macos_x64 {
+            architecture "x64"
+        }
+        macos_arm64 {
+            architecture "arm64"
+        }
+    }
+
+    buildTypes {
+        debug
+        release
+    }
 }
 
 test {
+    // We need the shared library
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     useJUnitPlatform()
+    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
 }
 
+tasks.register('testJ17', Test) {
+    // We need the shared library
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    useJUnitPlatform()
+    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+compileJava {
+    options.compilerArgs += ['-h', file('src/generated/c')]
+}
+
+jar {
+    mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    def natives = [
+            ['windows', 'x64'],
+            ['linux', 'x64'],
+            ['linux', 'arm64'],
+            ['macos', 'x64'],
+            ['macos', 'arm64'],
+    ]
+    natives.each {o ->
+        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
+            into "META-INF/natives/${o[0]}/${o[1]}/"
+        }
+    }
+}
+
+def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
+def libffiZipDest = new File(buildDir, libffiZipName)
+def libffiExtracted = new File(buildDir, "extractLibffi")
+tasks.register('downloadLibffi', Download) {
+    src "https://covers1624.net/Files/libffi/$libffiZipName"
+    dest libffiZipDest
+}
+
+tasks.register('extractLibffi', Copy) {
+    inputs.file(libffiZipDest)
+    outputs.dir(libffiExtracted)
+    dependsOn('downloadLibffi')
+    from(zipTree(libffiZipDest))
+    into(libffiExtracted)
+}
+
+tasks.withType(CCompile).configureEach {
+    it.dependsOn('extractLibffi')
+    it.inputs.dir(libffiExtracted)
+}
 
 publishing {
     repositories {
@@ -54,5 +196,53 @@ publishing {
 
             from components.java
         }
+    }
+}
+
+
+File cleanDir(File dir) {
+    delete(dir)
+    dir.mkdirs()
+    return dir
+}
+
+def runIn(File dir, Object... args) {
+    exec {
+        commandLine(args)
+        workingDir(dir)
+    }
+}
+
+def getOsName() {
+    def name = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    if (name.contains("windows")) return 'windows'
+    if (name.contains("linux")) return 'linux'
+    if (name.contains("osx") || name.contains("os x") || name.contains("darwin")) return 'macos'
+    if (name.contains("freebsd")) return 'freebsd'
+    return 'unknown'
+}
+
+def getArchName(arch = null) {
+    if (arch == null) {
+        arch = System.getProperty("os.arch")
+    }
+    switch (arch.toLowerCase(Locale.ROOT)) {
+        case 'i386':
+        case 'x86':
+            return 'x32'
+        case 'x64':
+        case 'x86_64':
+        case 'amd64':
+            return 'x64'
+        case 'arm':
+        case 'armv7':
+        case 'armv7l':
+            return 'arm32'
+        case 'arm64':
+        case 'armv8':
+        case 'aarch64':
+            return 'arm64'
+        default:
+            throw new RuntimeException("Unknown architecture: " + arch)
     }
 }
