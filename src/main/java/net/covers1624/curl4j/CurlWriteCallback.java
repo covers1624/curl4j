@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  *
  * @author covers1624
  */
-public class CurlWriteCallback extends Callback {
+public class CurlWriteCallback extends CurlCallback {
 
     private static final long cif = ffi_prep_cif(
             ffi_type_pointer,

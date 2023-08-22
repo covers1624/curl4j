@@ -19,7 +19,7 @@ public class CurlHeaderCallback extends CurlCallback {
             ffi_type_pointer,
             ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
     );
-    private static final long callback = ffi_callback(Reflect.getMethod(CurlHeaderCallbackI.class, "read", String.class, long.class));
+    private static final long callback = ffi_callback(Reflect.getMethod(CurlHeaderCallbackI.class, "onHeader", String.class, long.class));
 
     public CurlHeaderCallback(CurlHeaderCallbackI delegate) {
         super(cif, callback, delegate);

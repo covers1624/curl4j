@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  *
  * @author covers1624
  */
-public class CurlReadCallback extends Callback {
+public class CurlReadCallback extends CurlCallback {
 
     private static final long cif = ffi_prep_cif(
             ffi_type_pointer,
@@ -38,6 +38,6 @@ public class CurlReadCallback extends Callback {
          *                     If the curl operation is running on a Java thread, this will bubble out. Otherwise, it will
          *                     be printed to stderr, and ignored.
          */
-        void read(long ptr, long size, long nmemb, long userdata) throws IOException;
+        long read(long ptr, long size, long nmemb, long userdata) throws IOException;
     }
 }

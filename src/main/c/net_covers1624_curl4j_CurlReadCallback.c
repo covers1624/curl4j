@@ -4,13 +4,18 @@
 
 static jmethodID callback;
 
-static void callback_handler(ffi_cif *, void *ret, void **args, void *user_data) {
+static void read_callback(ffi_cif *, void *ret, void **args, void *user_data) {
     JNIEnv *env = getEnv();
-    *((jint *) ret) = (*env)->CallIntMethod(env, user_data, callback, (jlong) args[0], (jlong) args[1], (jlong) args[2], (jlong) args[3]);
+    *((jint *) ret) = (*env)->CallIntMethod(
+            env,
+            user_data,
+            callback,
+            *(jlong *) args[0], *(jlong *) args[1], *(jlong *) args[2], *(jlong *) args[3]
+    );
     // TODO exception handling when we support non-native threads.
 }
 
 JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CurlReadCallback_ffi_1callback(JNIEnv *env, jclass, jobject method) {
     callback = (*env)->FromReflectedMethod(env, method);
-    return (jlong) &callback_handler;
+    return (jlong) &read_callback;
 }
