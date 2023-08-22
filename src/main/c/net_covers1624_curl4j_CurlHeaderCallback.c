@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include "net_covers1624_curl4j_CurlHeaderCallback.h"
 #include "ffi.h"
