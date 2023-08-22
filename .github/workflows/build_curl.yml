@@ -1,7 +1,8 @@
 name: Build libffi
 
 on:
-  workflow_dispatch:
+  push:
+#  workflow_dispatch:
 
 jobs:
   build_linux_x64:
