@@ -6,7 +6,7 @@ static jmethodID callback;
 
 static void read_callback(ffi_cif *, void *ret, void **args, void *user_data) {
     JNIEnv *env = getEnv();
-    *((jint *) ret) = (*env)->CallIntMethod(
+    *((jlong *) ret) = (*env)->CallLongMethod(
             env,
             user_data,
             callback,
