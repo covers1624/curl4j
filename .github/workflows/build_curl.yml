@@ -16,3 +16,16 @@ jobs:
       - run: |
           .github/scripts/build_curl.sh
 
+  build_linux_arm64:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          run: |
+            apt update
+            apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip golang python3
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain aarch64-unknown-linux-gnu
+            .github/scripts/build_curl.sh
