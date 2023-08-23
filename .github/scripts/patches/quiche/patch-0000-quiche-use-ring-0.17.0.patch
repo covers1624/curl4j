@@ -1,0 +1,11 @@
+--- a/quiche/Cargo.toml	2023-05-10 19:48:05.000000000 +0930
++++ b/quiche/Cargo.toml	2023-08-23 15:43:13.743470855 +0930
+@@ -57,7 +57,7 @@
+ log = { version = "0.4", features = ["std"] }
+ libc = "0.2"
+ libm = "0.2"
+-ring = "0.16"
++ring = { git = "https://github.com/briansmith/ring.git", rev = "f5bd88cc0acd812ec32a80c26b5e053abe271009" }
+ slab = "0.4"
+ lazy_static = "1"
+ octets = { version = "0.2", path = "../octets" }

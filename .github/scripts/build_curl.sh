@@ -12,15 +12,24 @@
 # If anything breaks, abort.
 set -e
 
-script_dir=$(cd "$(dirname "$0")"; pwd)
+script_dir=$(
+  cd "$(dirname "$0")"
+  pwd
+)
+
+os=$(uname -s)
+
+if [ "$os" == "Darwin" ]; then
+  export MACOSX_DEPLOYMENT_TARGET=11.0
+fi
 
 suffix=$1
 
-curr_dir=$(realpath .)
+curr_dir=$(pwd)
 build_dir="$curr_dir/build"
 cache_dir="$curr_dir/cache"
 
-nproc=$(nproc)
+nproc=$(getconf _NPROCESSORS_ONLN)
 
 nghttp2_install_dir="$build_dir/nghttp2"
 nghttp2_version=1.55.1
@@ -95,7 +104,7 @@ function make_boringssl() {
 
   cmake --build . --target ssl --target crypto
   mkdir -p "$boringssl_install_dir"
-  cp -R include "$boringssl_install_dir"
+  cp -R src/include "$boringssl_install_dir"
   mkdir "$boringssl_install_dir/lib"
   cp ssl/libssl.a "$boringssl_install_dir/lib/"
   cp crypto/libcrypto.a "$boringssl_install_dir/lib/"
@@ -145,7 +154,7 @@ function make_zstd() {
   cd zstd
 
   PREFIX="$zstd_install_dir" make lib-mt install CFLAGS="-DZSTD_MULTITHREAD -fPIC" -j "$nproc"
-  rm "$zstd_install_dir/lib/"libzstd.so*
+  rm "$zstd_install_dir/lib/"libzstd.so* || rm "$zstd_install_dir/lib/"libzstd.dylib*
 
   cd ..
 }
@@ -160,8 +169,14 @@ function make_quiche() {
   mv "quiche-$quiche_version" quiche
   cd quiche
 
+  # APPARENTLY, Patch is braindead and does not actually care about the path in the a/b def of the patch.
+  cd quiche
+  # Patch quiche to use alpha version of ring, fixes issues on mac.
+  patch -i "$script_dir/patches/quiche/patch-0000-quiche-use-ring-0.17.0.patch"
+  cd ..
+
   QUICHE_BSSL_PATH="$boringssl_install_dir/lib/" cargo build --package quiche --release --features ffi,pkg-config-meta --target-dir "$quiche_install_dir"
-  rm "$quiche_install_dir/release/libquiche.so"
+  rm "$quiche_install_dir/release/libquiche.so" || rm "$quiche_install_dir/release/libquiche.dylib"
 
   cd ..
 }
@@ -181,8 +196,13 @@ function make_curl() {
 
   autoreconf -fi
 
+  cflags=""
+  if [ "$os" == Linux ]; then
+    cflags="-static-libgcc"
+  fi
+
   ./configure \
-    CFLAGS="-static-libgcc" \
+    CFLAGS="$cflags" \
     LDFLAGS="-Wl,-L$quiche_install_dir/release" \
     --prefix="$curl_install_dir" \
     --with-nghttp2="$nghttp2_install_dir" \
@@ -220,7 +240,14 @@ function package() {
   dir="$build_dir/packaging"
   libcurl_dir="$dir/libcurl"
   mkdir -p "$libcurl_dir"
-  cp "$build_dir/curl/lib/libcurl.so.4.8.0" "$libcurl_dir/libcurl.so"
+  if [ "$os" == "Linux" ]; then
+    cp "$build_dir/curl/lib/libcurl.so.4.8.0" "$libcurl_dir/libcurl.so"
+  elif [ "$os" == "Darwin" ]; then
+    cp "$build_dir/curl/lib/libcurl.4.dylib" "$libcurl_dir/libcurl.dylib"
+  else
+    echo "I don't know where libcurl lives on $os"
+    exit 1
+  fi
   libcurl_zip_name="libcurl-$curl_version-$suffix.zip"
   libcurl_zip="$dir/$libcurl_zip_name"
   cd "$libcurl_dir"
