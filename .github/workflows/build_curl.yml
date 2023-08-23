@@ -36,6 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          brew install automake autoconf libtool cmake ninja
+          brew install automake autoconf libtool cmake ninja sha256sum
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           .github/scripts/build_curl.sh
