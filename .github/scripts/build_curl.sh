@@ -60,7 +60,7 @@ function main() {
   make_boringssl
   make_brotli
   make_zlib
-  make_zstd
+  #    make_zstd
   make_quiche
   make_curl
 
@@ -201,6 +201,8 @@ function make_curl() {
     cflags="-static-libgcc"
   fi
 
+  # TODO, disabled for now, Not actually used as a transport encoding, kinda pointless. Also angry at build issues with it.
+  # --with-zstd="$zstd_install_dir" \
   ./configure \
     CFLAGS="$cflags" \
     LDFLAGS="-Wl,-L$quiche_install_dir/release" \
@@ -208,7 +210,7 @@ function make_curl() {
     --with-nghttp2="$nghttp2_install_dir" \
     --with-brotli="$brotli_install_dir" \
     --with-zlib="$zlib_install_dir" \
-    --with-zstd="$zstd_install_dir" \
+    --without-zstd \
     --with-openssl="$boringssl_install_dir" \
     --with-quiche="$quiche_install_dir/release" \
     --disable-manual \
