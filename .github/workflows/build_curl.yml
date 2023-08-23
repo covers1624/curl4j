@@ -39,3 +39,13 @@ jobs:
           brew install automake autoconf libtool cmake ninja coreutils
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           .github/scripts/build_curl.sh
+
+# One day GitHub will make this easy for us.. For now, someone with an m1 runs the script manually.
+#  build_macos_arm64:
+#    runs-on: macos-11
+#    steps:
+#      - uses: actions/checkout@v3
+#      - run: |
+#          brew install automake autoconf libtool cmake ninja coreutils
+#          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#          .github/scripts/build_curl.sh
