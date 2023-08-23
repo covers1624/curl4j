@@ -104,7 +104,7 @@ function make_boringssl() {
 
   cmake --build . --target ssl --target crypto
   mkdir -p "$boringssl_install_dir"
-  cp -R src/include "$boringssl_install_dir"
+  cp -R include "$boringssl_install_dir"
   mkdir "$boringssl_install_dir/lib"
   cp ssl/libssl.a "$boringssl_install_dir/lib/"
   cp crypto/libcrypto.a "$boringssl_install_dir/lib/"
