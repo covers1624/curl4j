@@ -26,8 +26,7 @@ jobs:
           distro: ubuntu22.04
           run: |
             apt update
-            apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip golang python3
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip python3
             source "$HOME/.cargo/env"
             .github/scripts/build_curl.sh
 
@@ -37,7 +36,6 @@ jobs:
       - uses: actions/checkout@v3
       - run: |
           brew install automake autoconf libtool cmake ninja coreutils
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           .github/scripts/build_curl.sh
 
 # One day GitHub will make this easy for us.. For now, someone with an m1 runs the script manually.
