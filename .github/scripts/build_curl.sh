@@ -34,8 +34,15 @@ nproc=$(getconf _NPROCESSORS_ONLN)
 nghttp2_install_dir="$build_dir/nghttp2"
 nghttp2_version=1.55.1
 
-boringssl_install_dir="$build_dir/boringssl"
-boringssl_version=3a667d10e94186fd503966f5638e134fe9fb4080
+# Technically quictls/openssl
+openssl_install_dir="$build_dir/openssl"
+openssl_version=3.1.2-quic1
+
+ngtcp2_install_dir="$build_dir/ngtcp2"
+ngtcp2_version=0.18.0
+
+nghttp3_install_dir="$build_dir/nghttp3"
+nghttp3_version=0.14.0
 
 brotli_install_dir="$build_dir/brotli"
 brotli_version=1.0.9
@@ -46,9 +53,6 @@ zlib_version=1.3
 zstd_install_dir="$build_dir/zstd"
 zstd_version=1.5.5
 
-quiche_install_dir="$build_dir/quiche"
-quiche_version=0.17.2
-
 curl_install_dir="$build_dir/curl"
 curl_version=8.2.1
 curl_version_under=8_2_1
@@ -57,11 +61,12 @@ function main() {
   mkdir -p "$cache_dir"
   rm -rf "$build_dir"
   make_nghttp2
-  make_boringssl
+  make_openssl
+  make_ngtcp2
+  make_nghttp3
   make_brotli
   make_zlib
   #    make_zstd
-  make_quiche
   make_curl
 
   package
@@ -86,29 +91,68 @@ function make_nghttp2() {
   cd ..
 }
 
-function make_boringssl() {
-  echo "Making BoringSSL"
-  zip="$cache_dir/boringssl.zip"
-  download_file "$zip" "https://github.com/google/boringssl/archive/$boringssl_version.zip"
-
-  rm -rf boringssl
+function make_openssl() {
+  echo "Making OpenSSL"
+  zip="$cache_dir/openssl.zip"
+  download_file "$zip" "https://github.com/quictls/openssl/archive/refs/tags/openssl-$openssl_version.zip"
+  rm -rf openssl
   unzip "$zip"
-  mv "boringssl-$boringssl_version" boringssl
-  cd boringssl
 
-  cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_POSITION_INDEPENDENT_CODE=on \
-    -DCMAKE_C_FLAGS="-Wno-unknown-warning-option -Wno-stringop-overflow -Wno-array-bounds" \
-    -GNinja
+  mv openssl-openssl-$openssl_version openssl
+  cd openssl
 
-  cmake --build . --target ssl --target crypto
-  mkdir -p "$boringssl_install_dir"
-  cp -R include "$boringssl_install_dir"
-  mkdir "$boringssl_install_dir/lib"
-  cp ssl/libssl.a "$boringssl_install_dir/lib/"
-  cp crypto/libcrypto.a "$boringssl_install_dir/lib/"
+  ./Configure -static --pic --prefix="$openssl_install_dir"
+  make -j "$nproc"
+  make install_sw
+  cd ..
+}
 
+function make_ngtcp2() {
+  echo "Making ngtpc2"
+  zip="$cache_dir/ngtcp2.zip"
+  download_file "$zip" "https://github.com/ngtcp2/ngtcp2/archive/refs/tags/v$ngtcp2_version.zip"
+
+  rm -rf ngtcp2
+  unzip "$zip"
+  mv "ngtcp2-$ngtcp2_version" ngtcp2
+  cd ngtcp2
+
+  autoreconf -i
+
+  ./configure \
+    --prefix="$ngtcp2_install_dir" \
+    --with-pic \
+    --enable-lib-only \
+    --disable-shared \
+    --with-jemalloc=no \
+    --with-openssl \
+    PKG_CONFIG_PATH="$openssl_install_dir/lib64/pkgconfig"
+
+  make -j "$nproc"
+  make install
+  cd ..
+}
+
+function make_nghttp3() {
+  echo "Making nghttp3"
+  zip="$cache_dir/nghttp3.zip"
+  download_file "$zip" "https://github.com/ngtcp2/nghttp3/archive/refs/tags/v$nghttp3_version.zip"
+
+  rm -rf nghttp3
+  unzip "$zip"
+  mv "nghttp3-$nghttp3_version" nghttp3
+  cd nghttp3
+
+  autoreconf -i
+
+  ./configure \
+    --prefix="$nghttp3_install_dir" \
+    --with-pic \
+    --enable-lib-only \
+    --disable-shared
+
+  make -j "$nproc"
+  make install
   cd ..
 }
 
@@ -159,28 +203,6 @@ function make_zstd() {
   cd ..
 }
 
-function make_quiche() {
-  echo "Making Quiche"
-  zip="$cache_dir/quiche.tar.gz"
-  download_file "$zip" "https://github.com/cloudflare/quiche/archive/refs/tags/$quiche_version.tar.gz"
-
-  rm -rf quiche
-  tar -xvf "$zip"
-  mv "quiche-$quiche_version" quiche
-  cd quiche
-
-  # APPARENTLY, Patch is braindead and does not actually care about the path in the a/b def of the patch.
-  cd quiche
-  # Patch quiche to use alpha version of ring, fixes issues on mac.
-  patch -i "$script_dir/patches/quiche/patch-0000-quiche-use-ring-0.17.0.patch"
-  cd ..
-
-  QUICHE_BSSL_PATH="$boringssl_install_dir/lib/" cargo build --package quiche --release --features ffi,pkg-config-meta --target-dir "$quiche_install_dir"
-  rm "$quiche_install_dir/release/libquiche.so" || rm "$quiche_install_dir/release/libquiche.dylib"
-
-  cd ..
-}
-
 function make_curl() {
   echo "Making curl"
   zip="$cache_dir/curl.tar.bz2"
@@ -205,14 +227,14 @@ function make_curl() {
   # --with-zstd="$zstd_install_dir" \
   ./configure \
     CFLAGS="$cflags" \
-    LDFLAGS="-Wl,-L$quiche_install_dir/release" \
     --prefix="$curl_install_dir" \
     --with-nghttp2="$nghttp2_install_dir" \
     --with-brotli="$brotli_install_dir" \
     --with-zlib="$zlib_install_dir" \
     --without-zstd \
-    --with-openssl="$boringssl_install_dir" \
-    --with-quiche="$quiche_install_dir/release" \
+    --with-openssl="$openssl_install_dir" \
+    --with-ngtcp2="$ngtcp2_install_dir" \
+    --with-nghttp3="$nghttp3_install_dir" \
     --disable-manual \
     --disable-static \
     --disable-dict \
@@ -260,14 +282,13 @@ function package() {
   echo "$libcurl_checksum" >"$libcurl_zip.sha256"
 
   licenses_dir="$dir/licenses"
-  mkdir -p "$licenses_dir/boringssl" && cp "$curr_dir/boringssl/LICENSE" "$licenses_dir/boringssl/LICENSE"
   mkdir -p "$licenses_dir/brotli" && cp "$curr_dir/brotli/LICENSE" "$licenses_dir/brotli/LICENSE"
   mkdir -p "$licenses_dir/curl" && cp "$curr_dir/curl/COPYING" "$licenses_dir/curl/COPYING"
   mkdir -p "$licenses_dir/nghttp2" && cp "$curr_dir/nghttp2/COPYING" "$licenses_dir/nghttp2/COPYING"
-  mkdir -p "$licenses_dir/quiche" && cp "$curr_dir/quiche/COPYING" "$licenses_dir/quiche/COPYING"
+  mkdir -p "$licenses_dir/nghttp3" && cp "$curr_dir/nghttp3/COPYING" "$licenses_dir/nghttp3/COPYING"
+  mkdir -p "$licenses_dir/ngtcp2" && cp "$curr_dir/ngtcp2/COPYING" "$licenses_dir/ngtcp2/COPYING"
+  mkdir -p "$licenses_dir/openssl" && cp "$curr_dir/openssl/LICENSE.txt" "$licenses_dir/openssl/LICENSE.txt"
   mkdir -p "$licenses_dir/zlib" && cp "$curr_dir/zlib/LICENSE" "$licenses_dir/zlib/LICENSE"
-  mkdir -p "$licenses_dir/zstd" && cp "$curr_dir/zstd/LICENSE" "$licenses_dir/zstd/LICENSE"
-  mkdir -p "$licenses_dir/zstd" && cp "$curr_dir/zstd/COPYING" "$licenses_dir/zstd/COPYING"
   licenses_zip_name="libcurl-$curl_version-$suffix-licenses.zip"
   licenses_zip="$dir/$licenses_zip_name"
   cd "$licenses_dir"
