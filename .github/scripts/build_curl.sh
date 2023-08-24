@@ -119,11 +119,6 @@ function make_ngtcp2() {
 
   autoreconf -i
 
-  libdir="lib64"
-  if [ "$os" == Darwin ]; then
-    libdir="lib"
-  fi
-
   ./configure \
     --prefix="$ngtcp2_install_dir" \
     --with-pic \
@@ -131,7 +126,7 @@ function make_ngtcp2() {
     --disable-shared \
     --with-jemalloc=no \
     --with-openssl \
-    PKG_CONFIG_PATH="$openssl_install_dir/$libdir/pkgconfig"
+    PKG_CONFIG_PATH="$openssl_install_dir/lib64/pkgconfig:$openssl_install_dir/lib/pkgconfig"
 
   make -j "$nproc"
   make install
