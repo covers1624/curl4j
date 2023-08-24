@@ -101,7 +101,7 @@ function make_openssl() {
   mv openssl-openssl-$openssl_version openssl
   cd openssl
 
-  ./Configure -static --pic --prefix="$openssl_install_dir"
+  ./Configure no-shared -fpic --prefix="$openssl_install_dir"
   make -j "$nproc"
   make install_sw
   cd ..
@@ -119,6 +119,11 @@ function make_ngtcp2() {
 
   autoreconf -i
 
+  libdir="lib64"
+  if [ "$os" == Darwin ]; then
+    libdir="lib"
+  fi
+
   ./configure \
     --prefix="$ngtcp2_install_dir" \
     --with-pic \
@@ -126,7 +131,7 @@ function make_ngtcp2() {
     --disable-shared \
     --with-jemalloc=no \
     --with-openssl \
-    PKG_CONFIG_PATH="$openssl_install_dir/lib64/pkgconfig"
+    PKG_CONFIG_PATH="$openssl_install_dir/$libdir/pkgconfig"
 
   make -j "$nproc"
   make install
