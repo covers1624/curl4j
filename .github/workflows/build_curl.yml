@@ -27,7 +27,6 @@ jobs:
           run: |
             apt update
             apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip python3
-            source "$HOME/.cargo/env"
             .github/scripts/build_curl.sh
 
   build_macos_x64:
