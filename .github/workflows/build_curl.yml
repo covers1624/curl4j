@@ -26,7 +26,7 @@ jobs:
           distro: ubuntu22.04
           run: |
             apt update
-            apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip python3
+            apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip python3 pkgconf
             .github/scripts/build_curl.sh
 
   build_macos_x64:
