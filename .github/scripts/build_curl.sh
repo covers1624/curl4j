@@ -254,7 +254,8 @@ function make_curl() {
     --without-libidn2 \
     --without-libpsl
 
-  make -j "$nproc"
+  #  make -j "$nproc"
+  make V=1
   make install
   cd ..
 }
