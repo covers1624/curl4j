@@ -34,10 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          find /usr/local/bin/openssl
-          find /usr/local/opt/openssl
-          find /usr/local/etc/openssl@1.1
-          find /usr/local/etc/openssl@3
+          find /. -name ssl.h
           brew install automake autoconf libtool cmake ninja coreutils
           .github/scripts/build_curl.sh
 
