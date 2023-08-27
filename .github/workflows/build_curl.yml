@@ -34,14 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          # GO AWAY OUTDATED OPENSSL REEEEEE
-          brew uninstall openssl@1.1
-          echo "FINE BREW, DO NOTHING, ILL REMOVE THEM MYSELF. /me thanos gauntlet gearup scene"
-          rm -rfv /usr/local/bin/openssl
-          rm -rfv /usr/local/opt/openssl
-          rm -rfv /usr/local/etc/openssl@1.1
-          rm -rfv /usr/local/etc/openssl@3
-          echo "YEEEEEEETED"
+          ls -alh /System/Library/Frameworks
           brew install automake autoconf libtool cmake ninja coreutils
           .github/scripts/build_curl.sh
 
