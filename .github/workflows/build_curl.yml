@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          find /. -name ssl.h
+          rm -rf /usr/local/Cellar/openssl*/**/include
           brew install automake autoconf libtool cmake ninja coreutils
           .github/scripts/build_curl.sh
 
