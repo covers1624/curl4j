@@ -4,6 +4,11 @@ on:
   push:
 #  workflow_dispatch:
 
+env:
+  FILE_SERVER: ${{ secrets.FILE_SERVER }}
+  FILE_SERVER_USER: ${{ secrets.FILE_SERVER_USER }}
+  FILE_SERVER_PASSWORD: ${{ secrets.FILE_SERVER_PASSWORD }}
+
 jobs:
   build_linux_x64:
     runs-on: ubuntu-22.04
@@ -25,6 +30,9 @@ jobs:
           arch: aarch64
           distro: ubuntu22.04
           run: |
+            export FILE_SERVER=${{ secrets.FILE_SERVER }}
+            export FILE_SERVER_USER=${{ secrets.FILE_SERVER_USER }}
+            export FILE_SERVER_PASSWORD=${{ secrets.FILE_SERVER_PASSWORD }}
             apt update
             apt install -y build-essential curl git autoconf libtool cmake ninja-build zip unzip python3 pkgconf
             .github/scripts/build_curl.sh
