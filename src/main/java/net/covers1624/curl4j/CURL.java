@@ -56,7 +56,7 @@ public class CURL {
      */
     public static Library getLbCURL() {
         if (CURL == null) {
-            String lib = System.getProperty("net.covers1624.curl4j.libname", "libcurl");
+            String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", "curl");
             if (LIB_CURL_OVERRIDE != null) {
                 lib = LIB_CURL_OVERRIDE;
             }
@@ -3230,7 +3230,7 @@ public class CURL {
 
         private Functions() { }
 
-        private static final net.covers1624.curl4j.core.Library CURL = getLbCURL();
+        private static final Library CURL = getLbCURL();
 
         public static final long curl_version = CURL.getFunction("curl_version");
         public static final long curl_version_info = CURL.getFunction("curl_version_info");

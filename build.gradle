@@ -236,14 +236,14 @@ test {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     useJUnitPlatform()
-    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
 }
 
 tasks.register('testJ17', Test) {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     useJUnitPlatform()
-    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(17)
     }
