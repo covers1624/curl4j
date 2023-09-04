@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     id 'java-library'
     id 'maven-publish'
@@ -16,6 +18,7 @@ group 'net.covers1624'
 version '2.0-SNAPSHOT'
 
 def libffiVersion = "1d0a28a"
+def libcurlVersion = "8.2.1"
 
 def os = getOsName()
 def arch = getArchName()
@@ -36,6 +39,14 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
+
+def natives = [
+        ['windows', 'x64'],
+        ['linux', 'x64'],
+        ['linux', 'arm64'],
+        ['macos', 'x64'],
+        ['macos', 'arm64'],
+]
 
 model {
     toolChains {
@@ -139,22 +150,6 @@ compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
-jar {
-    mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    def natives = [
-            ['windows', 'x64'],
-            ['linux', 'x64'],
-            ['linux', 'arm64'],
-            ['macos', 'x64'],
-            ['macos', 'arm64'],
-    ]
-    natives.each {o ->
-        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
-            into "META-INF/natives/${o[0]}/${o[1]}/"
-        }
-    }
-}
-
 def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
 def libffiZipDest = new File(buildDir, libffiZipName)
 def libffiExtracted = new File(buildDir, "extractLibffi")
@@ -176,6 +171,78 @@ tasks.withType(CCompile).configureEach {
     it.inputs.dir(libffiExtracted)
 }
 
+def dlCurlDir = new File(buildDir, "downloadLibcurl")
+def extractedCurlDir = new File(buildDir, "extractLibcurl")
+def extractCurlTasks = []
+natives.each {
+    def nOS = it[0]
+    def nArch = it[1]
+
+    def task_suffix = "libcurl_${nOS}_${nArch}"
+    def destZip = new File(dlCurlDir, "libcurl-$libcurlVersion-${nOS}_${nArch}.zip")
+    def zipTask = dlAndVerifyTask(
+            task_suffix,
+            "https://covers1624.net/Files/libcurl/${destZip.name}",
+            destZip,
+            "https://covers1624.net/Files/libcurl/${destZip.name}.sha256",
+            new File(dlCurlDir, "${destZip.name}.sha256")
+    )
+    def destLicenses = new File(dlCurlDir, "libcurl-$libcurlVersion-${nOS}_${nArch}-licenses.zip")
+    def licenseTask = dlAndVerifyTask(
+            "${task_suffix}-licenses",
+            "https://covers1624.net/Files/libcurl/${destLicenses.name}",
+            destLicenses,
+            "https://covers1624.net/Files/libcurl/${destLicenses.name}.sha256",
+            new File(dlCurlDir, "${destLicenses.name}.sha256")
+    )
+
+    def extractDest = new File(new File(extractedCurlDir, nOS), nArch)
+    def extractCurl = tasks.register("extract_$task_suffix", Copy) { task ->
+        task.dependsOn(zipTask)
+        task.dependsOn(licenseTask)
+
+        task.inputs.file(destZip)
+        task.inputs.file(destLicenses)
+        task.outputs.dir(extractDest)
+
+        from(zipTree(destZip))
+        from(zipTree(destLicenses)) {
+            into('licenses')
+        }
+        into(extractDest)
+    }
+
+    extractCurlTasks << extractCurl
+}
+
+jar {
+    mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    natives.each { o ->
+        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
+            into "META-INF/natives/${o[0]}/${o[1]}/"
+        }
+    }
+}
+
+tasks.register("jarWithLibCurl", Jar) {
+    classifier = "libcurl"
+
+    dependsOn extractCurlTasks
+    mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+
+    from sourceSets.main.output
+
+    natives.each { o ->
+        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
+            into "META-INF/natives/${o[0]}/${o[1]}/"
+        }
+    }
+
+    from(extractedCurlDir) {
+        into 'META-INF/natives'
+    }
+}
+
 publishing {
     repositories {
         if (System.getenv('MAVEN_PASS')) {
@@ -194,7 +261,9 @@ publishing {
             artifactId project.archivesBaseName
             version rootProject.version
 
-            from components.java
+            artifact jar
+            artifact sourcesJar
+            artifact jarWithLibCurl
         }
     }
 }
@@ -244,5 +313,52 @@ def getArchName(arch = null) {
             return 'arm64'
         default:
             throw new RuntimeException("Unknown architecture: " + arch)
+    }
+}
+
+String hashFile(File file) {
+    def digest = MessageDigest.getInstance("SHA-256")
+    return file.newInputStream().withCloseable {
+        int len
+        byte[] buf = new byte[4096]
+        while ((len = it.read(buf)) != -1) {
+            digest.update(buf, 0, len)
+        }
+        return digest.digest().encodeHex().toString()
+    }
+}
+
+def dlAndVerifyTask(String name, String urlFile, File fileDest, String urlHash, File sha256Dest) {
+    return tasks.register("download_$name") { task ->
+        def fName = fileDest.name
+        def fNameHash = sha256Dest.name
+        task.outputs.file(fileDest)
+        task.outputs.file(sha256Dest)
+        doLast {
+            if (fileDest.exists() && sha256Dest.exists()) {
+                if (hashFile(fileDest) != sha256Dest.text.trim()) {
+                    println("File $fName did not pass hash check, it will be re-downloaded.")
+                    fileDest.delete()
+                    sha256Dest.delete()
+                } else {
+                    task.setDidWork(false)
+                    return
+                }
+            }
+
+            download.run {
+                src urlHash
+                dest sha256Dest
+            }
+
+            download.run {
+                src urlFile
+                dest fileDest
+            }
+
+            if (hashFile(fileDest) != sha256Dest.text.trim()) {
+                throw new RuntimeException("File $fName is corrupt.")
+            }
+        }
     }
 }
