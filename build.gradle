@@ -150,24 +150,30 @@ compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
-def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
-def libffiZipDest = new File(buildDir, libffiZipName)
-def libffiExtracted = new File(buildDir, "extractLibffi")
-tasks.register('downloadLibffi', Download) {
-    src "https://covers1624.net/Files/libffi/$libffiZipName"
-    dest libffiZipDest
-}
+def libffiZipDest = new File(buildDir, "libffi-$libffiVersion-${os}_${crossArch}.zip")
+def dlLibffi = dlAndVerifyTask(
+        "libffi-${os}_${crossArch}",
+        "https://covers1624.net/Files/libffi/${libffiZipDest.name}",
+        libffiZipDest,
+        "https://covers1624.net/Files/libffi/${libffiZipDest.name}.sha256",
+        new File(buildDir, "${libffiZipDest.name}.sha256")
 
-tasks.register('extractLibffi', Copy) {
+)
+
+def libffiExtracted = new File(buildDir, "extractLibffi")
+def extractLibffi = tasks.register('extractLibffi', Copy) {
+    dependsOn(dlLibffi)
+
     inputs.file(libffiZipDest)
     outputs.dir(libffiExtracted)
-    dependsOn('downloadLibffi')
+
     from(zipTree(libffiZipDest))
     into(libffiExtracted)
 }
 
 tasks.withType(CCompile).configureEach {
-    it.dependsOn('extractLibffi')
+    it.dependsOn(extractLibffi)
+
     it.inputs.dir(libffiExtracted)
 }
 
