@@ -268,20 +268,6 @@ publishing {
     }
 }
 
-
-File cleanDir(File dir) {
-    delete(dir)
-    dir.mkdirs()
-    return dir
-}
-
-def runIn(File dir, Object... args) {
-    exec {
-        commandLine(args)
-        workingDir(dir)
-    }
-}
-
 def getOsName() {
     def name = System.getProperty("os.name").toLowerCase(Locale.ROOT);
     if (name.contains("windows")) return 'windows'
