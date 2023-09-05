@@ -3008,7 +3008,8 @@ public class CURL {
      * @return The string.
      */
     public static long curl_easy_getinfo_long(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
-        assert (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
+        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
 
         try (Memory.Stack stack = Memory.pushStack()) {
             Pointer pointer = stack.mallocPointer();
@@ -3016,7 +3017,8 @@ public class CURL {
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
-            return pointer.readLong();
+
+            return isLong ? pointer.readCLong() : pointer.readSizeT();
         }
     }
 
