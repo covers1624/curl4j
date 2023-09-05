@@ -38,6 +38,8 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
 }
 
 def natives = [
@@ -235,15 +237,23 @@ tasks.register("jarWithLibCurl", Jar) {
 test {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    dependsOn extractCurlTasks
+
     useJUnitPlatform()
+
     systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl.name', new File(extractedCurlDir, "${os}/${arch}/${System.mapLibraryName('curl')}"))
 }
 
 tasks.register('testJ17', Test) {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    dependsOn extractCurlTasks
+
     useJUnitPlatform()
+
     systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl.name', new File(extractedCurlDir, "${os}/${arch}/${System.mapLibraryName('curl')}"))
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(17)
     }
