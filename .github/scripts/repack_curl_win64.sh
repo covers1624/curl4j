@@ -30,7 +30,7 @@ libcurl_zip="$curr_dir/$libcurl_zip_name"
 libcurl_dir="$package_dir/libcurl"
 
 mkdir -p "$libcurl_dir"
-cp -r "$dist_dir/bin/libcurl-x64.dll" "$libcurl_dir/libcurl.dll"
+cp -r "$dist_dir/bin/libcurl-x64.dll" "$libcurl_dir/curl.dll"
 
 echo "Packaging libcurl.."
 cd "$libcurl_dir"
