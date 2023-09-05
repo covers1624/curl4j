@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-#  pull_request:
+  pull_request:
 
 jobs:
   build_linux_x64:
