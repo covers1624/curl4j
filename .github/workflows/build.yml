@@ -85,7 +85,7 @@ jobs:
             mingw-w64-x86_64-gcc-libs
       - run: |
           export JAVA_HOME=$(cygpath $JAVA_HOME)
-          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17 --no-daemon
+          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17 -si --no-daemon
         shell: msys2 {0}
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
