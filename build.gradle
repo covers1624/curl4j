@@ -165,6 +165,7 @@ tasks.withType(CCompile).configureEach {
 def dlCurlDir = new File(buildDir, "downloadLibcurl")
 def extractedCurlDir = new File(buildDir, "extractLibcurl")
 def extractCurlTasks = []
+def extractCurlTasksMap = [:]
 natives.each {
     def nOS = it[0]
     def nArch = it[1]
@@ -202,6 +203,7 @@ natives.each {
         }
         into(extractDest)
     }
+    extractCurlTasksMap["${nOS}_$nArch"] = extractCurl
 
     extractCurlTasks << extractCurl
 }
@@ -237,7 +239,7 @@ tasks.register("jarWithLibCurl", Jar) {
 test {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    dependsOn extractCurlTasks
+    dependsOn extractCurlTasksMap["${os}_$arch"]
 
     useJUnitPlatform()
 
@@ -248,7 +250,7 @@ test {
 tasks.register('testJ17', Test) {
     // We need the shared library
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    dependsOn extractCurlTasks
+    dependsOn extractCurlTasksMap["${os}_$arch"]
 
     useJUnitPlatform()
 
