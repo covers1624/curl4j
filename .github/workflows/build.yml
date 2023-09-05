@@ -27,7 +27,7 @@ jobs:
         with:
           name: linux_x64
           path: |
-            build/**/*.so
+            build/libs/**/*.so
 
   build_linux_arm64:
     runs-on: ubuntu-22.04
@@ -55,7 +55,7 @@ jobs:
         with:
           name: linux_arm64
           path: |
-            build/**/*.so
+            build/libs/**/*.so
 
   build_windows_x64:
     runs-on: windows-2022
@@ -92,7 +92,7 @@ jobs:
         with:
           name: windows_x64
           path: |
-            build/**/*.dll
+            build/libs/**/*.dll
 
   build_macos_x64:
     runs-on: macos-11
@@ -125,7 +125,7 @@ jobs:
         with:
           name: macos_x64
           path: |
-            build/**/*.dylib
+            build/libs/**/*.dylib
 
   build_macos_arm64:
     runs-on: macos-11
@@ -153,7 +153,7 @@ jobs:
         with:
           name: macos_arm64
           path: |
-            build/**/*.dylib
+            build/libs/**/*.dylib
 
   package:
     runs-on: ubuntu-22.04
@@ -163,23 +163,23 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: linux_arm64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: windows_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: macos_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: macos_arm64
-          path: ./build/
+          path: ./build/libs/
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
