@@ -1,6 +1,7 @@
 package net.covers1624.curl4j;
 
 import fi.iki.elonen.NanoHTTPD;
+import net.covers1624.curl4j.tests.TestBase;
 import net.covers1624.curl4j.tests.TestWebServer;
 import net.covers1624.curl4j.util.CurlInput;
 import net.covers1624.curl4j.util.HeaderCollector;
@@ -9,20 +10,16 @@ import net.covers1624.curl4j.util.SListHeaderWrapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Random;
 
 import static net.covers1624.curl4j.CURL.*;
+import static net.covers1624.curl4j.tests.TestWebServer.getBody;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by covers1624 on 4/9/23.
  */
-public class CURLTests {
-
-    private static final char[] HEX = "0123456789abcdef".toCharArray();
+public class CURLTests extends TestBase {
 
     @Test
     public void testCurlVersion() {
@@ -145,38 +142,5 @@ public class CURLTests {
             curl_easy_cleanup(curl);
             curl_global_cleanup();
         }
-    }
-
-    private static String randomHex(int len) {
-        Random rand = new Random();
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < len; i++) {
-            builder.append(HEX[rand.nextInt(HEX.length)]);
-        }
-        return builder.toString();
-    }
-
-    private static byte[] randomBytes(int len) {
-        byte[] data = new byte[len];
-        new Random().nextBytes(data);
-        return data;
-    }
-
-    // Thanks NanoHTTPD, your _fantastic_ at this. /s
-    private static byte[] getBody(NanoHTTPD.IHTTPSession session) throws IOException {
-        String lenStr = session.getHeaders().get("content-length");
-        if (lenStr == null) throw new RuntimeException("Expected Content-Length header.");
-        int nBytes = Integer.parseInt(lenStr);
-
-        InputStream is = session.getInputStream();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        int total = 0;
-        int len;
-        byte[] buf = new byte[1024];
-        while (total < nBytes && (len = is.read(buf, 0, Math.min(buf.length, nBytes - total))) != -1) {
-            bos.write(buf, 0, len);
-            total += len;
-        }
-        return bos.toByteArray();
     }
 }

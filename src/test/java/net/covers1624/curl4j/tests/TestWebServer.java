@@ -2,7 +2,9 @@ package net.covers1624.curl4j.tests;
 
 import fi.iki.elonen.NanoHTTPD;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +55,24 @@ public class TestWebServer extends NanoHTTPD implements AutoCloseable {
         } catch (IOException ex) {
             throw new RuntimeException("Failed to get random port.", ex);
         }
+    }
+
+    // Thanks NanoHTTPD, your _fantastic_ at this. /s
+    public static byte[] getBody(NanoHTTPD.IHTTPSession session) throws IOException {
+        String lenStr = session.getHeaders().get("content-length");
+        if (lenStr == null) throw new RuntimeException("Expected Content-Length header.");
+        int nBytes = Integer.parseInt(lenStr);
+
+        InputStream is = session.getInputStream();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int total = 0;
+        int len;
+        byte[] buf = new byte[1024];
+        while (total < nBytes && (len = is.read(buf, 0, Math.min(buf.length, nBytes - total))) != -1) {
+            bos.write(buf, 0, len);
+            total += len;
+        }
+        return bos.toByteArray();
     }
 
     public interface Handler {
