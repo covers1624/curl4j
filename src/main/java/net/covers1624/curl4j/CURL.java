@@ -2959,6 +2959,19 @@ public class CURL {
     }
 
     /**
+     * Set a curl {@link #CURLOPTTYPE_BLOB} option.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_setopt.html">documentation</a>.
+     *
+     * @param curl The CURL handle.
+     * @param opt  The option being set.
+     * @param blob The {@link curl_blob}.
+     */
+    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_blob blob) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, blob != null ? blob.address : Memory.NULL);
+    }
+
+    /**
      * Request internal information from the curl session with this function.
      * The data pointed to will be filled in accordingly and can be relied upon
      * only if the function returns {@link #CURLE_OK}. This function is intended to get
