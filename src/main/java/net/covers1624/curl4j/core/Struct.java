@@ -40,6 +40,10 @@ public class Struct {
         return addMember(new CLongMember(sizeof, name));
     }
 
+    public Member<Long> sizeTMember(String name) {
+        return addMember(new SizeTMember(sizeof, name));
+    }
+
     public Member<Set<String>> stringListMember(String name) {
         return addMember(new StringListMember(sizeof, name));
     }
@@ -118,6 +122,11 @@ public class Struct {
         private CLongMember(int offset, String name) { super(offset, name); }
         @Override public Long read(long struct) { return Memory.getCLong(struct + offset); }
         @Override public int size() { return NativeTypes.CLONG_SIZE; }
+    }
+    private static class SizeTMember extends Member<Long> {
+        private SizeTMember(int offset, String name) { super(offset, name); }
+        @Override public Long read(long struct) { return Memory.getSizeT(struct + offset); }
+        @Override public int size() { return NativeTypes.SIZE_T_SIZE; }
     }
     private static class PointerMember extends Member<Pointer> {
         private PointerMember(int offset, String name) { super(offset, name); }
