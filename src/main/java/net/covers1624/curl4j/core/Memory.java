@@ -13,8 +13,8 @@ public final class Memory {
 
     private static final Unsafe UNSAFE;
 
-    // 64k per stack.
-    private static final ThreadLocal<Stack> STACKS = ThreadLocal.withInitial(() -> new Stack(64 * 1024));
+    // 16k per stack.
+    private static final ThreadLocal<Stack> STACKS = ThreadLocal.withInitial(() -> new Stack(16 * 1024));
 
     static {
         LibraryLoader.initialize();
