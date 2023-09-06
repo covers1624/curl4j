@@ -13,12 +13,10 @@ import java.util.function.Function;
  */
 public class Struct {
 
-    private static final int ALIGN = OperatingSystem.CURRENT == OperatingSystem.WINDOWS ? 8 : 0x4000_0000;
-
     private final List<Member<?>> members = new ArrayList<>();
     private boolean finished;
     private int sizeof;
-    private int align = ALIGN;
+    private int align = 0;
 
     private <T> Member<T> addMember(Member<T> member) {
         if (finished) throw new IllegalArgumentException("Finish has already been called.");
@@ -75,6 +73,7 @@ public class Struct {
     public void finish() {
         if (finished) return;
         sizeof = align(sizeof, align);
+        finished = true;
     }
 
     public int getSize() {
