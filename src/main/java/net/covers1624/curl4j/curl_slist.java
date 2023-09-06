@@ -24,11 +24,11 @@ public class curl_slist extends Pointer {
 
     @Nullable
     public String data() {
-        return DATA.read(address);
+        return DATA.read(this);
     }
 
     @Nullable
     public curl_slist next() {
-        return NEXT.read(address);
+        return NEXT.read(this);
     }
 }
