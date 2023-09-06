@@ -27,6 +27,12 @@ println("OS: " + os)
 println("Host Architecutre: " + arch)
 println("Cross Architecutre: " + crossArch)
 
+sourceSets {
+    main {
+        resources.srcDirs += file('src/generated/resources')
+    }
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

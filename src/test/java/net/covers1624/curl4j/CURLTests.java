@@ -143,4 +143,41 @@ public class CURLTests extends TestBase {
             curl_global_cleanup();
         }
     }
+
+    @Test
+    public void testCABundle() throws IOException {
+        byte[] data = randomBytes(32);
+
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+        long curl = curl_easy_init();
+
+        try (TestWebServer server = new TestWebServer("/selfsigned.jks", "password"))  {
+            server.addHandler("/", r -> {
+                assertEquals(NanoHTTPD.Method.GET, r.getMethod());
+                return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, null, new ByteArrayInputStream(data), data.length);
+            });
+
+            curl_easy_reset(curl);
+
+            new CABundle(server.getCertBytes("key")).apply(curl);
+
+            curl_easy_setopt(curl, CURLOPT_URL, server.addr("/"));
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
+
+            try (MemoryCurlOutput output = MemoryCurlOutput.create()) {
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, output.callback());
+
+                int result = curl_easy_perform(curl);
+
+                assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertArrayEquals(data, output.bytes());
+            }
+        } finally {
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+        }
+    }
 }
