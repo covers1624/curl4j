@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 
 /**
- * Created by covers1624 on 16/8/23.
+ * @author covers1624
  */
 public class Pointer {
 

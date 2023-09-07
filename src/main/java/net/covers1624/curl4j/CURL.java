@@ -15,8 +15,6 @@ import static net.covers1624.curl4j.CURL.Functions.*;
  * proxies, HTTP/2, HTTP/3, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos),
  * file transfer resume, http proxy tunneling and more!</p>
  * <p>
- * This library is structured very much like other LWJGL native bindings and uses a very similar pattern.
- * <p>
  * This class does not contain any high-level abstractions around cURL, these are designed to be raw low-level bindings
  * similar, if not identical, to cURL.
  *

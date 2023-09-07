@@ -4,7 +4,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Created by covers1624 on 17/8/23.
+ * @author covers1624
  */
 @Retention(RetentionPolicy.CLASS)
 public @interface NativeType {

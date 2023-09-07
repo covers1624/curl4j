@@ -24,7 +24,7 @@ import static net.covers1624.curl4j.CURL.*;
  * You may choose to override the default CABundle via {@link #setDefault} this will cause all calls to {@link #getDefault} to
  * use the new default. By default, the built-in bundle is used. This may always be obtained via {@link #builtIn}.
  * <p>
- * Created by covers1624 on 6/9/23.
+ * @author covers1624
  */
 public final class CABundle {
 

@@ -1,7 +1,7 @@
 package net.covers1624.curl4j.core;
 
 /**
- * Created by covers1624 on 14/8/23.
+ * @author covers1624
  */
 public abstract class Library {
 

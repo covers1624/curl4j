@@ -3,7 +3,7 @@ package net.covers1624.curl4j.core;
 import java.lang.reflect.Method;
 
 /**
- * Created by covers1624 on 16/8/23.
+ * @author covers1624
  */
 public final class Reflect {
 

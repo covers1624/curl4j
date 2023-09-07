@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Created by covers1624 on 16/8/23.
+ * @author covers1624
  */
 public class Struct {
 
