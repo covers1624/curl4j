@@ -188,6 +188,11 @@ jobs:
           restore-keys: gradle-
       - name: Build
         run: ./gradlew jar jarWithLibCurl -si
+      - name: Publish
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+        env:
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+        run: ./gradlew publish
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
