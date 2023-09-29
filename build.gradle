@@ -4,7 +4,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'c'
-    id "de.undercouch.download" version "5.4.0"
+    id 'de.undercouch.download' version '5.4.0'
 }
 
 java {
@@ -17,15 +17,15 @@ java {
 group 'net.covers1624'
 version '2.0-SNAPSHOT'
 
-def libffiVersion = "1d0a28a"
-def libcurlVersion = "8.2.1"
+def libffiVersion = '1d0a28a'
+def libcurlVersion = '8.2.1'
 
 def os = getOsName()
 def arch = getArchName()
-def crossArch = getArchName(project.findProperty("cross_arch"))
-println("OS: " + os)
-println("Host Architecutre: " + arch)
-println("Cross Architecutre: " + crossArch)
+def crossArch = getArchName(project.findProperty('cross_arch'))
+println("OS: $os")
+println("Host Architecutre: $arch")
+println("Cross Architecutre: $crossArch")
 
 sourceSets {
     main {
@@ -70,19 +70,19 @@ model {
 
             eachPlatform {
                 if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != crossArch) {
-                    cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
-                    linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                    cCompiler.withArguments({ it << '--target=arm64-apple-darwin20.6.0' })
+                    linker.withArguments({ it << '--target=arm64-apple-darwin20.6.0' })
                 }
             }
         }
     }
     components {
         curl4j(NativeLibrarySpec) {
-            targetPlatform "windows_x64"
-            targetPlatform "linux_x64"
-            targetPlatform "linux_arm64"
-            targetPlatform "macos_x64"
-            targetPlatform "macos_arm64"
+            targetPlatform 'windows_x64'
+            targetPlatform 'linux_x64'
+            targetPlatform 'linux_arm64'
+            targetPlatform 'macos_x64'
+            targetPlatform 'macos_arm64'
 
             sources {
                 c {
@@ -97,7 +97,7 @@ model {
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
-                        srcDir "build/extractLibffi/libffi/include"
+                        srcDir 'build/extractLibffi/libffi/include'
 
                         var jdkDir = javaToolchains.compilerFor {
                             languageVersion = JavaLanguageVersion.of(8)
@@ -111,7 +111,7 @@ model {
             }
             binaries {
                 all {
-                    linker.args "-L${buildDir}/extractLibffi/libffi", "-lffi"
+                    linker.args "-L${buildDir}/extractLibffi/libffi", '-lffi'
                 }
             }
         }
@@ -119,19 +119,19 @@ model {
 
     platforms {
         windows_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         linux_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         linux_arm64 {
-            architecture "arm64"
+            architecture 'arm64'
         }
         macos_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         macos_arm64 {
-            architecture "arm64"
+            architecture 'arm64'
         }
     }
 
@@ -155,7 +155,7 @@ def dlLibffi = dlAndVerifyTask(
 
 )
 
-def libffiExtracted = new File(buildDir, "extractLibffi")
+def libffiExtracted = new File(buildDir, 'extractLibffi')
 def extractLibffi = tasks.register('extractLibffi', Copy) {
     dependsOn(dlLibffi)
 
@@ -172,7 +172,7 @@ tasks.withType(CCompile).configureEach {
     it.inputs.dir(libffiExtracted)
 }
 
-def dlCurlDir = new File(buildDir, "downloadLibcurl")
+def dlCurlDir = new File(buildDir, 'downloadLibcurl')
 def extractedCurlDir = new File(buildDir, "extractLibcurl")
 def extractCurlTasks = []
 def extractCurlTasksMap = [:]
@@ -227,8 +227,8 @@ jar {
     }
 }
 
-tasks.register("jarWithLibCurl", Jar) {
-    classifier = "libcurl"
+tasks.register('jarWithLibCurl', Jar) {
+    classifier = 'libcurl'
 
     dependsOn extractCurlTasks
     mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
@@ -275,7 +275,7 @@ publishing {
     repositories {
         if (System.getenv('MAVEN_PASS')) {
             maven {
-                url "https://nexus.covers1624.net/repository/maven-snapshots/"
+                url 'https://nexus.covers1624.net/repository/maven-snapshots/'
                 credentials {
                     username 'covers1624'
                     password System.getenv('MAVEN_PASS')
@@ -307,7 +307,7 @@ def getOsName() {
 
 def getArchName(arch = null) {
     if (arch == null) {
-        arch = System.getProperty("os.arch")
+        arch = System.getProperty('os.arch')
     }
     switch (arch.toLowerCase(Locale.ROOT)) {
         case 'i386':
@@ -326,12 +326,12 @@ def getArchName(arch = null) {
         case 'aarch64':
             return 'arm64'
         default:
-            throw new RuntimeException("Unknown architecture: " + arch)
+            throw new RuntimeException("Unknown architecture: $arch")
     }
 }
 
 String hashFile(File file) {
-    def digest = MessageDigest.getInstance("SHA-256")
+    def digest = MessageDigest.getInstance('SHA-256')
     return file.newInputStream().withCloseable {
         int len
         byte[] buf = new byte[4096]
