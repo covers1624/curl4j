@@ -5,6 +5,7 @@ plugins {
     id 'maven-publish'
     id 'c'
     id 'de.undercouch.download' version '5.4.0'
+    id 'com.palantir.git-version' version '3.0.0'
 }
 
 java {
@@ -15,7 +16,14 @@ java {
 }
 
 group 'net.covers1624'
-version '2.0-SNAPSHOT'
+version '2.0'
+
+def details = versionDetails()
+if (details.branchName == 'main') {
+    version += ".${details.commitDistance}"
+} else {
+    version += "-SNAPSHOT"
+}
 
 def libffiVersion = '1d0a28a'
 def libcurlVersion = '8.2.1'
