@@ -46,7 +46,7 @@ jobs:
           arch: aarch64
           distro: ubuntu22.04
           githubToken: ${{ github.token }}
-          install: apt update && apt install -y openjdk-8-jdk-headless build-essential
+          install: apt update && apt install -y openjdk-8-jdk-headless build-essential git
           run: |
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary test testJ17 -si --console=plain --no-daemon
