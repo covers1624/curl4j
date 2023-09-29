@@ -7,14 +7,14 @@ import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 
 /**
- * Created by covers1624 on 14/8/23.
+ * @author covers1624
  */
 public final class Memory {
 
     private static final Unsafe UNSAFE;
 
-    // 64k per stack.
-    private static final ThreadLocal<Stack> STACKS = ThreadLocal.withInitial(() -> new Stack(64 * 1024));
+    // 16k per stack.
+    private static final ThreadLocal<Stack> STACKS = ThreadLocal.withInitial(() -> new Stack(16 * 1024));
 
     static {
         LibraryLoader.initialize();
@@ -55,6 +55,7 @@ public final class Memory {
     public static float getFloat(long ptr) { return UNSAFE.getFloat(null, ptr); }
     public static double getDouble(long ptr) { return UNSAFE.getDouble(null, ptr); }
     public static long getCLong(long ptr) { return NativeTypes.CLONG_SIZE == 8 ? getLong(ptr) : getInt(ptr); }
+    public static long getSizeT(long ptr) { return NativeTypes.SIZE_T_SIZE == 8 ? getLong(ptr) : getInt(ptr); }
     public static long getAddress(long ptr) { return NativeTypes.IS_64BIT ? getLong(ptr) : getInt(ptr); }
     public static void putByte(long ptr, byte value) { UNSAFE.putByte(null, ptr, value); }
     public static void putShort(long ptr, short value) { UNSAFE.putShort(null, ptr, value); }
@@ -63,6 +64,7 @@ public final class Memory {
     public static void putFloat(long ptr, float value) { UNSAFE.putFloat(null, ptr, value); }
     public static void putDouble(long ptr, double value) { UNSAFE.putDouble(null, ptr, value); }
     public static void putCLong(long ptr, long value) { if (NativeTypes.CLONG_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
+    public static void putSizeT(long ptr, long value) { if (NativeTypes.SIZE_T_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
     public static void putAddress(long ptr, long value) { if (NativeTypes.IS_64BIT) putLong(ptr, value); else putInt(ptr, (int) value); }
     // @formatter:on
 

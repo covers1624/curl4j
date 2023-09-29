@@ -1,0 +1,22 @@
+--- a/configure.ac	2023-07-24 00:44:56.000000000 +0930
++++ b/configure.ac	2023-08-21 13:48:11.758834889 +0930
+@@ -1502,7 +1502,8 @@
+ 
+   dnl if given with a prefix, we set -L and -I based on that
+   if test -n "$PREFIX_BROTLI"; then
+-    LIB_BROTLI="-lbrotlidec"
++    # Use brotli static libraries.
++    LIB_BROTLI="-lbrotlidec-static -lbrotlicommon-static"
+     LD_BROTLI=-L${PREFIX_BROTLI}/lib$libsuff
+     CPP_BROTLI=-I${PREFIX_BROTLI}/include
+     DIR_BROTLI=${PREFIX_BROTLI}/lib$libsuff
+@@ -1512,7 +1513,8 @@
+   CPPFLAGS="$CPPFLAGS $CPP_BROTLI"
+   LIBS="$LIB_BROTLI $LIBS"
+ 
+-  AC_CHECK_LIB(brotlidec, BrotliDecoderDecompress)
++  # Add action-if-found to avoid additional -lbrotlidec in LIBS
++  AC_CHECK_LIB(brotlidec, BrotliDecoderDecompress, AC_DEFINE(HAVE_LIBBROTLI, 1, [Define to 1 if libbrotli exists]))
+ 
+   AC_CHECK_HEADERS(brotli/decode.h,
+     curl_brotli_msg="enabled (libbrotlidec)"

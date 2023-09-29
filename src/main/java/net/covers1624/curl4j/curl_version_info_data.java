@@ -6,7 +6,7 @@ import net.covers1624.curl4j.core.Struct;
 import java.util.Set;
 
 /**
- * Created by covers1624 on 16/8/23.
+ * @author covers1624
  */
 public class curl_version_info_data extends Pointer {
 

@@ -8,18 +8,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-
 /**
- * Created by covers1624 on 16/8/23.
+ * @author covers1624
  */
 public class Struct {
-
-    private static final int ALIGN = OperatingSystem.CURRENT == OperatingSystem.WINDOWS ? 8 : 0x4000_0000;
 
     private final List<Member<?>> members = new ArrayList<>();
     private boolean finished;
     private int sizeof;
-    private int align = ALIGN;
+    private int align = 0;
 
     private <T> Member<T> addMember(Member<T> member) {
         if (finished) throw new IllegalArgumentException("Finish has already been called.");
@@ -41,6 +38,10 @@ public class Struct {
         return addMember(new CLongMember(sizeof, name));
     }
 
+    public Member<Long> sizeTMember(String name) {
+        return addMember(new SizeTMember(sizeof, name));
+    }
+
     public Member<Set<String>> stringListMember(String name) {
         return addMember(new StringListMember(sizeof, name));
     }
@@ -58,6 +59,11 @@ public class Struct {
             }
 
             @Override
+            public void write(long struct, T value) {
+                throw new UnsupportedOperationException("Unable to set struct member yet.");
+            }
+
+            @Override
             public int size() {
                 return NativeTypes.POINTER_SIZE;
             }
@@ -67,6 +73,7 @@ public class Struct {
     public void finish() {
         if (finished) return;
         sizeof = align(sizeof, align);
+        finished = true;
     }
 
     public int getSize() {
@@ -99,7 +106,14 @@ public class Struct {
 
         public abstract T read(long struct);
 
+        public void write(Pointer pointer, T value) {
+            write(pointer.address, value);
+        }
+
+        public abstract void write(long struct, T value);
+
         public abstract int size();
+
         // TODO, this should probably be exposed as a creation property
         public int alignment() { return size(); }
     }
@@ -108,21 +122,31 @@ public class Struct {
     private static class IntMember extends Member<Integer> {
         private IntMember(int offset, String name) { super(offset, name); }
         @Override public Integer read(long struct) { return Memory.getInt(struct + offset); }
+        @Override public void write(long struct, Integer value) { Memory.putInt(struct + offset, value); }
         @Override public int size() { return NativeTypes.CINT_SIZE; }
     }
     private static class StringMember extends Member<@Nullable String> {
         private StringMember(int offset, String name) { super(offset, name); }
         @Override public String read(long struct) { return Memory.readUtf8(Memory.getAddress(struct + offset)); }
+        @Override public void write(long struct, String value) { throw new UnsupportedOperationException("Unable to set Strings yet."); }
         @Override public int size() { return NativeTypes.POINTER_SIZE; }
     }
     private static class CLongMember extends Member<Long> {
         private CLongMember(int offset, String name) { super(offset, name); }
         @Override public Long read(long struct) { return Memory.getCLong(struct + offset); }
+        @Override public void write(long struct, Long value) { Memory.putCLong(struct + offset, value); }
         @Override public int size() { return NativeTypes.CLONG_SIZE; }
+    }
+    private static class SizeTMember extends Member<Long> {
+        private SizeTMember(int offset, String name) { super(offset, name); }
+        @Override public Long read(long struct) { return Memory.getSizeT(struct + offset); }
+        @Override public void write(long struct, Long value) { Memory.putSizeT(struct + offset, value); }
+        @Override public int size() { return NativeTypes.SIZE_T_SIZE; }
     }
     private static class PointerMember extends Member<Pointer> {
         private PointerMember(int offset, String name) { super(offset, name); }
         @Override public Pointer read(long struct) { return new Pointer(Memory.getAddress(struct + offset)); }
+        @Override public void write(long struct, Pointer value) { Memory.putAddress(struct + offset, value.address); }
         @Override public int size() { return NativeTypes.POINTER_SIZE; }
     }
     // @formatter:on
@@ -143,6 +167,11 @@ public class Struct {
             }
 
             return protocols;
+        }
+
+        @Override
+        public void write(long struct, Set<String> value) {
+            throw new UnsupportedOperationException("Unable to set StringList yet.");
         }
 
         @Override

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by covers1624 on 15/8/23.
+ * @author covers1624
  */
 public abstract class Callback implements AutoCloseable {
 

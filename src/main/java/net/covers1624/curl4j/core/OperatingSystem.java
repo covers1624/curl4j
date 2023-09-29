@@ -3,7 +3,7 @@ package net.covers1624.curl4j.core;
 import java.util.Locale;
 
 /**
- * Created by covers1624 on 15/8/23.
+ * @author covers1624
  */
 public enum OperatingSystem {
     WINDOWS,

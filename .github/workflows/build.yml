@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-#  pull_request:
+  pull_request:
 
 jobs:
   build_linux_x64:
@@ -27,7 +27,7 @@ jobs:
         with:
           name: linux_x64
           path: |
-            build/**/*.so
+            build/libs/**/*.so
 
   build_linux_arm64:
     runs-on: ubuntu-22.04
@@ -46,7 +46,7 @@ jobs:
           arch: aarch64
           distro: ubuntu22.04
           githubToken: ${{ github.token }}
-          install: apt update && apt install -y openjdk-8-jdk-headless build-essential
+          install: apt update && apt install -y openjdk-8-jdk-headless build-essential git
           run: |
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
             ./gradlew curl4jLinux_arm64ReleaseSharedLibrary test testJ17 -si --console=plain --no-daemon
@@ -55,7 +55,7 @@ jobs:
         with:
           name: linux_arm64
           path: |
-            build/**/*.so
+            build/libs/**/*.so
 
   build_windows_x64:
     runs-on: windows-2022
@@ -81,18 +81,19 @@ jobs:
           update: true
           install: >-
             base-devel
+            git
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
       - run: |
           export JAVA_HOME=$(cygpath $JAVA_HOME)
-          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17 --no-daemon
+          ./gradlew curl4jWindows_x64ReleaseSharedLibrary test testJ17 -si --no-daemon
         shell: msys2 {0}
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: windows_x64
           path: |
-            build/**/*.dll
+            build/libs/**/*.dll
 
   build_macos_x64:
     runs-on: macos-11
@@ -125,7 +126,7 @@ jobs:
         with:
           name: macos_x64
           path: |
-            build/**/*.dylib
+            build/libs/**/*.dylib
 
   build_macos_arm64:
     runs-on: macos-11
@@ -153,7 +154,7 @@ jobs:
         with:
           name: macos_arm64
           path: |
-            build/**/*.dylib
+            build/libs/**/*.dylib
 
   package:
     runs-on: ubuntu-22.04
@@ -163,23 +164,23 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: linux_arm64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: windows_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: macos_x64
-          path: ./build/
+          path: ./build/libs/
       - uses: actions/download-artifact@v3
         with:
           name: macos_arm64
-          path: ./build/
+          path: ./build/libs/
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -187,7 +188,12 @@ jobs:
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
       - name: Build
-        run: ./gradlew jar -si
+        run: ./gradlew jar jarWithLibCurl -si
+      - name: Publish
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+        env:
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+        run: ./gradlew publish
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:

@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          brew install automake autoconf libtool
+          brew install automake autoconf libtool coreutils
           .github/scripts/build_libffi.sh 1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c macos_x64
 
 # One day GitHub will make this easy for us.. For now, someone with an m1 runs the script manually.

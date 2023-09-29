@@ -59,6 +59,10 @@ public class MemoryTests {
         Memory.putCLong(addr, clong);
         assertEquals(clong, Memory.getCLong(addr));
 
+        long sizeT = NativeTypes.SIZE_T_SIZE == 8 ? 0x7CFA69B27D59AF1CL : 0x7CFA69B2L;
+        Memory.putSizeT(addr, sizeT);
+        assertEquals(sizeT, Memory.getSizeT(addr));
+
         long address = NativeTypes.IS_64BIT ? 0x7CFA69B27D59AF1CL : 0xECFA69B2L;
         Memory.putAddress(addr, address);
         assertEquals(address, Memory.getAddress(addr));

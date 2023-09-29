@@ -1,8 +1,11 @@
+import java.security.MessageDigest
+
 plugins {
     id 'java-library'
     id 'maven-publish'
     id 'c'
-    id "de.undercouch.download" version "5.4.0"
+    id 'de.undercouch.download' version '5.4.0'
+    id 'com.palantir.git-version' version '3.0.0'
 }
 
 java {
@@ -13,20 +16,38 @@ java {
 }
 
 group 'net.covers1624'
-version '2.0-SNAPSHOT'
+version '2.0'
 
-def libffiVersion = "1d0a28a"
+def details = versionDetails()
+if (details.branchName == 'main') {
+    version += ".${details.commitDistance}"
+} else {
+    version += "-SNAPSHOT"
+}
+
+def libffiVersion = '1d0a28a'
+def libcurlVersion = '8.2.1'
 
 def os = getOsName()
 def arch = getArchName()
-def crossArch = getArchName(project.findProperty("cross_arch"))
-println("OS: " + os)
-println("Host Architecutre: " + arch)
-println("Cross Architecutre: " + crossArch)
+def crossArch = getArchName(project.findProperty('cross_arch'))
+println("OS: $os")
+println("Host Architecutre: $arch")
+println("Cross Architecutre: $crossArch")
+
+sourceSets {
+    main {
+        resources.srcDirs += file('src/generated/resources')
+    }
+}
 
 repositories {
     mavenLocal()
     mavenCentral()
+}
+
+configurations {
+    testCompileOnly.extendsFrom compileOnly
 }
 
 dependencies {
@@ -35,7 +56,17 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
 }
+
+def natives = [
+        ['windows', 'x64'],
+        ['linux', 'x64'],
+        ['linux', 'arm64'],
+        ['macos', 'x64'],
+        ['macos', 'arm64'],
+]
 
 model {
     toolChains {
@@ -47,19 +78,19 @@ model {
 
             eachPlatform {
                 if (it.platform.name == 'macos_arm64' && os == 'macos' && arch != crossArch) {
-                    cCompiler.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
-                    linker.withArguments({ it << "--target=arm64-apple-darwin20.6.0" })
+                    cCompiler.withArguments({ it << '--target=arm64-apple-darwin20.6.0' })
+                    linker.withArguments({ it << '--target=arm64-apple-darwin20.6.0' })
                 }
             }
         }
     }
     components {
         curl4j(NativeLibrarySpec) {
-            targetPlatform "windows_x64"
-            targetPlatform "linux_x64"
-            targetPlatform "linux_arm64"
-            targetPlatform "macos_x64"
-            targetPlatform "macos_arm64"
+            targetPlatform 'windows_x64'
+            targetPlatform 'linux_x64'
+            targetPlatform 'linux_arm64'
+            targetPlatform 'macos_x64'
+            targetPlatform 'macos_arm64'
 
             sources {
                 c {
@@ -74,7 +105,7 @@ model {
                     }
                     exportedHeaders {
                         srcDir 'src/generated/c'
-                        srcDir "build/extractLibffi/libffi/include"
+                        srcDir 'build/extractLibffi/libffi/include'
 
                         var jdkDir = javaToolchains.compilerFor {
                             languageVersion = JavaLanguageVersion.of(8)
@@ -88,7 +119,7 @@ model {
             }
             binaries {
                 all {
-                    linker.args "-L${buildDir}/extractLibffi/libffi", "-lffi"
+                    linker.args "-L${buildDir}/extractLibffi/libffi", '-lffi'
                 }
             }
         }
@@ -96,19 +127,19 @@ model {
 
     platforms {
         windows_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         linux_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         linux_arm64 {
-            architecture "arm64"
+            architecture 'arm64'
         }
         macos_x64 {
-            architecture "x64"
+            architecture 'x64'
         }
         macos_arm64 {
-            architecture "arm64"
+            architecture 'arm64'
         }
     }
 
@@ -118,69 +149,141 @@ model {
     }
 }
 
-test {
-    // We need the shared library
-    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    useJUnitPlatform()
-    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
-}
-
-tasks.register('testJ17', Test) {
-    // We need the shared library
-    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    useJUnitPlatform()
-    systemProperty('net.covers1624.libcurl4j.libname', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
-    javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
 compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
+def libffiZipDest = new File(buildDir, "libffi-$libffiVersion-${os}_${crossArch}.zip")
+def dlLibffi = dlAndVerifyTask(
+        "libffi-${os}_${crossArch}",
+        "https://covers1624.net/Files/libffi/${libffiZipDest.name}",
+        libffiZipDest,
+        "https://covers1624.net/Files/libffi/${libffiZipDest.name}.sha256",
+        new File(buildDir, "${libffiZipDest.name}.sha256")
+
+)
+
+def libffiExtracted = new File(buildDir, 'extractLibffi')
+def extractLibffi = tasks.register('extractLibffi', Copy) {
+    dependsOn(dlLibffi)
+
+    inputs.file(libffiZipDest)
+    outputs.dir(libffiExtracted)
+
+    from(zipTree(libffiZipDest))
+    into(libffiExtracted)
+}
+
+tasks.withType(CCompile).configureEach {
+    it.dependsOn(extractLibffi)
+
+    it.inputs.dir(libffiExtracted)
+}
+
+def dlCurlDir = new File(buildDir, 'downloadLibcurl')
+def extractedCurlDir = new File(buildDir, "extractLibcurl")
+def extractCurlTasks = []
+def extractCurlTasksMap = [:]
+natives.each {
+    def nOS = it[0]
+    def nArch = it[1]
+
+    def task_suffix = "libcurl_${nOS}_${nArch}"
+    def destZip = new File(dlCurlDir, "libcurl-$libcurlVersion-${nOS}_${nArch}.zip")
+    def zipTask = dlAndVerifyTask(
+            task_suffix,
+            "https://covers1624.net/Files/libcurl/${destZip.name}",
+            destZip,
+            "https://covers1624.net/Files/libcurl/${destZip.name}.sha256",
+            new File(dlCurlDir, "${destZip.name}.sha256")
+    )
+    def destLicenses = new File(dlCurlDir, "libcurl-$libcurlVersion-${nOS}_${nArch}-licenses.zip")
+    def licenseTask = dlAndVerifyTask(
+            "${task_suffix}-licenses",
+            "https://covers1624.net/Files/libcurl/${destLicenses.name}",
+            destLicenses,
+            "https://covers1624.net/Files/libcurl/${destLicenses.name}.sha256",
+            new File(dlCurlDir, "${destLicenses.name}.sha256")
+    )
+
+    def extractDest = new File(new File(extractedCurlDir, nOS), nArch)
+    def extractCurl = tasks.register("extract_$task_suffix", Copy) { task ->
+        task.dependsOn(zipTask)
+        task.dependsOn(licenseTask)
+
+        task.inputs.file(destZip)
+        task.inputs.file(destLicenses)
+        task.outputs.dir(extractDest)
+
+        from(zipTree(destZip))
+        from(zipTree(destLicenses)) {
+            into('licenses')
+        }
+        into(extractDest)
+    }
+    extractCurlTasksMap["${nOS}_$nArch"] = extractCurl
+
+    extractCurlTasks << extractCurl
+}
+
 jar {
     mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
-    def natives = [
-            ['windows', 'x64'],
-            ['linux', 'x64'],
-            ['linux', 'arm64'],
-            ['macos', 'x64'],
-            ['macos', 'arm64'],
-    ]
-    natives.each {o ->
+    natives.each { o ->
         from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
             into "META-INF/natives/${o[0]}/${o[1]}/"
         }
     }
 }
 
-def libffiZipName = "libffi-$libffiVersion-${os}_${crossArch}.zip"
-def libffiZipDest = new File(buildDir, libffiZipName)
-def libffiExtracted = new File(buildDir, "extractLibffi")
-tasks.register('downloadLibffi', Download) {
-    src "https://covers1624.net/Files/libffi/$libffiZipName"
-    dest libffiZipDest
+tasks.register('jarWithLibCurl', Jar) {
+    classifier = 'libcurl'
+
+    dependsOn extractCurlTasks
+    mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+
+    from sourceSets.main.output
+
+    natives.each { o ->
+        from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
+            into "META-INF/natives/${o[0]}/${o[1]}/"
+        }
+    }
+
+    from(extractedCurlDir) {
+        into 'META-INF/natives'
+    }
 }
 
-tasks.register('extractLibffi', Copy) {
-    inputs.file(libffiZipDest)
-    outputs.dir(libffiExtracted)
-    dependsOn('downloadLibffi')
-    from(zipTree(libffiZipDest))
-    into(libffiExtracted)
+test {
+    // We need the shared library
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    dependsOn extractCurlTasksMap["${os}_$arch"]
+
+    useJUnitPlatform()
+
+    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl.name', new File(extractedCurlDir, "${os}/${arch}/${System.mapLibraryName('curl')}"))
 }
 
-tasks.withType(CCompile).configureEach {
-    it.dependsOn('extractLibffi')
-    it.inputs.dir(libffiExtracted)
+tasks.register('testJ17', Test) {
+    // We need the shared library
+    dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    dependsOn extractCurlTasksMap["${os}_$arch"]
+
+    useJUnitPlatform()
+
+    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
+    systemProperty('net.covers1624.curl4j.libcurl.name', new File(extractedCurlDir, "${os}/${arch}/${System.mapLibraryName('curl')}"))
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 publishing {
     repositories {
         if (System.getenv('MAVEN_PASS')) {
             maven {
-                url "https://nexus.covers1624.net/repository/maven-snapshots/"
+                url 'https://nexus.covers1624.net/repository/maven-snapshots/'
                 credentials {
                     username 'covers1624'
                     password System.getenv('MAVEN_PASS')
@@ -194,22 +297,10 @@ publishing {
             artifactId project.archivesBaseName
             version rootProject.version
 
-            from components.java
+            artifact jar
+            artifact sourcesJar
+            artifact jarWithLibCurl
         }
-    }
-}
-
-
-File cleanDir(File dir) {
-    delete(dir)
-    dir.mkdirs()
-    return dir
-}
-
-def runIn(File dir, Object... args) {
-    exec {
-        commandLine(args)
-        workingDir(dir)
     }
 }
 
@@ -224,7 +315,7 @@ def getOsName() {
 
 def getArchName(arch = null) {
     if (arch == null) {
-        arch = System.getProperty("os.arch")
+        arch = System.getProperty('os.arch')
     }
     switch (arch.toLowerCase(Locale.ROOT)) {
         case 'i386':
@@ -243,6 +334,53 @@ def getArchName(arch = null) {
         case 'aarch64':
             return 'arm64'
         default:
-            throw new RuntimeException("Unknown architecture: " + arch)
+            throw new RuntimeException("Unknown architecture: $arch")
+    }
+}
+
+String hashFile(File file) {
+    def digest = MessageDigest.getInstance('SHA-256')
+    return file.newInputStream().withCloseable {
+        int len
+        byte[] buf = new byte[4096]
+        while ((len = it.read(buf)) != -1) {
+            digest.update(buf, 0, len)
+        }
+        return digest.digest().encodeHex().toString()
+    }
+}
+
+def dlAndVerifyTask(String name, String urlFile, File fileDest, String urlHash, File sha256Dest) {
+    return tasks.register("download_$name") { task ->
+        def fName = fileDest.name
+        def fNameHash = sha256Dest.name
+        task.outputs.file(fileDest)
+        task.outputs.file(sha256Dest)
+        doLast {
+            if (fileDest.exists() && sha256Dest.exists()) {
+                if (hashFile(fileDest) != sha256Dest.text.trim()) {
+                    println("File $fName did not pass hash check, it will be re-downloaded.")
+                    fileDest.delete()
+                    sha256Dest.delete()
+                } else {
+                    task.setDidWork(false)
+                    return
+                }
+            }
+
+            download.run {
+                src urlHash
+                dest sha256Dest
+            }
+
+            download.run {
+                src urlFile
+                dest fileDest
+            }
+
+            if (hashFile(fileDest) != sha256Dest.text.trim()) {
+                throw new RuntimeException("File $fName is corrupt.")
+            }
+        }
     }
 }

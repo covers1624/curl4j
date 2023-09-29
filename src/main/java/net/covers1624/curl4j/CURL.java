@@ -15,8 +15,6 @@ import static net.covers1624.curl4j.CURL.Functions.*;
  * proxies, HTTP/2, HTTP/3, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos),
  * file transfer resume, http proxy tunneling and more!</p>
  * <p>
- * This library is structured very much like other LWJGL native bindings and uses a very similar pattern.
- * <p>
  * This class does not contain any high-level abstractions around cURL, these are designed to be raw low-level bindings
  * similar, if not identical, to cURL.
  *
@@ -56,7 +54,7 @@ public class CURL {
      */
     public static Library getLbCURL() {
         if (CURL == null) {
-            String lib = System.getProperty("net.covers1624.curl4j.libname", "libcurl");
+            String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", "curl");
             if (LIB_CURL_OVERRIDE != null) {
                 lib = LIB_CURL_OVERRIDE;
             }
@@ -2871,8 +2869,7 @@ public class CURL {
      *
      * @return The CURL handle.
      */
-    @NativeType ("CURL *")
-    public static long curl_easy_init() {
+    public static @NativeType ("CURL *") long curl_easy_init() {
         return ncurl_easy_init(Functions.curl_easy_init);
     }
 
@@ -2900,7 +2897,7 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value.
      */
-    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
         return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
     }
 
@@ -2915,8 +2912,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value.
      */
-    public static void curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, boolean value) {
-        curl_easy_setopt(curl, opt, value ? 1 : 0);
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, boolean value) {
+        return curl_easy_setopt(curl, opt, value ? 1 : 0);
     }
 
     /**
@@ -2928,7 +2925,7 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value to set.
      */
-    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
         return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
     }
 
@@ -2941,7 +2938,7 @@ public class CURL {
      * @param opt  The option being set.
      * @param func The function.
      */
-    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CurlCallback func) {
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CurlCallback func) {
         return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, func.getFunctionAddress());
     }
 
@@ -2954,8 +2951,21 @@ public class CURL {
      * @param opt   The option being set.
      * @param slist The {@link curl_slist}.
      */
-    public static int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
         return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, slist != null ? slist.address : Memory.NULL);
+    }
+
+    /**
+     * Set a curl {@link #CURLOPTTYPE_BLOB} option.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_setopt.html">documentation</a>.
+     *
+     * @param curl The CURL handle.
+     * @param opt  The option being set.
+     * @param blob The {@link curl_blob}.
+     */
+    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_blob blob) {
+        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, blob != null ? blob.address : Memory.NULL);
     }
 
     /**
@@ -2973,8 +2983,7 @@ public class CURL {
      * @param opt   The info to select.
      * @param value Pointer to store the value in.
      */
-    @NativeType ("CURLcode")
-    public static int curl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt, Pointer value) {
+    public static @NativeType ("CURLcode") int curl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt, Pointer value) {
         return ncurl_easy_getinfo(Functions.curl_easy_getinfo, curl, opt, value.address);
     }
 
@@ -3008,7 +3017,8 @@ public class CURL {
      * @return The string.
      */
     public static long curl_easy_getinfo_long(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
-        assert (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
+        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
 
         try (Memory.Stack stack = Memory.pushStack()) {
             Pointer pointer = stack.mallocPointer();
@@ -3016,7 +3026,8 @@ public class CURL {
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
-            return pointer.readLong();
+
+            return isLong ? pointer.readCLong() : pointer.readSizeT();
         }
     }
 
@@ -3028,8 +3039,7 @@ public class CURL {
      * @param curl The CURL handle.
      * @return The curl exit code.
      */
-    @NativeType ("CURLcode")
-    public static int curl_easy_perform(@NativeType ("CURL *") long curl) {
+    public static @NativeType ("CURLcode") int curl_easy_perform(@NativeType ("CURL *") long curl) {
         return ncurl_easy_perform(curl_easy_perform, curl);
     }
 
@@ -3072,7 +3082,7 @@ public class CURL {
      * @param target          The impersonation target. E.g. "chrome110"
      * @param default_headers If the default headers should be applied. You probably want true here.
      */
-    public static int curl_easy_impersonate(long curl, String target, boolean default_headers) {
+    public static int curl_easy_impersonate(@NativeType ("CURL *") long curl, String target, boolean default_headers) {
         return ncurl_easy_impersonate(Functions.curl_easy_impersonate, curl, target, default_headers);
     }
 
@@ -3119,8 +3129,7 @@ public class CURL {
      * @param curl The CURL handle.
      * @return The curl_mime handle.
      */
-    @NativeType ("curl_mime *")
-    public static long curl_mime_init(@NativeType ("CURL *") long curl) {
+    public static @NativeType ("curl_mime *") long curl_mime_init(@NativeType ("CURL *") long curl) {
         return ncurl_mime_init(Functions.curl_mime_init, curl);
     }
 
@@ -3144,8 +3153,7 @@ public class CURL {
      * @param mime The curl_mime handle.
      * @return The new curl_mimepart handle.
      */
-    @NativeType ("curl_mimepart *")
-    public static long curl_mime_addpart(@NativeType ("curl_mime *") long mime) {
+    public static @NativeType ("curl_mimepart *") long curl_mime_addpart(@NativeType ("curl_mime *") long mime) {
         return ncurl_mime_addpart(Functions.curl_mime_addpart, mime);
     }
 
@@ -3158,8 +3166,7 @@ public class CURL {
      * @param name The name.
      * @return The CURLcode response.
      */
-    @NativeType ("CURLcode")
-    public static int curl_mime_name(@NativeType ("curl_mime *") long mime, @Nullable String name) {
+    public static @NativeType ("CURLcode") int curl_mime_name(@NativeType ("curl_mime *") long mime, @Nullable String name) {
         return ncurl_mime_name(Functions.curl_mime_name, mime, name);
     }
 
@@ -3172,8 +3179,7 @@ public class CURL {
      * @param filename The remote file name.
      * @return The CURLcode response.
      */
-    @NativeType ("CURLcode")
-    public static int curl_mime_filename(@NativeType ("curl_mime *") long mime, @Nullable String filename) {
+    public static @NativeType ("CURLcode") int curl_mime_filename(@NativeType ("curl_mime *") long mime, @Nullable String filename) {
         return ncurl_mime_filename(Functions.curl_mime_filename, mime, filename);
     }
 
@@ -3186,8 +3192,7 @@ public class CURL {
      * @param mimetype The Content-Type for this part.
      * @return The CURLcode response.
      */
-    @NativeType ("CURLcode")
-    public static int curl_mime_type(@NativeType ("curl_mime *") long mime, String mimetype) {
+    public static @NativeType ("CURLcode") int curl_mime_type(@NativeType ("curl_mime *") long mime, String mimetype) {
         return ncurl_mime_type(Functions.curl_mime_type, mime, mimetype);
     }
 
@@ -3200,8 +3205,7 @@ public class CURL {
      * @param data The data.
      * @return The CURLcode response.
      */
-    @NativeType ("CURLcode")
-    public static int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
+    public static @NativeType ("CURLcode") int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
         return ncurl_mime_data(Functions.curl_mime_filename, mime, data);
     }
 
@@ -3215,8 +3219,7 @@ public class CURL {
      * @param readfunc The read function.
      * @return The CURLcode response.
      */
-    @NativeType ("CURLcode")
-    public static int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
+    public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
         return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), Memory.NULL, Memory.NULL, Memory.NULL);
     }
 
@@ -3230,7 +3233,7 @@ public class CURL {
 
         private Functions() { }
 
-        private static final net.covers1624.curl4j.core.Library CURL = getLbCURL();
+        private static final Library CURL = getLbCURL();
 
         public static final long curl_version = CURL.getFunction("curl_version");
         public static final long curl_version_info = CURL.getFunction("curl_version_info");
