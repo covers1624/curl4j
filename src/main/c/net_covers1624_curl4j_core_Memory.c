@@ -24,6 +24,3 @@ JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Memory_deleteGlobalRef(JN
 JNIEXPORT jobject JNICALL Java_net_covers1624_curl4j_core_Memory_getGlobalRefValue(JNIEnv *, jclass, jlong obj) {
     return (jobject) obj;
 }
-
-
-
