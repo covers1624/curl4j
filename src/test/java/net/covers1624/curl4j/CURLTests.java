@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 import static net.covers1624.curl4j.CURL.*;
 import static net.covers1624.curl4j.tests.TestWebServer.getBody;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +41,7 @@ public class CURLTests extends TestBase {
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {
                 assertEquals(NanoHTTPD.Method.GET, r.getMethod());
-                return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, null, new ByteArrayInputStream(data), data.length);
+                return bytesResponse(OK, data);
             });
 
             curl_easy_reset(curl);
@@ -74,7 +75,7 @@ public class CURLTests extends TestBase {
             server.addHandler("/", r -> {
                 assertEquals(NanoHTTPD.Method.PUT, r.getMethod());
                 assertArrayEquals(data, getBody(r));
-                return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, null, null, -1);
+                return NanoHTTPD.newFixedLengthResponse(OK, null, null, -1);
             });
 
             curl_easy_reset(curl);
@@ -112,7 +113,7 @@ public class CURLTests extends TestBase {
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {
                 assertEquals(NanoHTTPD.Method.GET, r.getMethod());
-                NanoHTTPD.Response response = NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, null, new ByteArrayInputStream(data), data.length);
+                NanoHTTPD.Response response = bytesResponse(OK, data);
                 response.addHeader("X-Magic", r.getHeaders().get("x-magic"));
                 return response;
             });
@@ -151,10 +152,10 @@ public class CURLTests extends TestBase {
         curl_global_init(CURL_GLOBAL_DEFAULT);
         long curl = curl_easy_init();
 
-        try (TestWebServer server = new TestWebServer("/selfsigned.jks", "password"))  {
+        try (TestWebServer server = new TestWebServer("/selfsigned.jks", "password")) {
             server.addHandler("/", r -> {
                 assertEquals(NanoHTTPD.Method.GET, r.getMethod());
-                return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, null, new ByteArrayInputStream(data), data.length);
+                return bytesResponse(OK, data);
             });
 
             curl_easy_reset(curl);
