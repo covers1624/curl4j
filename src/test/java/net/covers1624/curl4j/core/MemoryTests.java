@@ -69,6 +69,30 @@ public class MemoryTests {
     }
 
     @Test
+    public void testStrings() {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(32);
+        long addr = Memory.getDirectByteBufferAddress(buffer);
+        buffer.put((byte) 'H')
+                .put((byte) 'e')
+                .put((byte) 'l')
+                .put((byte) 'l')
+                .put((byte) 'o')
+                .put((byte) ' ')
+                .put((byte) 'W')
+                .put((byte) 'o')
+                .put((byte) 'r')
+                .put((byte) 'l')
+                .put((byte) 'd')
+                .put((byte) '\0');
+        buffer.position(0);
+
+        assertEquals("Hello World", Memory.readUtf8(addr));
+
+        buffer.put(11, (byte)'A'); // Destroy the null byte.
+        assertEquals("Hello World", Memory.readUtf8(addr, 11));
+    }
+
+    @Test
     public void testStack() {
         try (Memory.Stack stack = Memory.pushStack()) {
             ByteBuffer buffer = stack.malloc(8);
