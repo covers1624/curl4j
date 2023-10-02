@@ -3,6 +3,8 @@ package net.covers1624.curl4j.core;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
+
 /**
  * @author covers1624
  */
@@ -12,6 +14,8 @@ public abstract class Callback implements AutoCloseable {
     protected static final long ffi_type_int = ffi_type_int();
     protected static final long ffi_type_long = ffi_type_long();
 
+    private static final long builtin_callback = ffi_callback(Reflect.getDeclaredMethod(Callback.class, "ffi_callback", long.class, long.class));
+
     private final long cif;
     private final long callback;
     private final CallbackInterface delegate;
@@ -20,6 +24,34 @@ public abstract class Callback implements AutoCloseable {
     private long delegateRef = Memory.NULL;
     private long code = Memory.NULL;
 
+    /**
+     * Construct a new callback, must be from an overridden class.
+     * <p>
+     * This method is an overload of {@link #Callback(long, long, CallbackInterface)}
+     * which uses the built-in native callback function. This enables using {@link CallbackInterface#invoke(long, long)}.
+     *
+     * @param cif      The Callback interface for libffi to generate via {@link #ffi_prep_cif}.
+     *                 This should be constructed and stored in a static variable.
+     * @param delegate The delegate to call, if null is specified, it is expected that this class
+     *                 implements {@link CallbackInterface}.
+     */
+    protected Callback(long cif, @Nullable CallbackInterface delegate) {
+        this(cif, builtin_callback, delegate);
+    }
+
+    /**
+     * Construct a new callback, must be from an overridden class.
+     * <p>
+     * In a future version, this method may become deprecated.
+     *
+     * @param cif      The Callback interface for libffi to generate via {@link #ffi_prep_cif}.
+     *                 This should be constructed and stored in a static variable.
+     * @param callback The native function pointer for libffi to invoke. It is recommended to use
+     *                 {@link #Callback(long, CallbackInterface)} instead of custom native callbacks,
+     *                 due to the automatic exception handling provided.
+     * @param delegate The delegate to call, if null is specified, it is expected that this class
+     *                 implements {@link CallbackInterface}.
+     */
     protected Callback(long cif, long callback, @Nullable CallbackInterface delegate) {
         this.cif = cif;
         this.callback = callback;
@@ -42,7 +74,11 @@ public abstract class Callback implements AutoCloseable {
 
                 code = codePtr.readAddress();
             }
-            delegateRef = Memory.newGlobalRef(delegate);
+            if (callback == builtin_callback) {
+                delegateRef = Memory.newGlobalRef(this);
+            } else {
+                delegateRef = Memory.newGlobalRef(delegate);
+            }
             int ret = ffi_prep_closure_loc(closure, cif, callback, delegateRef, code);
             if (ret != 0 /* FFI_OK */) {
                 close();
@@ -107,7 +143,32 @@ public abstract class Callback implements AutoCloseable {
 
     private static native void ffi_closure_free(long closure);
 
+    private static native long ffi_callback(Method method);
+
+    // Invoked by JNI in native land, simply forwards the callback through.
+    private void ffi_callback(long ret, long args) throws Throwable {
+        assert delegate != null;
+        delegate.invoke(ret, args);
+    }
+
     public interface CallbackInterface extends AutoCloseable {
+
+        /**
+         * Called from libffi when the callback is invoked.
+         * <p>
+         * This is only called when the built-in native callback is used.
+         * <p>
+         * Implementors of {@link CallbackInterface} are expected to implement this if they
+         * are using the built-in native callback.
+         * <p>
+         * It is expected that the built-in callback will become mandatory at some point.
+         *
+         * @param ret  The return pointer.
+         * @param args The pointer to the argument pointers.
+         */
+        default void invoke(@NativeType ("void *") long ret, @NativeType ("void **") long args) throws Throwable {
+            throw new UnsupportedOperationException("Callback must override this function to use the built-in callback.");
+        }
 
         @Override
         default void close() throws Exception { }

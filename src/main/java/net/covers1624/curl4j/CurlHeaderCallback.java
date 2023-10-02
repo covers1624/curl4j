@@ -1,9 +1,5 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Reflect;
-
-import java.lang.reflect.Method;
-
 /**
  * A function callback for handling curl headers.
  * <p>
@@ -18,20 +14,17 @@ public class CurlHeaderCallback extends CurlCallback implements CurlHeaderCallba
             ffi_type_pointer,
             ffi_type_pointer, ffi_type_pointer, ffi_type_pointer, ffi_type_pointer
     );
-    private static final long callback = ffi_callback(Reflect.getMethod(CurlHeaderCallbackI.class, "onHeader", String.class, long.class));
 
     public CurlHeaderCallback(CurlHeaderCallbackI delegate) {
-        super(cif, callback, delegate);
+        super(cif, delegate);
     }
 
     protected CurlHeaderCallback() {
-        super(cif, callback, null);
+        super(cif, null);
     }
 
     @Override
     public void onHeader(String header, long userdata) {
         throw new UnsupportedOperationException("Not implemented. Override this function or provide a delegate.");
     }
-
-    private static native long ffi_callback(Method method);
 }

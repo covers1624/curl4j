@@ -14,4 +14,12 @@ public final class Reflect {
             throw new IllegalStateException("Failed to find method " + name + ".", ex);
         }
     }
+
+    public static Method getDeclaredMethod(Class<?> clazz, String name, Class<?>... params) {
+        try {
+            return clazz.getDeclaredMethod(name, params);
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalStateException("Failed to find method " + name + ".", ex);
+        }
+    }
 }
