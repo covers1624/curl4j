@@ -46,7 +46,6 @@ JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1closure_1fr
 
 static void ffi_callback(ffi_cif *, void *ret, void **args, void *user_data) {
     JNIEnv *env = getEnv();
-    // This static method handles all exceptions for us java-side :D
     (*env)->CallVoidMethod(env, user_data, callbackMethod, ret, args);
 }
 
