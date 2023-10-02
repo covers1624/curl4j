@@ -9,6 +9,10 @@ import net.covers1624.curl4j.core.Callback;
  */
 public abstract class CurlCallback extends Callback {
 
+    protected CurlCallback(long cif, CallbackInterface delegate) {
+        super(cif, delegate);
+    }
+
     protected CurlCallback(long cif, long callback, CallbackInterface delegate) {
         super(cif, callback, delegate);
     }

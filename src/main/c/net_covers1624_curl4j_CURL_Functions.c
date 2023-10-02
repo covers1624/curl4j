@@ -114,4 +114,3 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mim
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mime_1data_1cb(JNIEnv *, jclass, jlong func, jlong part, jlong dataSize, jlong readFunc, jlong seekFunc, jlong freeFunc, jlong userData) {
     return ((int (*)(uintptr_t, long, uintptr_t, uintptr_t, uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) part, dataSize, (uintptr_t) readFunc, (uintptr_t) seekFunc, (uintptr_t) freeFunc, (uintptr_t) userData);
 }
-

@@ -66,6 +66,7 @@ public final class Memory {
     public static void putCLong(long ptr, long value) { if (NativeTypes.CLONG_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
     public static void putSizeT(long ptr, long value) { if (NativeTypes.SIZE_T_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
     public static void putAddress(long ptr, long value) { if (NativeTypes.IS_64BIT) putLong(ptr, value); else putInt(ptr, (int) value); }
+    public static void memcpy(long src, long dst, long len) { UNSAFE.copyMemory(src, dst, len); }
     // @formatter:on
 
     /**
@@ -73,9 +74,28 @@ public final class Memory {
      * regular Java String.
      *
      * @param buffer The string to read.
-     * @return The
+     * @return The string.
      */
     public static native String readUtf8(long buffer);
+
+    /**
+     * Read the given string segment into a regular
+     * Java String.
+     * <p>
+     * The given string buffer does not need to be null terminated.
+     *
+     * @param strBuf The string buffer.
+     * @param len    The length.
+     * @return The string.
+     */
+    public static String readUtf8(long strBuf, int len) {
+        try (Stack stack = Memory.pushStack()) {
+            long buffer = stack.nmalloc(len + 1);
+            memcpy(strBuf, buffer, len);
+            putByte(strBuf + len, (byte) '\0');
+            return readUtf8(buffer);
+        }
+    }
 
     /**
      * Create a new DirectByteBuffer with the given address and capacity.

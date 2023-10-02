@@ -79,6 +79,14 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1prep_1closu
 JNIEXPORT void JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1closure_1free
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     net_covers1624_curl4j_core_Callback
+ * Method:    ffi_callback
+ * Signature: (Ljava/lang/reflect/Method;)J
+ */
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Callback_ffi_1callback
+  (JNIEnv *, jclass, jobject);
+
 #ifdef __cplusplus
 }
 #endif
