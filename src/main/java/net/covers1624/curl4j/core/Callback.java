@@ -20,6 +20,8 @@ public abstract class Callback implements AutoCloseable {
     private final long callback;
     private final CallbackInterface delegate;
 
+    private CallbackExceptionHandler exceptionHandler = CallbackExceptionHandler.DEFAULT;
+
     private long closure = Memory.NULL;
     private long delegateRef = Memory.NULL;
     private long code = Memory.NULL;
@@ -88,6 +90,15 @@ public abstract class Callback implements AutoCloseable {
         return code;
     }
 
+    /**
+     * Set a custom exception handling policy for this callback.
+     *
+     * @param exceptionHandler The exception handler.
+     */
+    public final void setExceptionHandler(CallbackExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
+
     @Override
     @MustBeInvokedByOverriders
     public void close() {
@@ -148,7 +159,11 @@ public abstract class Callback implements AutoCloseable {
     // Invoked by JNI in native land, simply forwards the callback through.
     private void ffi_callback(long ret, long args) throws Throwable {
         assert delegate != null;
-        delegate.invoke(ret, args);
+        try {
+            delegate.invoke(ret, args);
+        } catch (Throwable ex) {
+            exceptionHandler.onException(ex);
+        }
     }
 
     public interface CallbackInterface extends AutoCloseable {
@@ -172,5 +187,47 @@ public abstract class Callback implements AutoCloseable {
 
         @Override
         default void close() throws Exception { }
+    }
+
+    /**
+     * Handler for exceptions inside callback functions.
+     */
+    public interface CallbackExceptionHandler {
+
+        /**
+         * The default callback implementation, just log and take no further action.
+         * <p>
+         * Generally this is okay, but the user should choose a more strict exception policy,
+         * such as {@link #RETHROW}, or a custom policy to abort the operation.
+         */
+        CallbackExceptionHandler DEFAULT = ex -> {
+            System.err.println("[curl4j] Exception thrown inside callback, this will silently be ignored.");
+            ex.printStackTrace(System.err);
+        };
+
+        /**
+         * Simply rethrows the exception and lets it propagate through native land.
+         * <p>
+         * If the callback this is attached to is not a Java owned thread, this policy
+         * is not sufficient.
+         * <p>
+         * Note: Native land DOES NOT know about these exceptions, the underlying native
+         * application will continue running, potentially calling the same callback again,
+         * resulting in further exceptions. This should ONLY be used in cases where the thread
+         * starting the native operation, and the thread which will fire the callbacks, are the
+         * same thread, threads not owned by Java will NEVER have this propagate out.
+         */
+        CallbackExceptionHandler RETHROW = ex -> { throw ex; };
+
+        /**
+         * Called when an exception is thrown inside a Callback.
+         * <p>
+         * It is the callers choice what to do with the exception,
+         * silently handle it, abort the native operation, kill the app,
+         * rethrow, etc.
+         *
+         * @param ex The exception.
+         */
+        void onException(Throwable ex) throws Throwable;
     }
 }
