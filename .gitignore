@@ -3,9 +3,11 @@
 !src/
 !java9/
 !native_build/
+!docs/
 
 !LICENSE.txt
-!README.MD
+!EXAMPLES.md
+!README.md
 
 !gradle/
 !gradlew
