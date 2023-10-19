@@ -2842,7 +2842,7 @@ public class CURL {
      * uses libcurl and before any call of other libcurl functions.
      * <p>
      * This function is thread-safe if {@link #CURL_VERSION_THREADSAFE} is set in the
-     * {@link curl_version_info_data#features()} flag (fetch by {@link #curl_version_info}).
+     * {@link curl_version_info_data#getFeatures()} flag (fetch by {@link #curl_version_info}).
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_init.html">documentation</a>.
      */
