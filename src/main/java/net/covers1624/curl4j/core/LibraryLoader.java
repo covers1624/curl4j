@@ -43,7 +43,7 @@ public class LibraryLoader {
 
         // Try and load embedded
         if (!NO_EMBEDDED) {
-            URL url = LibraryLoader.class.getResource("/" + libPath);
+            URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
             if (url != null) {
                 Path path = getAsAbsolutePath(url);
                 if (path == null) {
