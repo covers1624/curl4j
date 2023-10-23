@@ -44,6 +44,7 @@ sourceSets {
 repositories {
     mavenLocal()
     mavenCentral()
+    maven { url 'https://maven.covers1624.net' }
 }
 
 configurations {
@@ -58,6 +59,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
+    testImplementation 'net.covers1624:Quack:0.4.9.77'
 }
 
 def natives = [
@@ -226,8 +228,11 @@ natives.each {
     extractCurlTasks << extractCurl
 }
 
+evaluationDependsOn(":java9")
+
 jar {
     mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
+    from project(":java9").sourceSets.main.output
     natives.each { o ->
         from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
             into "META-INF/natives/${o[0]}/${o[1]}/"
@@ -242,6 +247,7 @@ tasks.register('jarWithLibCurl', Jar) {
     mustRunAfter("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
 
     from sourceSets.main.output
+    from project(":java9").sourceSets.main.output
 
     natives.each { o ->
         from(fileTree("build/libs/curl4j/shared/${o[0]}_${o[1]}/release/")) {
@@ -259,6 +265,8 @@ test {
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     dependsOn extractCurlTasksMap["${os}_$arch"]
 
+    classpath += project(":java9").sourceSets.main.output
+
     useJUnitPlatform()
 
     systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
@@ -270,6 +278,8 @@ tasks.register('testJ17', Test) {
     dependsOn("curl4j${os.capitalize()}_${arch}ReleaseSharedLibrary")
     dependsOn extractCurlTasksMap["${os}_$arch"]
 
+    classpath += project(":java9").sourceSets.main.output
+
     useJUnitPlatform()
 
     systemProperty('net.covers1624.curl4j.libcurl4j.name', file("build/libs/curl4j/shared/${os}_${arch}/release/${System.mapLibraryName('curl4j')}"))
@@ -278,6 +288,8 @@ tasks.register('testJ17', Test) {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
+
+check.dependsOn('testJ17')
 
 publishing {
     repositories {
