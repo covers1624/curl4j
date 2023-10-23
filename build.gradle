@@ -16,7 +16,7 @@ java {
 }
 
 group 'net.covers1624'
-version '2.0'
+version '2.1'
 
 def details = versionDetails()
 if (details.branchName == 'main') {
