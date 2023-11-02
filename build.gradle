@@ -295,7 +295,11 @@ publishing {
     repositories {
         if (System.getenv('MAVEN_PASS')) {
             maven {
-                url 'https://nexus.covers1624.net/repository/maven-snapshots/'
+                if (details.branchName == 'main') {
+                    url 'https://nexus.covers1624.net/repository/maven-releases/'
+                } else {
+                    url 'https://nexus.covers1624.net/repository/maven-snapshots/'
+                }
                 credentials {
                     username 'covers1624'
                     password System.getenv('MAVEN_PASS')
