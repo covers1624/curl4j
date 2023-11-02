@@ -3206,7 +3206,7 @@ public class CURL {
      * @return The CURLcode response.
      */
     public static @NativeType ("CURLcode") int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
-        return ncurl_mime_data(Functions.curl_mime_filename, mime, data);
+        return ncurl_mime_data(Functions.curl_mime_data, mime, data);
     }
 
     /**
