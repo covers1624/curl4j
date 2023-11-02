@@ -13,7 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          fetch-depth: 0
+          fetch-tags: true
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -34,7 +35,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          fetch-depth: 0
+          fetch-tags: true
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -62,7 +64,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          fetch-depth: 0
+          fetch-tags: true
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -100,7 +103,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          fetch-depth: 0
+          fetch-tags: true
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -133,7 +137,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
+          fetch-depth: 0
+          fetch-tags: true
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
@@ -161,6 +166,9 @@ jobs:
     needs: [ build_linux_x64, build_linux_arm64, build_windows_x64, build_macos_x64, build_macos_arm64 ]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/download-artifact@v3
         with:
           name: linux_x64
