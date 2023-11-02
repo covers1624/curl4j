@@ -3,14 +3,15 @@ package net.covers1624.curl4j;
 import fi.iki.elonen.NanoHTTPD;
 import net.covers1624.curl4j.tests.TestBase;
 import net.covers1624.curl4j.tests.TestWebServer;
-import net.covers1624.curl4j.util.CurlInput;
-import net.covers1624.curl4j.util.HeaderCollector;
-import net.covers1624.curl4j.util.MemoryCurlOutput;
-import net.covers1624.curl4j.util.SListHeaderWrapper;
+import net.covers1624.curl4j.util.*;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 import static net.covers1624.curl4j.CURL.*;
@@ -175,6 +176,57 @@ public class CURLTests extends TestBase {
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
                 assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
                 assertArrayEquals(data, output.bytes());
+            }
+        } finally {
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+        }
+    }
+
+    @Test
+    public void testMimeBody() throws IOException {
+        byte[] data = randomBytes(32);
+
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+        long curl = curl_easy_init();
+
+        try (TestWebServer server = new TestWebServer()) {
+            server.addHandler("/", r -> {
+                assertEquals(NanoHTTPD.Method.POST, r.getMethod());
+                Map<String, String> body = new HashMap<>();
+                r.parseBody(body);
+                assertEquals(2, body.size());
+
+                for (String value : body.values()) {
+                    assertFalse(value.isEmpty());
+                    Path path = Paths.get(value);
+                    assertTrue(Files.exists(path));
+                    assertArrayEquals(data, Files.readAllBytes(path));
+                }
+
+                return NanoHTTPD.newFixedLengthResponse(OK, null, null, -1);
+            });
+
+            curl_easy_reset(curl);
+
+            curl_easy_setopt(curl, CURLOPT_URL, server.addr("/"));
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+
+            CurlMimeBody.Builder mimeBodyBuilder = CurlMimeBody.builder(curl)
+                    // Setting fileName on these reveals a bug in NanoHTTPD, it incorrectly appends increments to the end of one of the names.
+                    .addPart("byteArray").type("application/octet-stream").body(data).build()
+                    .addPart("dynamicInput").type("application/octet-stream").body(CurlInput.fromBytes(data)).build();
+
+            try (MemoryCurlOutput output = MemoryCurlOutput.create();
+                 CurlMimeBody body = mimeBodyBuilder.build()) {
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, output.callback());
+
+                curl_easy_setopt(curl, CURLOPT_MIMEPOST, body.getMime());
+
+                int result = curl_easy_perform(curl);
+
+                assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
             }
         } finally {
             curl_easy_cleanup(curl);
