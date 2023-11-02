@@ -63,7 +63,7 @@ public class TestWebServer extends NanoHTTPD implements AutoCloseable {
     public Response serve(IHTTPSession session) {
         try {
             return funcMap.get(session.getUri()).handle(session);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
@@ -133,6 +133,6 @@ public class TestWebServer extends NanoHTTPD implements AutoCloseable {
 
     public interface Handler {
 
-        Response handle(IHTTPSession session) throws IOException;
+        Response handle(IHTTPSession session) throws Throwable;
     }
 }
