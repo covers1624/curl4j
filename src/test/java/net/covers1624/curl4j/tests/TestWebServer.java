@@ -22,7 +22,11 @@ public class TestWebServer extends NanoHTTPD implements AutoCloseable {
     private final Map<String, Handler> funcMap = new HashMap<>();
 
     public TestWebServer() throws IOException {
-        this(getRandomEphemeralPort(), null, null);
+        this(getRandomEphemeralPort());
+    }
+
+    public TestWebServer(int port) throws IOException {
+        this(port, null, null);
     }
 
     public TestWebServer(String keystore, @Nullable String password) throws IOException {
