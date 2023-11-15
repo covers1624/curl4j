@@ -50,6 +50,7 @@ curl_build=${build_dir}/curl
 curl_install=${install_dir}/curl
 
 # === state ===
+nproc=$(shell getconf _NPROCESSORS_ONLN)
 compiler_deps=
 compiler=gcc
 
@@ -71,7 +72,8 @@ ${musl_build}: ${musl_archive}
 ${musl_install}: ${musl_build}
 	cd "${musl_build}"
 	CC="gcc" CFLAGS="-fPIC" ./configure --disable-shared --prefix="${musl_install}"
-	make install -j
+	make -j ${nproc}
+	make install
 else
 # TODO IJ is whining that this target doesnt exist, but not sure it actually matters.
 ${compiler_deps}:
@@ -89,7 +91,8 @@ ${zlib_build}: ${zlib_archive}
 ${zlib_install}: ${compiler_deps} ${zlib_build}
 	cd "${zlib_build}"
 	CC="${compiler}" CFLAGS="-fPIC" ./configure --static --prefix="${zlib_install}"
-	make install -j
+	make -j ${nproc}
+	make install
 
 # === brotli ===
 ${brotli_archive}:
@@ -103,7 +106,9 @@ ${brotli_build}: ${brotli_archive}
 ${brotli_install}: ${compiler_deps} ${brotli_build}
 	cd "${brotli_build}"
 	CC="${compiler}" cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${brotli_install}" -DBUILD_SHARED_LIBS=OFF
-	cmake --build . --config Release --target install
+	cmake --build . --config Release
+	make -j ${nproc}
+	make install
 
 # === QuicTLS/OpenSSL ===
 ${quictls_archive}:
@@ -122,7 +127,7 @@ ${quictls_install}: ${compiler_deps} ${linux_headers} ${quictls_build}
 		--prefix=${quictls_install} \
 		-DOPENSSL_DEV_NO_ATOMICS=true \
 		-D__STDC_NO_ATOMICS__=true
-	make -j
+	make -j ${nproc}
 	make install_sw
 
 # === nghttp2 ===
@@ -137,7 +142,7 @@ ${nghttp2_build}: ${nghttp2_archive}
 ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 	cd "${nghttp2_build}"
 	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --disable-python-bindings --prefix="${nghttp2_install}"
-	make -j
+	make -j ${nproc}
 	make install
 
 # === ngtcp2 ===
@@ -159,7 +164,7 @@ ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 		--with-jemalloc=no \
 		--with-openssl \
 		PKG_CONFIG_PATH="${quictls_install}/lib64/pkgconfig:${quictls_install}/lib/pkgconfig"
-	make -j
+	make -j ${nproc}
 	make install
 
 # === nghttp3 ===
@@ -174,7 +179,7 @@ ${nghttp3_build}: ${nghttp3_archive}
 ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 	cd "${nghttp3_build}"
 	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --prefix="${nghttp3_install}"
-	make -j
+	make -j ${nproc}
 	make install
 
 # === curl ===
@@ -220,7 +225,7 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 		--without-librtmp \
 		--without-libidn2 \
 		--without-libpsl
-	make -j
+	make -j ${nproc}
 	make install
 
 # === Misc ===
