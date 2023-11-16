@@ -75,9 +75,14 @@ ${musl_install}: ${musl_build}
 	CC="gcc" CFLAGS="-fPIC" ./configure --disable-shared --prefix="${musl_install}"
 	make -j ${nproc}
 	make install
+
+clean-musl:
+	rm -rf "${musl_build}"
+	rm -rf "${musl_install}"
 else
 # TODO IJ is whining that this target doesnt exist, but not sure it actually matters.
 ${compiler_deps}:
+clean-musl:
 endif
 
 # === zlib ===
@@ -95,6 +100,10 @@ ${zlib_install}: ${compiler_deps} ${zlib_build}
 	make -j ${nproc}
 	make install
 
+clean-zlib:
+	rm -rf ${zlib_build}
+	rm -rf ${zlib_install}
+
 # === brotli ===
 ${brotli_archive}:
 	@"${scripts_dir}/download.sh" "https://github.com/google/brotli/archive/refs/tags/v${brotli_version}.tar.gz" "${brotli_archive}"
@@ -110,6 +119,10 @@ ${brotli_install}: ${compiler_deps} ${brotli_build}
 	cmake --build . --config Release
 	make -j ${nproc}
 	make install
+
+clean-brotli:
+	rm -rf ${brotli_build}
+	rm -rf ${brotli_install}
 
 # === QuicTLS/OpenSSL ===
 ${quictls_archive}:
@@ -131,6 +144,10 @@ ${quictls_install}: ${compiler_deps} ${linux_headers} ${quictls_build}
 	make -j ${nproc}
 	make install_sw
 
+clean-quictls:
+	rm -rf ${quictls_build}
+	rm -rf ${quictls_install}
+
 # === nghttp2 ===
 ${nghttp2_archive}:
 	@"${scripts_dir}/download.sh" "https://github.com/nghttp2/nghttp2/releases/download/v${nghttp2_version}/nghttp2-${nghttp2_version}.tar.gz" "${nghttp2_archive}"
@@ -145,6 +162,10 @@ ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --disable-python-bindings --prefix="${nghttp2_install}"
 	make -j ${nproc}
 	make install
+
+clean-nghttp2:
+	rm -rf ${nghttp2_build}
+	rm -rf ${nghttp2_install}
 
 # === ngtcp2 ===
 ${ngtcp2_archive}:
@@ -168,6 +189,10 @@ ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 	make -j ${nproc}
 	make install
 
+clean-ngtcp2:
+	rm -rf ${ngtcp2_build}
+	rm -rf ${ngtcp2_install}
+
 # === nghttp3 ===
 ${nghttp3_archive}:
 	@"${scripts_dir}/download.sh" "https://github.com/ngtcp2/nghttp3/releases/download/v${nghttp3_version}/nghttp3-${nghttp3_version}.tar.gz" "${nghttp3_archive}"
@@ -182,6 +207,10 @@ ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --prefix="${nghttp3_install}"
 	make -j ${nproc}
 	make install
+
+clean-nghttp3:
+	rm -rf ${nghttp3_build}
+	rm -rf ${nghttp3_install}
 
 # === curl ===
 ${curl_archive}:
@@ -229,6 +258,10 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 	make -j ${nproc}
 	make install
 
+clean-curl:
+	rm -rf ${curl_build}
+	rm -rf ${curl_install}
+
 # === Misc ===
 ${linux_headers}:
 	mkdir -p "${linux_headers}"
@@ -236,9 +269,12 @@ ${linux_headers}:
 	ln -s /usr/include/asm-generic "${linux_headers}"
 	ln -s /usr/include/$(shell uname -m)-linux-gnu/asm "${linux_headers}"
 
-clean:
+clean-linux:
+	rm -rf "${linux_headers}"
+
+clean: clean-linux clean-musl clean-zlib clean-brotli clean-nghttp2 clean-ngtcp2 clean-nghttp3
 	rm -rf "${build_dir}"
 	rm -rf "${install_dir}"
 
-clean_cache:
+clean-cache:
 	rm -rf "${cache_dir}"
