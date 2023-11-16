@@ -137,6 +137,7 @@ ${quictls_install}: ${compiler_deps} ${linux_headers} ${quictls_build}
 	cd "${quictls_build}"
 	CC="${compiler}" CFLAGS="-I${linux_headers}" ./Configure \
 		no-shared \
+		no-tests \
 		-fpic \
 		--prefix=${quictls_install} \
 		-DOPENSSL_DEV_NO_ATOMICS=true \
