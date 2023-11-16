@@ -68,6 +68,7 @@ ${musl_build}: ${musl_archive}
 	mkdir -p "${build_dir}"
 	tar -xvf "${musl_archive}" -C "${build_dir}"
 	mv "${build_dir}/musl-${musl_version}/" "${musl_build}"
+	patch -N -p1 -d "${musl_build}" -r /dev/null -i "${scripts_dir}/patches/musl/0000-getauxval-null-guard.patch"
 
 ${musl_install}: ${musl_build}
 	cd "${musl_build}"
@@ -198,7 +199,7 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 	cd "${curl_build}"
 	./configure \
 		CC="${compiler}" \
-		HOST=${HOST} \
+		--host=${HOST} \
 		--prefix="${curl_install}" \
 		--with-zlib=${zlib_install} \
 		--with-brotli=${brotli_install} \
@@ -233,7 +234,7 @@ ${linux_headers}:
 	mkdir -p "${linux_headers}"
 	ln -s /usr/include/linux "${linux_headers}"
 	ln -s /usr/include/asm-generic "${linux_headers}"
-	ln -s /usr/include/x86_64-linux-gnu/asm "${linux_headers}"
+	ln -s /usr/include/$(shell uname -m)-linux-gnu/asm "${linux_headers}"
 
 clean:
 	rm -rf "${build_dir}"

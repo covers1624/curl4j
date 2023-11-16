@@ -1,0 +1,13 @@
+--- a/src/misc/getauxval.c
++++ b/src/misc/getauxval.c
+@@ -6,7 +6,9 @@
+ {
+ 	size_t *auxv = libc.auxv;
+ 	if (item == AT_SECURE) return libc.secure;
+-	for (; *auxv; auxv+=2)
++    // Check auxv is not null as well.
++    // This happens in mixed libc environments.
++	for (; auxv && *auxv; auxv+=2)
+ 		if (*auxv==item) return auxv[1];
+ 	errno = ENOENT;
+ 	return 0;
