@@ -17,6 +17,7 @@ void *libcurl = NULL;
 #endif
 
 void *curlSym(const char *sym) {
+	printf(" Loading symbol: %s\n", sym);
 #ifdef WIN32
 	void *func = (void *)GetProcAddress(libcurl, sym);
 #else
@@ -60,6 +61,7 @@ int main(int argc, char *argv[]) {
 	}
 #endif
 
+	printf("Loading symbols:\n");
 	void *f_curl_version = curlSym("curl_version");
 	if (!f_curl_version) return 1;
 
