@@ -85,8 +85,8 @@ ${musl_build}: ${musl_archive}
 ${musl_install}: ${musl_build}
 	cd "${musl_build}"
 	CC="${musl_compiler}" CFLAGS="-fPIC" ./configure --disable-shared --prefix="${musl_install}"
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-musl:
 	rm -rf "${musl_build}"
@@ -116,8 +116,8 @@ ${zlib_build}: ${zlib_archive}
 ${zlib_install}: ${compiler_deps} ${zlib_build}
 	cd "${zlib_build}"
 	CC="${compiler}" CFLAGS="-fPIC" ./configure --static --prefix="${zlib_install}"
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-zlib:
 	rm -rf ${zlib_build}
@@ -140,8 +140,8 @@ ${brotli_install}: ${compiler_deps} ${brotli_build}
 		-DBUILD_SHARED_LIBS=OFF \
 		${cmake_extra}
 	cmake --build . --config Release
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-brotli:
 	rm -rf ${brotli_build}
@@ -165,8 +165,8 @@ ${quictls_install}: ${compiler_deps} ${linux_headers} ${quictls_build}
 		-DOPENSSL_DEV_NO_ATOMICS=true \
 		-D__STDC_NO_ATOMICS__=true \
 		${quictls_extra}
-	make -j ${nproc}
-	make install_sw
+	${MAKE} -j ${nproc}
+	${MAKE} install_sw
 
 clean-quictls:
 	rm -rf ${quictls_build}
@@ -190,8 +190,8 @@ ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 		--disable-shared \
 		--disable-python-bindings \
 		--prefix="${nghttp2_install}"
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-nghttp2:
 	rm -rf ${nghttp2_build}
@@ -217,8 +217,8 @@ ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 		--with-jemalloc=no \
 		--with-openssl \
 		PKG_CONFIG_PATH="${quictls_install}/lib64/pkgconfig:${quictls_install}/lib/pkgconfig"
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-ngtcp2:
 	rm -rf ${ngtcp2_build}
@@ -241,8 +241,8 @@ ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 		--disable-shared \
 		--with-pic \
 		--enable-lib-only
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 
 clean-nghttp3:
 	rm -rf ${nghttp3_build}
@@ -288,8 +288,8 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 		--without-librtmp \
 		--without-libidn2 \
 		--without-libpsl
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 else
 ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_install} ${nghttp2_install} ${ngtcp2_install} ${nghttp3_install} ${curl_build}
 	set -e
@@ -322,8 +322,8 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 		-DUSE_NGTCP2=ON \
 		${cmake_extra} \
 		-G "Unix Makefiles"
-	make -j ${nproc}
-	make install
+	${MAKE} -j ${nproc}
+	${MAKE} install
 endif
 
 clean-curl:
