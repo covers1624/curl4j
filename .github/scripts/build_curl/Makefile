@@ -53,6 +53,10 @@ curl_install=${install_dir}/curl
 nproc=$(shell getconf _NPROCESSORS_ONLN)
 compiler_deps=
 compiler=gcc
+windres=
+
+cmake_extra=
+quictls_extra=
 
 all: ${curl_install}
 
@@ -60,6 +64,7 @@ all: ${curl_install}
 ifneq (,$(findstring musl,$(HOST)))
 compiler_deps=${musl_install}
 compiler=${musl_install}/bin/musl-gcc
+cmake_extra=-DCMAKE_FIND_ROOT_PATH="${musl_install}"
 
 ${musl_archive}:
 	@"${scripts_dir}/download.sh" "https://musl.libc.org/releases/musl-${musl_version}.tar.gz" "${musl_archive}"
@@ -83,6 +88,13 @@ else
 # TODO IJ is whining that this target doesnt exist, but not sure it actually matters.
 ${compiler_deps}:
 clean-musl:
+ifneq (,$(findstring w64, $(HOST)))
+compiler=x86_64-w64-mingw32-gcc-posix
+windres=x86_64-w64-mingw32-windres
+
+cmake_extra=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
+quictls_extra=mingw64
+endif
 endif
 
 # === zlib ===
@@ -118,7 +130,8 @@ ${brotli_install}: ${compiler_deps} ${brotli_build}
 	CC="${compiler}" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="${brotli_install}" \
-		-DBUILD_SHARED_LIBS=OFF
+		-DBUILD_SHARED_LIBS=OFF \
+		${cmake_extra}
 	cmake --build . --config Release
 	make -j ${nproc}
 	make install
@@ -138,13 +151,13 @@ ${quictls_build}: ${quictls_archive}
 
 ${quictls_install}: ${compiler_deps} ${linux_headers} ${quictls_build}
 	cd "${quictls_build}"
-	CC="${compiler}" CFLAGS="-I${linux_headers}" ./Configure \
-		no-shared \
+	CC="${compiler}" CFLAGS="-I${linux_headers}" WINDRES=${windres} ./Configure \
 		no-tests \
 		-fpic \
 		--prefix=${quictls_install} \
 		-DOPENSSL_DEV_NO_ATOMICS=true \
-		-D__STDC_NO_ATOMICS__=true
+		-D__STDC_NO_ATOMICS__=true \
+		${quictls_extra}
 	make -j ${nproc}
 	make install_sw
 
@@ -188,7 +201,7 @@ ${ngtcp2_build}: ${ngtcp2_archive}
 
 ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 	cd "${ngtcp2_build}"
-	CFLAGS=--static CC="${compiler}" ./configure \
+	CC="${compiler}" ./configure \
 		--host=${HOST} \
 		--prefix="${ngtcp2_install}" \
 		--with-pic \
@@ -215,7 +228,7 @@ ${nghttp3_build}: ${nghttp3_archive}
 
 ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 	cd "${nghttp3_build}"
-	CFLAGS=--static CC="${compiler}" ./configure \
+	CC="${compiler}" ./configure \
 		--host=${HOST} \
 		--prefix="${nghttp3_install}" \
 		--disable-shared \
@@ -237,11 +250,18 @@ ${curl_build}: ${curl_archive}
 	tar -xvf "${curl_archive}" -C "${build_dir}"
 	mv "${build_dir}/curl-${curl_version}/" "${curl_build}/"
 	cd "${curl_build}"
-	patch -N -p1 -r /dev/null -i "${scripts_dir}/patches/curl/patch-0000-brotli-1.1.0-static.patch"
-	autoreconf -fi
 
+# TODO On Linux/mac we use automake, on Windows/Mingw we use cmake.
+#      As of writing this the following issues are present:
+# 		- Windows/Mingw on automake does not emit a libcurl.dll, at all.
+#		- Linux-x64 on cmake works just fine
+ifeq (,$(findstring w64, $(HOST)))
 ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_install} ${nghttp2_install} ${ngtcp2_install} ${nghttp3_install} ${curl_build}
 	cd "${curl_build}"
+	patch -N -p1 -r /dev/null -i "${scripts_dir}/patches/curl/patch-0000-brotli-1.1.0-static.patch"
+	autoreconf -fi
+	# TODO, Required due to the hack required for mingw bellow.
+	rm "${quictls_install}"/lib*/*.so || true
 	./configure \
 		CC="${compiler}" \
 		--host=${HOST} \
@@ -273,6 +293,41 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 		--without-libpsl
 	make -j ${nproc}
 	make install
+else
+${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_install} ${nghttp2_install} ${ngtcp2_install} ${nghttp3_install} ${curl_build}
+	set -e
+	cd "${curl_build}"
+	# TODO This is a hack. Find a way to nuke this.
+	# 	   This forces curl to link against the .a files instead of the .dll.a files. Thus they are actually static linked in.
+	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
+	rm "${quictls_install}"/lib*/*.dll.a || true
+	export CC="${compiler}"
+	export CFLAGS="-gdwarf-4"
+	export LDFLAGS="--static -static-libgcc"
+	export OpenSSL_ROOT=${quictls_install}
+	export OPENSSL_ROOT_DIR=${quictls_install}
+	export ZLIB_ROOT=${zlib_install}
+	export Brotli_ROOT=${brotli_install}
+	export NGHTTP2_ROOT=${nghttp2_install}
+	export NGTCP2_ROOT=${ngtcp2_install}
+	export NGHTTP3_ROOT=${nghttp3_install}
+	export HAVE_SSL_CTX_SET_QUIC_METHOD=yes
+	cmake \
+		-DCMAKE_C_FLAGS="-DNGHTTP2_STATICLIB -DNGTCP2_STATICLIB -DNGHTTP3_STATICLIB" \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="${curl_install}" \
+		-DBUILD_CURL_EXE=OFF \
+		-DBUILD_TESTING=OFF \
+		-DCURL_BROTLI=ON \
+		-DCURL_USE_OPENSSL=ON \
+		-DHAVE_SSL_CTX_SET_QUIC_METHOD=ON \
+		-DUSE_NGHTTP2=ON \
+		-DUSE_NGTCP2=ON \
+		${cmake_extra} \
+		-G "Unix Makefiles"
+	make -j ${nproc}
+	make install
+endif
 
 clean-curl:
 	rm -rf ${curl_build}

@@ -3,12 +3,25 @@
 
 #include <sys/stat.h>
 #include <stdio.h>
+#ifdef WIN32
+#include <libloaderapi.h>
+#include <errhandlingapi.h>
+#else
 #include <dlfcn.h>
+#endif
 
+#ifdef WIN32
+HMODULE libcurl = NULL;
+#else
 void *libcurl = NULL;
+#endif
 
 void *curlSym(const char *sym) {
+#ifdef WIN32
+	void *func = (void *)GetProcAddress(libcurl, sym);
+#else
 	void *func = dlsym(libcurl, sym);
+#endif
 	if (!func) {
 		printf("Could not find symbol '%s'\n", sym);
 		return NULL;
@@ -33,11 +46,19 @@ int main(int argc, char *argv[]) {
 	}
 	printf("Testing libcurl at: %s\n", argv[1]);
 
+#ifdef WIN32
+	libcurl = LoadLibrary(libcurlPath);
+	if (!libcurl) {
+		printf("Failed to open library: %d\n", GetLastError());
+		return 1;
+	}
+#else
 	libcurl = dlopen(libcurlPath, RTLD_LAZY);
 	if (!libcurl) {
 		printf("Failed to open library: %s\n", dlerror());
 		return 1;
 	}
+#endif
 
 	void *f_curl_version = curlSym("curl_version");
 	if (!f_curl_version) return 1;
@@ -58,7 +79,11 @@ int main(int argc, char *argv[]) {
 	print_string_list(curl_version_info[25]);
 	printf("\n");
 
+#ifdef WIN32
+	FreeLibrary(libcurl);
+#else
 	dlclose(libcurl);
+#endif
 }
 
 void print_string_list(char **list) {
