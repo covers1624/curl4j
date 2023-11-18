@@ -62,6 +62,13 @@ all: ${curl_install}
 
 # === musl ===
 ifneq (,$(findstring musl,$(HOST)))
+musl_compiler=gcc
+
+ifneq (,$(findstring aarch64,$(HOST)))
+musl_compiler=aarch64-linux-gnu-gcc-10
+quictls_extra=linux-aarch64
+endif
+
 compiler_deps=${musl_install}
 compiler=${musl_install}/bin/musl-gcc
 cmake_extra=-DCMAKE_FIND_ROOT_PATH="${musl_install}"
@@ -77,7 +84,7 @@ ${musl_build}: ${musl_archive}
 
 ${musl_install}: ${musl_build}
 	cd "${musl_build}"
-	CC="gcc" CFLAGS="-fPIC" ./configure --disable-shared --prefix="${musl_install}"
+	CC="${musl_compiler}" CFLAGS="-fPIC" ./configure --disable-shared --prefix="${musl_install}"
 	make -j ${nproc}
 	make install
 
@@ -255,6 +262,9 @@ ${curl_build}: ${curl_archive}
 #      As of writing this the following issues are present:
 # 		- Windows/Mingw on automake does not emit a libcurl.dll, at all.
 #		- Linux-x64 on cmake works just fine
+#		- Linux-aarch64 on cmake does not link correctly and emits a broken assembly.
+#		  - During OpenSSL static init, several calls to sigsetjmp are made, however, it incorrectly links setjmp.
+#			Ultimately causing a Bus error as execution runs off into fucking narnia.
 ifeq (,$(findstring w64, $(HOST)))
 ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_install} ${nghttp2_install} ${ngtcp2_install} ${nghttp3_install} ${curl_build}
 	cd "${curl_build}"
