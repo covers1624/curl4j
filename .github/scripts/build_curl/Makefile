@@ -183,7 +183,7 @@ ${nghttp2_build}: ${nghttp2_archive}
 
 ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 	cd "${nghttp2_build}"
-	CFLAGS=--static CC="${compiler}" ./configure \
+	CC="${compiler}" ./configure \
 		--host=${HOST} \
 		--with-pic \
 		--enable-lib-only \
