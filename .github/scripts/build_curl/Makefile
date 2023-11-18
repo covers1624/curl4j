@@ -115,7 +115,10 @@ ${brotli_build}: ${brotli_archive}
 
 ${brotli_install}: ${compiler_deps} ${brotli_build}
 	cd "${brotli_build}"
-	CC="${compiler}" cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${brotli_install}" -DBUILD_SHARED_LIBS=OFF
+	CC="${compiler}" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="${brotli_install}" \
+		-DBUILD_SHARED_LIBS=OFF
 	cmake --build . --config Release
 	make -j ${nproc}
 	make install
@@ -160,7 +163,13 @@ ${nghttp2_build}: ${nghttp2_archive}
 
 ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 	cd "${nghttp2_build}"
-	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --disable-python-bindings --prefix="${nghttp2_install}"
+	CFLAGS=--static CC="${compiler}" ./configure \
+		--host=${HOST} \
+		--with-pic \
+		--enable-lib-only \
+		--disable-shared \
+		--disable-python-bindings \
+		--prefix="${nghttp2_install}"
 	make -j ${nproc}
 	make install
 
@@ -180,6 +189,7 @@ ${ngtcp2_build}: ${ngtcp2_archive}
 ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 	cd "${ngtcp2_build}"
 	CFLAGS=--static CC="${compiler}" ./configure \
+		--host=${HOST} \
 		--prefix="${ngtcp2_install}" \
 		--with-pic \
 		--enable-lib-only \
@@ -205,7 +215,12 @@ ${nghttp3_build}: ${nghttp3_archive}
 
 ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 	cd "${nghttp3_build}"
-	CFLAGS=--static CC="${compiler}" ./configure --with-pic --enable-lib-only --disable-shared --prefix="${nghttp3_install}"
+	CFLAGS=--static CC="${compiler}" ./configure \
+		--host=${HOST} \
+		--prefix="${nghttp3_install}" \
+		--disable-shared \
+		--with-pic \
+		--enable-lib-only
 	make -j ${nproc}
 	make install
 
