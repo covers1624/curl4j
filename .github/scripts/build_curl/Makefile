@@ -56,6 +56,8 @@ compiler=gcc
 windres=
 
 cmake_extra=
+cflags_extra=
+ldflags_extra=
 quictls_extra=
 
 all: ${curl_install}
@@ -100,7 +102,18 @@ compiler=x86_64-w64-mingw32-gcc-posix
 windres=x86_64-w64-mingw32-windres
 
 cmake_extra=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
+ldflags_extra=--static -static-libgcc
 quictls_extra=mingw64
+else
+ifneq (, $(findstring darwin, $(HOST)))
+compiler=clang
+
+ifneq (, $(findstring aarch64, $(HOST)))
+cmake_extra=-DCMAKE_OSX_ARCHITECTURES=arm64
+cflags_extra=--target=${HOST}
+quictls_extra=darwin64-arm64
+endif
+endif
 endif
 endif
 
@@ -115,7 +128,10 @@ ${zlib_build}: ${zlib_archive}
 
 ${zlib_install}: ${compiler_deps} ${zlib_build}
 	cd "${zlib_build}"
-	CC="${compiler}" CFLAGS="-fPIC" ./configure --static --prefix="${zlib_install}"
+	CC="${compiler}" CFLAGS="-fPIC ${cflags_extra}" \
+		./configure \
+		--static \
+		--prefix="${zlib_install}"
 	${MAKE} -j ${nproc}
 	${MAKE} install
 
@@ -183,7 +199,7 @@ ${nghttp2_build}: ${nghttp2_archive}
 
 ${nghttp2_install}: ${compiler_deps} ${nghttp2_build}
 	cd "${nghttp2_build}"
-	CC="${compiler}" ./configure \
+	CC="${compiler}" CFLAGS="${cflags_extra}" ./configure \
 		--host=${HOST} \
 		--with-pic \
 		--enable-lib-only \
@@ -208,7 +224,7 @@ ${ngtcp2_build}: ${ngtcp2_archive}
 
 ${ngtcp2_install}: ${compiler_deps} ${ngtcp2_build} ${quictls_install}
 	cd "${ngtcp2_build}"
-	CC="${compiler}" ./configure \
+	CC="${compiler}" CFLAGS="${cflags_extra}" ./configure \
 		--host=${HOST} \
 		--prefix="${ngtcp2_install}" \
 		--with-pic \
@@ -235,7 +251,7 @@ ${nghttp3_build}: ${nghttp3_archive}
 
 ${nghttp3_install}: ${compiler_deps} ${nghttp3_build}
 	cd "${nghttp3_build}"
-	CC="${compiler}" ./configure \
+	CC="${compiler}" CFLAGS="${cflags_extra}" ./configure \
 		--host=${HOST} \
 		--prefix="${nghttp3_install}" \
 		--disable-shared \
@@ -265,7 +281,7 @@ ${curl_build}: ${curl_archive}
 #		- Linux-aarch64 on cmake does not link correctly and emits a broken assembly.
 #		  - During OpenSSL static init, several calls to sigsetjmp are made, however, it incorrectly links setjmp.
 #			Ultimately causing a Bus error as execution runs off into fucking narnia.
-ifeq (,$(findstring w64, $(HOST)))
+ifneq (,$(findstring linux, $(HOST)))
 ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_install} ${nghttp2_install} ${ngtcp2_install} ${nghttp3_install} ${curl_build}
 	cd "${curl_build}"
 	patch -N -p1 -r /dev/null -i "${scripts_dir}/patches/curl/patch-0000-brotli-1.1.0-static.patch"
@@ -298,9 +314,9 @@ ${curl_install}: ${compiler_deps} ${zlib_install} ${brotli_install} ${quictls_in
 	# 	   This forces curl to link against the .a files instead of the .dll.a files. Thus they are actually static linked in.
 	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
 	rm "${quictls_install}"/lib*/*.dll.a || true
+	rm "${quictls_install}"/lib*/*.dylib || true
 	export CC="${compiler}"
-	export CFLAGS="-gdwarf-4"
-	export LDFLAGS="--static -static-libgcc"
+	export LDFLAGS="${ldflags_extra}"
 	export OpenSSL_ROOT=${quictls_install}
 	export OPENSSL_ROOT_DIR=${quictls_install}
 	export ZLIB_ROOT=${zlib_install}
