@@ -354,6 +354,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		-DHAVE_SSL_CTX_SET_QUIC_METHOD=ON \
 		-DUSE_NGHTTP2=ON \
 		-DUSE_NGTCP2=ON \
+		-DCURL_USE_LIBSSH2=OFF \
 		$(CMAKE_ARGS) \
 		-G "Unix Makefiles"
 	$(MAKE) -j $(nproc)
