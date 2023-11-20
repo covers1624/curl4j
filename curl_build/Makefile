@@ -1,6 +1,9 @@
 .ONESHELL:
 
-# === common directories ===
+# === common ===
+flavour=$(shell echo "$(PLATFORM)" | cut -d_ -f1)
+arch=$(shell echo "$(PLATFORM)" | cut -d_ -f2)
+
 curr_dir=$(shell pwd)
 scripts_dir=$(curr_dir)/../.github/scripts
 build_dir=$(curr_dir)/build
@@ -49,6 +52,9 @@ curl_archive=$(cache_dir)/curl-$(curl_version).tar.gz
 curl_build=$(build_dir)/curl
 curl_install=$(install_dir)/curl
 
+libcurl_install=$(install_dir)/libcurl
+libcurl_zip=$(install_dir)/libcurl-$(curl_version)-$(flavour)_$(arch).zip
+
 # === state ===
 nproc=$(shell getconf _NPROCESSORS_ONLN)
 COMPILER_DEPS=
@@ -59,12 +65,9 @@ CFLAGS=
 LDFLAGS=
 QUICTLS_ARGS=
 
-all: $(curl_install)
+all: $(libcurl_zip)
 
 # === OS Specific configuration ===
-flavour=$(shell echo "$(PLATFORM)" | cut -d_ -f1)
-arch=$(shell echo "$(PLATFORM)" | cut -d_ -f2)
-# Setup OS specific configurations
 # Linux
 ifeq (linux, $(flavour))
 ifeq (x64, $(arch))
@@ -368,6 +371,33 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
 endif
+
+$(libcurl_install): $(curl_install)
+	set -e
+	mkdir -p $(libcurl_install)
+	# Copy licenses
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/zlib" && cp "$(zlib_build)/LICENSE" "$(libcurl_install)/$(flavour)/$(arch)/licenses/zlib/LICENSE"
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/brotli" && cp "$(brotli_build)/LICENSE" "$(libcurl_install)/$(flavour)/$(arch)/licenses/brotli/LICENSE"
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/nghttp2" && cp "$(nghttp2_build)/COPYING" "$(libcurl_install)/$(flavour)/$(arch)/licenses/nghttp2/COPYING"
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/ngtcp2" && cp "$(ngtcp2_build)/COPYING" "$(libcurl_install)/$(flavour)/$(arch)/licenses/ngtcp2/COPYING"
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/quictls" && cp "$(quictls_build)/LICENSE.txt" "$(libcurl_install)/$(flavour)/$(arch)/licenses/quictls/LICENSE.txt"
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/curl" && cp "$(curl_build)/COPYING" "$(libcurl_install)/$(flavour)/$(arch)/licenses/curl/COPYING"
+ifeq (linux, $(flavour))
+	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/musl" && cp "$(musl_build)/COPYRIGHT" "$(libcurl_install)/$(flavour)/$(arch)/licenses/musl/COPYRIGHT"
+	cp "$(curl_install)/lib/libcurl.so.4.8.0" "$(libcurl_install)/$(flavour)/$(arch)/libcurl.so"
+else ifeq (windows, $(flavour))
+	cp "$(curl_install)/bin/libcurl.dll" "$(libcurl_install)/$(flavour)/$(arch)/curl.dll"
+else ifeq (macos, $(flavour))
+	cp "$(curl_install)/bin/libcurl.4.dylib" "$(libcurl_install)/$(flavour)/$(arch)/libcurl.dylib"
+else
+$(error "I don't know where libcurl was installed to on $(flavour)")
+endif
+
+$(libcurl_zip): $(libcurl_install)
+	set -e
+	cd "$(libcurl_install)"
+	zip -r "$(libcurl_zip)" ./*
+	sha256sum $(libcurl_zip)
 
 clean-curl:
 	rm -rf $(curl_build)

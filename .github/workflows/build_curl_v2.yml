@@ -11,6 +11,12 @@ jobs:
       - run: |
           cd curl_build
           PLATFORM=linux_x64 make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux_x64
+          path: |
+            curl_build/install/*.zip    
 
   build_linux_arm64:
     runs-on: ubuntu-22.04
@@ -23,6 +29,12 @@ jobs:
       - run: |
           cd curl_build
           PLATFORM=linux_arm64 make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux_arm64
+          path: |
+            curl_build/install/*.zip    
 
   build_windows_x64:
     runs-on: ubuntu-22.04
@@ -35,6 +47,12 @@ jobs:
       - run: |
           cd curl_build
           PLATFORM=windows_x64 make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows_x64
+          path: |
+            curl_build/install/*.zip  
 
   build_macos_x64:
     runs-on: macos-11
@@ -47,6 +65,12 @@ jobs:
       - run: |
           cd curl_build
           PLATFORM=macos_x64 gmake
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos_x64
+          path: |
+            curl_build/install/*.zip  
 
   build_macos_aarch64:
     runs-on: macos-11
@@ -59,3 +83,9 @@ jobs:
       - run: |
           cd curl_build
           PLATFORM=macos_arm64 gmake
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos_arm64
+          path: |
+            curl_build/install/*.zip  
