@@ -51,29 +51,69 @@ curl_install=$(install_dir)/curl
 
 # === state ===
 nproc=$(shell getconf _NPROCESSORS_ONLN)
-compiler_deps=
-compiler=gcc
-windres=
+COMPILER_DEPS=
+C_COMPILER=gcc
 
-cmake_extra=
-cflags_extra=
-ldflags_extra=
-quictls_extra=
+CMAKE_ARGS=
+CFLAGS=
+LDFLAGS=
+QUICTLS_ARGS=
 
 all: $(curl_install)
 
-# === musl ===
-ifneq (,$(findstring musl,$(HOST)))
-musl_compiler=gcc
-
-ifneq (,$(findstring aarch64,$(HOST)))
-musl_compiler=aarch64-linux-gnu-gcc-10
-quictls_extra=linux-aarch64
+# === OS Specific configuration ===
+flavour=$(shell echo "$(PLATFORM)" | cut -d_ -f1)
+arch=$(shell echo "$(PLATFORM)" | cut -d_ -f2)
+# Setup OS specific configurations
+# Linux
+ifeq (linux, $(flavour))
+ifeq (x64, $(arch))
+HOST=x86_64-pc-linux-musl
+MUSL_CC=gcc
+QUICTLS_ARGS=linux-x86_64
+else
+HOST=aarch64-pc-linux-musl
+MUSL_CC=aarch64-linux-gnu-gcc-10
+QUICTLS_ARGS=linux-aarch64
 endif
 
-compiler_deps=$(musl_install)
-compiler=$(musl_install)/bin/musl-gcc
-cmake_extra=-DCMAKE_FIND_ROOT_PATH="$(musl_install)"
+# Windows
+else ifeq (windows, $(flavour))
+# Bail arm64 windows. Not currently supported.
+ifeq (arm64, $(arch))
+$(error Arm64 Windows not currently supported.)
+endif
+
+HOST=x86_64-w64-mingw32
+C_COMPILER=x86_64-w64-mingw32-gcc-posix
+WINDRES=x86_64-w64-mingw32-windres
+CMAKE_ARGS=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
+LDFLAGS=--static -static-libgcc
+QUICTLS_ARGS=mingw64
+
+# Macos
+else ifeq (macos, $(flavour))
+C_COMPILER=clang
+
+ifeq (x64, $(arch))
+HOST=x86_64-apple-darwin20.6.0
+QUICTLS_ARGS=darwin64-x86_64
+else
+HOST=aarch64-apple-darwin20.6.0
+CMAKE_ARGS=-DCMAKE_OSX_ARCHITECTURES=arm64
+CFLAGS=--target=aarch64-apple-darwin20.6.0
+QUICTLS_ARGS=darwin64-arm64
+endif
+
+else
+$(error Unknown Operating System: $(flavour))
+endif
+
+# === musl ===
+ifeq (linux, $(flavour))
+COMPILER_DEPS=$(musl_install)
+C_COMPILER=$(musl_install)/bin/musl-gcc
+CMAKE_ARGS=-DCMAKE_FIND_ROOT_PATH="$(musl_install)"
 
 $(musl_archive):
 	@"$(scripts_dir)/download.sh" "https://musl.libc.org/releases/musl-$(musl_version).tar.gz" "$(musl_archive)"
@@ -86,36 +126,14 @@ $(musl_build): $(musl_archive)
 
 $(musl_install): $(musl_build)
 	cd "$(musl_build)"
-	CC="$(musl_compiler)" CFLAGS="-fPIC" ./configure --disable-shared --prefix="$(musl_install)"
+	CC="$(MUSL_CC)" CFLAGS="-fPIC" ./configure --disable-shared --prefix="$(musl_install)"
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
+endif
 
 clean-musl:
 	rm -rf "$(musl_build)"
 	rm -rf "$(musl_install)"
-else
-# TODO IJ is whining that this target doesnt exist, but not sure it actually matters.
-$(compiler_deps):
-clean-musl:
-ifneq (,$(findstring w64, $(HOST)))
-compiler=x86_64-w64-mingw32-gcc-posix
-windres=x86_64-w64-mingw32-windres
-
-cmake_extra=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
-ldflags_extra=--static -static-libgcc
-quictls_extra=mingw64
-else
-ifneq (, $(findstring darwin, $(HOST)))
-compiler=clang
-
-ifneq (, $(findstring aarch64, $(HOST)))
-cmake_extra=-DCMAKE_OSX_ARCHITECTURES=arm64
-cflags_extra=--target=$(HOST)
-quictls_extra=darwin64-arm64
-endif
-endif
-endif
-endif
 
 # === zlib ===
 $(zlib_archive):
@@ -126,9 +144,9 @@ $(zlib_build): $(zlib_archive)
 	tar -xvf "$(zlib_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/zlib-$(zlib_version)/" "$(zlib_build)/"
 
-$(zlib_install): $(compiler_deps) $(zlib_build)
+$(zlib_install): $(COMPILER_DEPS) $(zlib_build)
 	cd "$(zlib_build)"
-	CC="$(compiler)" CFLAGS="-fPIC $(cflags_extra)" \
+	CC="$(C_COMPILER)" CFLAGS="-fPIC $(CFLAGS)" \
 		./configure \
 		--static \
 		--prefix="$(zlib_install)"
@@ -148,13 +166,13 @@ $(brotli_build): $(brotli_archive)
 	tar -xvf "$(brotli_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/brotli-$(brotli_version)/" "$(brotli_build)/"
 
-$(brotli_install): $(compiler_deps) $(brotli_build)
+$(brotli_install): $(COMPILER_DEPS) $(brotli_build)
 	cd "$(brotli_build)"
-	CC="$(compiler)" cmake \
+	CC="$(C_COMPILER)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(brotli_install)" \
 		-DBUILD_SHARED_LIBS=OFF \
-		$(cmake_extra)
+		$(CMAKE_ARGS)
 	cmake --build . --config Release
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
@@ -172,15 +190,15 @@ $(quictls_build): $(quictls_archive)
 	tar -xvf "$(quictls_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/openssl-openssl-$(quictls_version)/" "$(quictls_build)/"
 
-$(quictls_install): $(compiler_deps) $(linux_headers) $(quictls_build)
+$(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
 	cd "$(quictls_build)"
-	CC="$(compiler)" CFLAGS="-I$(linux_headers)" WINDRES=$(windres) ./Configure \
+	CC="$(C_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
 		no-tests \
 		-fpic \
 		--prefix=$(quictls_install) \
 		-DOPENSSL_DEV_NO_ATOMICS=true \
 		-D__STDC_NO_ATOMICS__=true \
-		$(quictls_extra)
+		$(QUICTLS_ARGS)
 	$(MAKE) -j $(nproc)
 	$(MAKE) install_sw
 
@@ -197,9 +215,9 @@ $(nghttp2_build): $(nghttp2_archive)
 	tar -xvf "$(nghttp2_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/nghttp2-$(nghttp2_version)/" "$(nghttp2_build)/"
 
-$(nghttp2_install): $(compiler_deps) $(nghttp2_build)
+$(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 	cd "$(nghttp2_build)"
-	CC="$(compiler)" CFLAGS="$(cflags_extra)" ./configure \
+	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
 		--with-pic \
 		--enable-lib-only \
@@ -222,9 +240,9 @@ $(ngtcp2_build): $(ngtcp2_archive)
 	tar -xvf "$(ngtcp2_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/ngtcp2-$(ngtcp2_version)/" "$(ngtcp2_build)/"
 
-$(ngtcp2_install): $(compiler_deps) $(ngtcp2_build) $(quictls_install)
+$(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 	cd "$(ngtcp2_build)"
-	CC="$(compiler)" CFLAGS="$(cflags_extra)" ./configure \
+	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(ngtcp2_install)" \
 		--with-pic \
@@ -249,9 +267,9 @@ $(nghttp3_build): $(nghttp3_archive)
 	tar -xvf "$(nghttp3_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/nghttp3-$(nghttp3_version)/" "$(nghttp3_build)/"
 
-$(nghttp3_install): $(compiler_deps) $(nghttp3_build)
+$(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
 	cd "$(nghttp3_build)"
-	CC="$(compiler)" CFLAGS="$(cflags_extra)" ./configure \
+	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(nghttp3_install)" \
 		--disable-shared \
@@ -274,7 +292,7 @@ $(curl_build): $(curl_archive)
 	mv "$(build_dir)/curl-$(curl_version)/" "$(curl_build)/"
 	cd "$(curl_build)"
 
-# TODO On Linux/mac we use automake, on Windows/Mingw we use cmake.
+# TODO On Linux we use automake, on Windows/Mingw/mac we use cmake.
 #      As of writing this the following issues are present:
 # 		- Windows/Mingw on automake does not emit a libcurl.dll, at all.
 #		- Linux-x64 on cmake works just fine
@@ -282,14 +300,14 @@ $(curl_build): $(curl_archive)
 #		  - During OpenSSL static init, several calls to sigsetjmp are made, however, it incorrectly links setjmp.
 #			Ultimately causing a Bus error as execution runs off into fucking narnia.
 ifneq (,$(findstring linux, $(HOST)))
-$(curl_install): $(compiler_deps) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
+$(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	cd "$(curl_build)"
 	patch -N -p1 -r /dev/null -i "$(scripts_dir)/patches/curl/patch-0000-brotli-1.1.0-static.patch"
 	autoreconf -fi
 	# TODO, Required due to the hack required for mingw bellow.
 	rm "$(quictls_install)"/lib*/*.so || true
 	./configure \
-		CC="$(compiler)" \
+		CC="$(C_COMPILER)" \
 		--host=$(HOST) \
 		--prefix="$(curl_install)" \
 		--with-zlib=$(zlib_install) \
@@ -307,7 +325,7 @@ $(curl_install): $(compiler_deps) $(zlib_install) $(brotli_install) $(quictls_in
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
 else
-$(curl_install): $(compiler_deps) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
+$(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
 	# TODO This is a hack. Find a way to nuke this.
@@ -315,8 +333,8 @@ $(curl_install): $(compiler_deps) $(zlib_install) $(brotli_install) $(quictls_in
 	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
 	rm "$(quictls_install)"/lib*/*.dll.a || true
 	rm "$(quictls_install)"/lib*/*.dylib || true
-	export CC="$(compiler)"
-	export LDFLAGS="$(ldflags_extra)"
+	export CC="$(C_COMPILER)"
+	export LDFLAGS="$(LDFLAGS)"
 	export OpenSSL_ROOT=$(quictls_install)
 	export OPENSSL_ROOT_DIR=$(quictls_install)
 	export ZLIB_ROOT=$(zlib_install)
@@ -336,7 +354,7 @@ $(curl_install): $(compiler_deps) $(zlib_install) $(brotli_install) $(quictls_in
 		-DHAVE_SSL_CTX_SET_QUIC_METHOD=ON \
 		-DUSE_NGHTTP2=ON \
 		-DUSE_NGTCP2=ON \
-		$(cmake_extra) \
+		$(CMAKE_ARGS) \
 		-G "Unix Makefiles"
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
