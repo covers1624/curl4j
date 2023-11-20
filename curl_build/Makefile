@@ -125,6 +125,7 @@ $(musl_build): $(musl_archive)
 	patch -N -p1 -d "$(musl_build)" -r /dev/null -i "$(scripts_dir)/patches/musl/0000-getauxval-null-guard.patch"
 
 $(musl_install): $(musl_build)
+	set -e
 	cd "$(musl_build)"
 	CC="$(MUSL_CC)" CFLAGS="-fPIC" ./configure --disable-shared --prefix="$(musl_install)"
 	$(MAKE) -j $(nproc)
@@ -145,6 +146,7 @@ $(zlib_build): $(zlib_archive)
 	mv "$(build_dir)/zlib-$(zlib_version)/" "$(zlib_build)/"
 
 $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
+	set -e
 	cd "$(zlib_build)"
 	CC="$(C_COMPILER)" CFLAGS="-fPIC $(CFLAGS)" \
 		./configure \
@@ -167,6 +169,7 @@ $(brotli_build): $(brotli_archive)
 	mv "$(build_dir)/brotli-$(brotli_version)/" "$(brotli_build)/"
 
 $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
+	set -e
 	cd "$(brotli_build)"
 	CC="$(C_COMPILER)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
@@ -191,6 +194,7 @@ $(quictls_build): $(quictls_archive)
 	mv "$(build_dir)/openssl-openssl-$(quictls_version)/" "$(quictls_build)/"
 
 $(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
+	set -e
 	cd "$(quictls_build)"
 	CC="$(C_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
 		no-tests \
@@ -216,6 +220,7 @@ $(nghttp2_build): $(nghttp2_archive)
 	mv "$(build_dir)/nghttp2-$(nghttp2_version)/" "$(nghttp2_build)/"
 
 $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
+	set -e
 	cd "$(nghttp2_build)"
 	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
@@ -241,6 +246,7 @@ $(ngtcp2_build): $(ngtcp2_archive)
 	mv "$(build_dir)/ngtcp2-$(ngtcp2_version)/" "$(ngtcp2_build)/"
 
 $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
+	set -e
 	cd "$(ngtcp2_build)"
 	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
@@ -268,6 +274,7 @@ $(nghttp3_build): $(nghttp3_archive)
 	mv "$(build_dir)/nghttp3-$(nghttp3_version)/" "$(nghttp3_build)/"
 
 $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
+	set -e
 	cd "$(nghttp3_build)"
 	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
@@ -301,6 +308,7 @@ $(curl_build): $(curl_archive)
 #			Ultimately causing a Bus error as execution runs off into fucking narnia.
 ifneq (,$(findstring linux, $(HOST)))
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
+	set -e
 	cd "$(curl_build)"
 	patch -N -p1 -r /dev/null -i "$(scripts_dir)/patches/curl/patch-0000-brotli-1.1.0-static.patch"
 	autoreconf -fi
