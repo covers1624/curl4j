@@ -2,6 +2,7 @@
 
 !src/
 !java9/
+!curl_build/
 
 !LICENSE.txt
 !README.MD

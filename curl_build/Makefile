@@ -2,7 +2,7 @@
 
 # === common directories ===
 curr_dir=$(shell pwd)
-scripts_dir=$(curr_dir)/..
+scripts_dir=$(curr_dir)/../.github/scripts
 build_dir=$(curr_dir)/build
 install_dir=$(curr_dir)/install
 cache_dir=$(curr_dir)/cache
