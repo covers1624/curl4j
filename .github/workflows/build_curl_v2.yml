@@ -40,14 +40,22 @@ jobs:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
+      - name: Install dependencies.
+        run: |
+          rm -rf /usr/local/Cellar/openssl*/**/include
+          brew install make
       - run: |
           cd curl_build
-          PLATFORM=macos_x64 make
+          PLATFORM=macos_x64 gmake
 
   build_macos_aarch64:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
+      - name: Install dependencies.
+        run: |
+          rm -rf /usr/local/Cellar/openssl*/**/include
+          brew install make
       - run: |
           cd curl_build
-          PLATFORM=macos_arm64 make
+          PLATFORM=macos_arm64 gmake
