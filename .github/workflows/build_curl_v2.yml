@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies.
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
-          brew install make
+          brew install make coreutils
       - run: |
           cd curl_build
           PLATFORM=macos_x64 gmake
@@ -79,7 +79,7 @@ jobs:
       - name: Install dependencies.
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
-          brew install make
+          brew install make coreutils
       - run: |
           cd curl_build
           PLATFORM=macos_arm64 gmake
