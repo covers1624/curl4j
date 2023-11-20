@@ -388,7 +388,7 @@ ifeq (linux, $(flavour))
 else ifeq (windows, $(flavour))
 	cp "$(curl_install)/bin/libcurl.dll" "$(libcurl_install)/$(flavour)/$(arch)/curl.dll"
 else ifeq (macos, $(flavour))
-	cp "$(curl_install)/bin/libcurl.4.dylib" "$(libcurl_install)/$(flavour)/$(arch)/libcurl.dylib"
+	cp "$(curl_install)/lib/libcurl.4.dylib" "$(libcurl_install)/$(flavour)/$(arch)/libcurl.dylib"
 else
 $(error "I don't know where libcurl was installed to on $(flavour)")
 endif
