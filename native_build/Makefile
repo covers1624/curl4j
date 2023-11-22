@@ -125,7 +125,7 @@ $(musl_build): $(musl_archive)
 	mkdir -p "$(build_dir)"
 	tar -xvf "$(musl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/musl-$(musl_version)/" "$(musl_build)"
-	patch -N -p1 -d "$(musl_build)" -r /dev/null -i "$(scripts_dir)/patches/musl/0000-getauxval-null-guard.patch"
+	patch -N -p1 -d "$(musl_build)" -r /dev/null -i "$(scripts_dir)/patches/musl/0000-libc-lazy-init.patch"
 
 $(musl_install): $(musl_build)
 	set -e
