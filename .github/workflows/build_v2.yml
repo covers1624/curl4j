@@ -91,10 +91,7 @@ jobs:
           distro: alpine_latest
           install: apk update && apk add openjdk8 openjdk9 openjdk17 git
           run: |
-            ./gradlew check
-      - name: "Check"
-        run: |
-          ./gradlew check -si
+            ./gradlew check -si
 
   build_windows_x64:
     runs-on: ubuntu-22.04
