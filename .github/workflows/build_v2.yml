@@ -16,7 +16,7 @@ jobs:
         with:
           name: linux_x64
           path: |
-            native_build/install/*.zip    
+            native_build/install/libcurl*
 
   build_linux_arm64:
     runs-on: ubuntu-22.04
@@ -34,7 +34,7 @@ jobs:
         with:
           name: linux_arm64
           path: |
-            native_build/install/*.zip    
+            native_build/install/libcurl*
 
   build_windows_x64:
     runs-on: ubuntu-22.04
@@ -52,7 +52,7 @@ jobs:
         with:
           name: windows_x64
           path: |
-            native_build/install/*.zip  
+            native_build/install/libcurl*
 
   build_macos_x64:
     runs-on: macos-11
@@ -70,7 +70,7 @@ jobs:
         with:
           name: macos_x64
           path: |
-            native_build/install/*.zip  
+            native_build/install/libcurl*
 
   build_macos_aarch64:
     runs-on: macos-11
@@ -88,4 +88,4 @@ jobs:
         with:
           name: macos_arm64
           path: |
-            native_build/install/*.zip  
+            native_build/install/libcurl*

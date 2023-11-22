@@ -1,5 +1,7 @@
 /*
 
+!jni_helpers
+
 !.gitignore
 !Makefile
 !probe.c

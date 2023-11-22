@@ -1,6 +1,7 @@
 //
 // Created by covers1624 on 14/08/23.
 //
+#ifndef WIN32
 #include "net_covers1624_curl4j_core_Library_UnixLibrary.h"
 #include "stdint.h"
 #include "dlfcn.h"
@@ -29,3 +30,4 @@ JNIEXPORT jstring JNICALL Java_net_covers1624_curl4j_core_Library_00024UnixLibra
 
     return (*env)->NewStringUTF(env, err);
 }
+#endif

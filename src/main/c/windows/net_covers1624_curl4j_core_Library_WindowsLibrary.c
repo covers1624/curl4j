@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include "net_covers1624_curl4j_core_Library_WindowsLibrary.h"
 #include "libloaderapi.h"
 #include "errhandlingapi.h"
@@ -19,3 +20,4 @@ JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_core_Library_00024WindowsLibr
     (*env)->ReleaseStringUTFChars(env, name, str);
     return (jlong) proc;
 }
+#endif
