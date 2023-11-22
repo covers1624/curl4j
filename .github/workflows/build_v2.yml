@@ -39,7 +39,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_x64
-          path: .native_build/install/
+          path: native_build/install/
       - name: "Check"
         run: |
           ./gradlew check
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_x64
-          path: .native_build/install/
+          path: native_build/install/
       - name: "Check"
         run: |
           apk update
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: linux_arm64
-          path: .native_build/install/
+          path: native_build/install/
       - uses: uraimo/run-on-arch-action@v2
         name: Check
         with:
@@ -157,7 +157,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: windows_x64
-          path: .native_build/install/
+          path: native_build/install/
       - name: "Check"
         run: |
           ./gradlew check
@@ -201,7 +201,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: macos_x64
-          path: .native_build/install/
+          path: native_build/install/
       - name: "Check"
         run: |
           ./gradlew check
