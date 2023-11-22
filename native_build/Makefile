@@ -137,7 +137,8 @@ $(musl_archive):
 
 $(musl_build): $(musl_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(musl_archive)" -C "$(build_dir)"
+	echo "Extracting musl archive.."
+	tar -xf "$(musl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/musl-$(musl_version)/" "$(musl_build)"
 	patch -N -p1 -d "$(musl_build)" -r /dev/null -i "$(scripts_dir)/patches/musl/0000-libc-lazy-init.patch"
 
@@ -159,7 +160,8 @@ $(zlib_archive):
 
 $(zlib_build): $(zlib_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(zlib_archive)" -C "$(build_dir)"
+	echo "Extracting zlib archive.."
+	tar -xf "$(zlib_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/zlib-$(zlib_version)/" "$(zlib_build)/"
 
 $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
@@ -182,7 +184,8 @@ $(brotli_archive):
 
 $(brotli_build): $(brotli_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(brotli_archive)" -C "$(build_dir)"
+	echo "Extracting brotli archive.."
+	tar -xf "$(brotli_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/brotli-$(brotli_version)/" "$(brotli_build)/"
 
 $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
@@ -207,7 +210,8 @@ $(quictls_archive):
 
 $(quictls_build): $(quictls_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(quictls_archive)" -C "$(build_dir)"
+	echo "Extracting quictls archive.."
+	tar -xf "$(quictls_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/openssl-openssl-$(quictls_version)/" "$(quictls_build)/"
 
 $(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
@@ -233,7 +237,8 @@ $(nghttp2_archive):
 
 $(nghttp2_build): $(nghttp2_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(nghttp2_archive)" -C "$(build_dir)"
+	echo "Extracting nghttp2 archive.."
+	tar -xf "$(nghttp2_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/nghttp2-$(nghttp2_version)/" "$(nghttp2_build)/"
 
 $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
@@ -259,7 +264,8 @@ $(ngtcp2_archive):
 
 $(ngtcp2_build): $(ngtcp2_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(ngtcp2_archive)" -C "$(build_dir)"
+	echo "Extracting ngtcp2 archive.."
+	tar -xf "$(ngtcp2_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/ngtcp2-$(ngtcp2_version)/" "$(ngtcp2_build)/"
 
 $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
@@ -287,7 +293,8 @@ $(nghttp3_archive):
 
 $(nghttp3_build): $(nghttp3_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(nghttp3_archive)" -C "$(build_dir)"
+	echo "Extracting nghttp3 archive.."
+	tar -xf "$(nghttp3_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/nghttp3-$(nghttp3_version)/" "$(nghttp3_build)/"
 
 $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
@@ -312,7 +319,8 @@ $(curl_archive):
 
 $(curl_build): $(curl_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(curl_archive)" -C "$(build_dir)"
+	echo "Extracting curl archive.."
+	tar -xf "$(curl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/curl-$(curl_version)/" "$(curl_build)/"
 	cd "$(curl_build)"
 
@@ -419,7 +427,8 @@ $(libffi_archive):
 
 $(libffi_build): $(libffi_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(libffi_archive)" -C "$(build_dir)"
+	echo "Extracting libffi archive.."
+	tar -xf "$(libffi_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/libffi-$(libffi_commit)/" "$(libffi_build)/"
 	cd "$(libffi_build)"
 	./autogen.sh
@@ -449,7 +458,8 @@ $(java_archive):
 
 $(java_build): $(java_archive)
 	mkdir -p "$(build_dir)"
-	tar -xvf "$(java_archive)" -C "$(build_dir)"
+	echo "Extracting jdk8 src archive.."
+	tar -xf "$(java_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/jdk8u-dev-$(java_version)/" "$(java_build)/"
 
 $(java_install): $(java_build)
