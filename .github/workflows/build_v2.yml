@@ -42,7 +42,7 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          ./gradlew check
+          ./gradlew check -si
 
   build_linux_arm64:
     runs-on: ubuntu-22.04
@@ -94,7 +94,7 @@ jobs:
             ./gradlew check
       - name: "Check"
         run: |
-          ./gradlew check
+          ./gradlew check -si
 
   build_windows_x64:
     runs-on: ubuntu-22.04
@@ -138,7 +138,7 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          ./gradlew check
+          ./gradlew check -si
 
   build_macos_x64:
     runs-on: macos-11
@@ -182,7 +182,7 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          ./gradlew check
+          ./gradlew check -si
 
   build_macos_arm64:
     runs-on: macos-11
