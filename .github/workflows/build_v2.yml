@@ -91,6 +91,7 @@ jobs:
           distro: alpine_latest
           install: apk update && apk add openjdk8 openjdk9 openjdk17 git
           run: |
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
             ./gradlew check -si
 
   build_windows_x64:
