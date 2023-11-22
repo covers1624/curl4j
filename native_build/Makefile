@@ -408,7 +408,13 @@ $(linux_headers):
 	mkdir -p "$(linux_headers)"
 	ln -s /usr/include/linux "$(linux_headers)"
 	ln -s /usr/include/asm-generic "$(linux_headers)"
-	ln -s /usr/include/$(shell uname -m)-linux-gnu/asm "$(linux_headers)"
+	if [ -e /usr/include/asm ]; then
+		# Arch just puts them here in the root include dir.
+		ln -s /usr/include/asm "$(linux_headers)"
+	else
+		# Ubuntu GH runners seem to put it in nested toolchain dirs.
+		ln -s /usr/include/$(shell uname -m)-linux-gnu/asm "$(linux_headers)"
+	fi
 
 clean-linux:
 	rm -rf "$(linux_headers)"
