@@ -243,7 +243,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
         env:
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
-        run: ./gradlew publish
+        run: ./gradlew publish -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
