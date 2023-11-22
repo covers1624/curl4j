@@ -436,7 +436,7 @@ $(libffi_build): $(libffi_archive)
 $(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
 	set -e
 	cd "$(libffi_build)"
-	CC=$(C_COMPILER) CFLAGS="-I$(linux_headers)" ./configure \
+	CC=$(C_COMPILER) CFLAGS="$(CFLAGS) -I$(linux_headers)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(libffi_install)" \
 		--disable-docs \
