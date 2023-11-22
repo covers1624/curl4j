@@ -208,3 +208,48 @@ jobs:
           name: macos_arm64
           path: |
             native_build/install/libcurl*
+
+  package:
+    runs-on: ubuntu-22.04
+    needs: [ build_linux_x64, test_linux_x64, build_linux_arm64, test_linux_arm64, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_x64
+          path: native_build/install/
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_arm64
+          path: native_build/install/
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows_x64
+          path: native_build/install/
+      - uses: actions/download-artifact@v3
+        with:
+          name: macos_x64
+          path: native_build/install/
+      - uses: actions/download-artifact@v3
+        with:
+          name: macos_arm64
+          path: native_build/install/
+      - name: Build
+        run: ./gradlew jar jarWithLibCurl -si
+      - name: Publish
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+        env:
+          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+        run: ./gradlew publish
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jars
+          path: |
+            build/**/*.jar
