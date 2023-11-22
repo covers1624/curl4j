@@ -25,6 +25,47 @@ jobs:
           path: |
             native_build/install/libcurl*
 
+  test_linux_x64_ubuntu:
+    runs-on: ubuntu-22.04
+    needs: build_linux_x64
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_x64
+          path: .native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check
+
+  test_linux_x64_alpine:
+    runs-on: ubuntu-22.04
+    container: alpine:3.18.4
+    needs: build_linux_x64
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_x64
+          path: .native_build/install/
+      - name: "Check"
+        run: |
+          apk update
+          apk add openjdk8 openjdk9 openjdk17
+          ./gradlew check
+
   build_linux_arm64:
     runs-on: ubuntu-22.04
     steps:
@@ -49,6 +90,33 @@ jobs:
           name: linux_arm64
           path: |
             native_build/install/libcurl*
+
+  test_linux_arm64:
+    runs-on: ubuntu-22.04
+    needs: build_linux_arm64
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_arm64
+          path: .native_build/install/
+      - uses: uraimo/run-on-arch-action@v2
+        name: Check
+        with:
+          arch: aarch64
+          distro: alpine_latest
+          install: apk update && apk install openjdk8
+          run: |
+            ./gradlew check
+      - name: "Check"
+        run: |
+          ./gradlew check
 
   build_windows_x64:
     runs-on: ubuntu-22.04
@@ -75,6 +143,25 @@ jobs:
           path: |
             native_build/install/libcurl*
 
+  test_windows_x64:
+    runs-on: windows-2022
+    needs: build_windows_x64
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows_x64
+          path: .native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check
+
   build_macos_x64:
     runs-on: macos-11
     steps:
@@ -99,6 +186,25 @@ jobs:
           name: macos_x64
           path: |
             native_build/install/libcurl*
+
+  test_macos_x64:
+    runs-on: macos-11
+    needs: build_macos_x64
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: macos_x64
+          path: .native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check
 
   build_macos_aarch64:
     runs-on: macos-11
