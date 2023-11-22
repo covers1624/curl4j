@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - run: |
+      - name: Build
+        run: |
           cd native_build
           PLATFORM=linux_x64 make
       - name: Upload Artifacts
@@ -26,7 +27,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install gcc-10-aarch64-linux-gnu
-      - run: |
+      - name: Build
+        run: |
           cd native_build
           PLATFORM=linux_arm64 make
       - name: Upload Artifacts
@@ -44,7 +46,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install mingw-w64
-      - run: |
+      - name: Build
+        run: |
           cd native_build
           PLATFORM=windows_x64 make
       - name: Upload Artifacts
@@ -62,7 +65,8 @@ jobs:
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
           brew install make coreutils
-      - run: |
+      - name: Build
+        run: |
           cd native_build
           PLATFORM=macos_x64 gmake
       - name: Upload Artifacts
@@ -80,7 +84,8 @@ jobs:
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
           brew install make coreutils
-      - run: |
+      - name: Build
+        run: |
           cd native_build
           PLATFORM=macos_arm64 gmake
       - name: Upload Artifacts
