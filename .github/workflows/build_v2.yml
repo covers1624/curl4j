@@ -89,7 +89,7 @@ jobs:
         with:
           arch: aarch64
           distro: alpine_latest
-          install: apk update && apk install openjdk8
+          install: apk update && apk add openjdk8
           run: |
             ./gradlew check
       - name: "Check"
