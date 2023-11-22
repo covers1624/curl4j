@@ -184,7 +184,7 @@ jobs:
         run: |
           ./gradlew check
 
-  build_macos_aarch64:
+  build_macos_arm64:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
