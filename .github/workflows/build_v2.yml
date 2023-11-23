@@ -131,11 +131,11 @@ jobs:
         name: Check
         with:
           arch: aarch64
-          distro: alpine_latest
-          install: apk update && apk add openjdk8 openjdk9 openjdk17 git
+          distro: ubuntu22.04
+          install: apt update && apt install -y openjdk-8-jdk-headless git
           run: |
-            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
-            ./gradlew check -si || cat hs_err* && exit 1
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
+            ./gradlew check -si
 
   build_windows_x64:
     runs-on: ubuntu-22.04
