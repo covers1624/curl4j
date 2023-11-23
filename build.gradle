@@ -26,10 +26,11 @@ def libcurlVersion = '8.2.1'
 
 def os = getOsName()
 def arch = getArchName()
-def libc = os == 'linux' ? getLibc() : null
+def libc = os == 'linux' ? (System.getenv('LIBC') ?: getLibc()) : null
 def suffix = libc != null ? "-$libc" : ""
 println("OS: $os")
-println("Host Architecutre: $arch")
+println("Arch: $arch")
+println("Libc: $libc Suffix: $suffix")
 
 sourceSets {
     main {
