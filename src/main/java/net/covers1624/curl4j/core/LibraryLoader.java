@@ -17,7 +17,7 @@ public class LibraryLoader {
     private static final boolean NO_EMBEDDED = Boolean.getBoolean("net.covers1624.curl4j.no_embedded");
 
     static {
-        loadJNILibrary(System.getProperty("net.covers1624.curl4j.libcurl4j.name", "curl4j"));
+        loadJNILibrary(System.getProperty("net.covers1624.curl4j.libcurl4j.name", LibC.appendSuffix("curl4j")));
     }
 
     /**

@@ -85,12 +85,17 @@ all: build-libcurl build-libcurl4j
 # Linux
 ifeq (linux, $(flavour))
 ifeq (x64, $(arch))
-HOST=x86_64-pc-linux-musl
+HOST=x86_64-pc-linux-$(LIBC)
 MUSL_CC=gcc
+C_COMPILER=gcc
 QUICTLS_ARGS=linux-x86_64
 else
-HOST=aarch64-pc-linux-musl
+ifeq (musl, $(LIBC))
+$(error Musl arm64 is currently not supported. Better CrossCompile env is required.)
+endif
+HOST=aarch64-pc-linux-$(LIBC)
 MUSL_CC=aarch64-linux-gnu-gcc-10
+C_COMPILER=aarch64-linux-gnu-gcc-10
 QUICTLS_ARGS=linux-aarch64
 endif
 
@@ -127,7 +132,7 @@ $(error Unknown Operating System: $(flavour))
 endif
 
 # === musl ===
-ifeq (linux, $(flavour))
+ifeq (musl, $(LIBC))
 COMPILER_DEPS=$(musl_install)
 C_COMPILER=$(musl_install)/bin/musl-gcc
 CMAKE_ARGS=-DCMAKE_FIND_ROOT_PATH="$(musl_install)"
@@ -140,12 +145,11 @@ $(musl_build): $(musl_archive)
 	echo "Extracting musl archive.."
 	tar -xf "$(musl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/musl-$(musl_version)/" "$(musl_build)"
-	patch -N -p1 -d "$(musl_build)" -r /dev/null -i "$(scripts_dir)/patches/musl/0000-libc-lazy-init.patch"
 
 $(musl_install): $(musl_build)
 	set -e
 	cd "$(musl_build)"
-	CC="$(MUSL_CC)" CFLAGS="-fPIC" ./configure --disable-shared --prefix="$(musl_install)"
+	CC="$(MUSL_CC)" ./configure --prefix="$(musl_install)"
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
 endif
@@ -352,6 +356,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		--enable-pthreads \
 		--disable-manual \
 		--disable-static \
+		--without-zstd \
 		--without-librtmp \
 		--without-libidn2 \
 		--without-libpsl
@@ -405,8 +410,7 @@ $(libcurl_install): $(curl_install)
 	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/quictls" && cp "$(quictls_build)/LICENSE.txt" "$(libcurl_install)/$(flavour)/$(arch)/licenses/quictls/LICENSE.txt"
 	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/curl" && cp "$(curl_build)/COPYING" "$(libcurl_install)/$(flavour)/$(arch)/licenses/curl/COPYING"
 ifeq (linux, $(flavour))
-	mkdir -p "$(libcurl_install)/$(flavour)/$(arch)/licenses/musl" && cp "$(musl_build)/COPYRIGHT" "$(libcurl_install)/$(flavour)/$(arch)/licenses/musl/COPYRIGHT"
-	cp "$(curl_install)/lib/libcurl.so.4.8.0" "$(libcurl_install)/$(flavour)/$(arch)/libcurl.so"
+	cp "$(curl_install)/lib/libcurl.so.4.8.0" "$(libcurl_install)/$(flavour)/$(arch)/libcurl-$(LIBC).so"
 else ifeq (windows, $(flavour))
 	cp "$(curl_install)/bin/libcurl.dll" "$(libcurl_install)/$(flavour)/$(arch)/curl.dll"
 else ifeq (macos, $(flavour))
@@ -494,8 +498,7 @@ $(libcurl4j_install): $(curl4j_build)
 	# Copy licenses
 	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi" && cp "$(libffi_build)/LICENSE" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi/LICENSE"
 ifeq (linux, $(flavour))
-	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/musl" && cp "$(musl_build)/COPYRIGHT" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/musl/COPYRIGHT"
-	cp "$(curl4j_build)/libcurl4j.so" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j.so"
+	cp "$(curl4j_build)/libcurl4j.so" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j-$(LIBC).so"
 else ifeq (windows, $(flavour))
 	cp "$(curl4j_build)/libcurl4j.dll" "$(libcurl4j_install)/$(flavour)/$(arch)/curl4j.dll"
 else ifeq (macos, $(flavour))

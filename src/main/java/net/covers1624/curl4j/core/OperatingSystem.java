@@ -26,4 +26,8 @@ public enum OperatingSystem {
         if (name.contains("freebsd")) return FREEBSD;
         return UNKNOWN;
     }
+
+    public boolean isLinux() {
+        return this == LINUX;
+    }
 }

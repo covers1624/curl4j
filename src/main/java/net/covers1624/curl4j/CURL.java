@@ -54,7 +54,7 @@ public class CURL {
      */
     public static Library getLbCURL() {
         if (CURL == null) {
-            String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", "curl");
+            String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", LibC.appendSuffix("curl"));
             if (LIB_CURL_OVERRIDE != null) {
                 lib = LIB_CURL_OVERRIDE;
             }

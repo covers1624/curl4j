@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build_linux_x64:
+  build_linux_x64-gnu:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -17,17 +17,17 @@ jobs:
       - name: Build
         run: |
           cd native_build
-          PLATFORM=linux_x64 make
+          PLATFORM=linux_x64 LIBC=gnu make
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: linux_x64
+          name: linux_x64-gnu
           path: |
             native_build/install/libcurl*
 
-  test_linux_x64:
+  test_linux_x64-gnu:
     runs-on: ubuntu-22.04
-    needs: build_linux_x64
+    needs: build_linux_x64-gnu
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
@@ -38,13 +38,53 @@ jobs:
           restore-keys: gradle-
       - uses: actions/download-artifact@v3
         with:
-          name: linux_x64
+          name: linux_x64-gnu
           path: native_build/install/
       - name: "Check"
         run: |
           ./gradlew check -si
 
-  build_linux_arm64:
+  build_linux_x64-musl:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=linux_x64 LIBC=musl make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux_x64-musl
+          path: |
+            native_build/install/libcurl*
+
+  test_linux_x64-musl:
+    runs-on: ubuntu-22.04
+    needs: build_linux_x64-musl
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_x64-musl
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check -si
+
+  build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -61,17 +101,17 @@ jobs:
       - name: Build
         run: |
           cd native_build
-          PLATFORM=linux_arm64 make
+          PLATFORM=linux_arm64 LIBC=gnu make
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: linux_arm64
+          name: linux_arm64-gnu
           path: |
             native_build/install/libcurl*
 
-  test_linux_arm64:
+  test_linux_arm64-gnu:
     runs-on: ubuntu-22.04
-    needs: build_linux_arm64
+    needs: build_linux_arm64-gnu
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
@@ -82,7 +122,7 @@ jobs:
           restore-keys: gradle-
       - uses: actions/download-artifact@v3
         with:
-          name: linux_arm64
+          name: linux_arm64-gnu
           path: native_build/install/
       - uses: uraimo/run-on-arch-action@v2
         name: Check
@@ -209,7 +249,7 @@ jobs:
 
   package:
     runs-on: ubuntu-22.04
-    needs: [ build_linux_x64, test_linux_x64, build_linux_arm64, test_linux_arm64, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
+    needs: [ build_linux_x64-gnu, test_linux_x64-gnu, build_linux_x64-musl, test_linux_x64-musl, build_linux_arm64-gnu, test_linux_arm64-gnu, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
@@ -220,11 +260,15 @@ jobs:
           restore-keys: gradle-
       - uses: actions/download-artifact@v3
         with:
-          name: linux_x64
+          name: linux_x64-gnu
           path: native_build/install/
       - uses: actions/download-artifact@v3
         with:
-          name: linux_arm64
+          name: linux_x64-musl
+          path: native_build/install/
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux_arm64-gnu
           path: native_build/install/
       - uses: actions/download-artifact@v3
         with:
