@@ -90,9 +90,6 @@ MUSL_CC=gcc
 C_COMPILER=gcc
 QUICTLS_ARGS=linux-x86_64
 else
-ifeq (musl, $(LIBC))
-$(error Musl arm64 is currently not supported. Better CrossCompile env is required.)
-endif
 HOST=aarch64-pc-linux-$(LIBC)
 MUSL_CC=aarch64-linux-gnu-gcc-10
 C_COMPILER=aarch64-linux-gnu-gcc-10
