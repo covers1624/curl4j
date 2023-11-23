@@ -85,7 +85,10 @@ jobs:
       - name: "Check"
         run: |
           apk update && apk add openjdk8 openjdk9 openjdk17 git
-          ./gradlew check -si
+          export JDK8=/usr/lib/jvm/java-8-openjdk/
+          export JDK9=/usr/lib/jvm/java-9-openjdk/
+          export JDK17=/usr/lib/jvm/java-17-openjdk/
+          ./gradlew check -si -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
