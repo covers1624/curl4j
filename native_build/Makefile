@@ -6,7 +6,7 @@ arch=$(shell echo "$(PLATFORM)" | cut -d_ -f2)
 
 curr_dir=$(shell pwd)
 root_dir=$(curr_dir)/..
-patches_dir=$(curr_dir)/pathces
+patches_dir=$(curr_dir)/patches
 scripts_dir=$(curr_dir)/scripts
 build_dir=$(curr_dir)/build
 install_dir=$(curr_dir)/install
