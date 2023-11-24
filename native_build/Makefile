@@ -6,7 +6,8 @@ arch=$(shell echo "$(PLATFORM)" | cut -d_ -f2)
 
 curr_dir=$(shell pwd)
 root_dir=$(curr_dir)/..
-scripts_dir=$(root_dir)/.github/scripts
+patches_dir=$(curr_dir)/pathces
+scripts_dir=$(curr_dir)/scripts
 build_dir=$(curr_dir)/build
 install_dir=$(curr_dir)/install
 cache_dir=$(curr_dir)/cache
@@ -336,7 +337,7 @@ ifneq (,$(findstring linux, $(HOST)))
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
-	patch -N -p1 -r /dev/null -i "$(scripts_dir)/patches/curl/patch-0000-brotli-1.1.0-static.patch"
+	patch -N -p1 -r /dev/null -i "$(patches_dir)/curl/patch-0000-brotli-1.1.0-static.patch"
 	autoreconf -fi
 	# TODO, Required due to the hack required for mingw bellow.
 	rm "$(quictls_install)"/lib*/*.so || true
