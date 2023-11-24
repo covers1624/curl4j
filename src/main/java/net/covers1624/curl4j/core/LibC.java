@@ -20,10 +20,6 @@ public enum LibC {
 
     public static final String LIBC_SUFFIX = IS_LINUX ? "-" + CURRENT.getSuffix() : "";
 
-    public static String appendSuffix(String lib) {
-        return lib + LIBC_SUFFIX;
-    }
-
     public String getSuffix() {
         // If we don't know, just assume GNU, its the common variant.
         if (this == UNKNOWN) return GNU.getSuffix();

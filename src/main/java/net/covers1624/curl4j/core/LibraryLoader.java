@@ -17,7 +17,7 @@ public class LibraryLoader {
     private static final boolean NO_EMBEDDED = Boolean.getBoolean("net.covers1624.curl4j.no_embedded");
 
     static {
-        loadJNILibrary(System.getProperty("net.covers1624.curl4j.libcurl4j.name", LibC.appendSuffix("curl4j")));
+        loadJNILibrary(System.getProperty("net.covers1624.curl4j.libcurl4j.name", "curl4j"));
     }
 
     /**
@@ -33,23 +33,26 @@ public class LibraryLoader {
         }
 
         // Next, try and use the system property extracted dir override.
-        String libPath = getLibPath(libName);
-        if (LIB_PATH != null) {
-            Path path = Paths.get(LIB_PATH, libPath);
-            if (Files.exists(path)) {
-                return loadLib(path.toAbsolutePath().toString());
+        for (String libPath : getLibPaths(libName)) {
+            if (LIB_PATH != null) {
+                Path path = Paths.get(LIB_PATH, libPath);
+                if (Files.exists(path)) {
+                    return loadLib(path.toAbsolutePath().toString());
+                }
             }
         }
 
         // Try and load embedded
         if (!NO_EMBEDDED) {
-            URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
-            if (url != null) {
-                Path path = getAsAbsolutePath(url);
-                if (path == null) {
-                    path = extract(url, libName);
+            for (String libPath : getLibPaths(libName)) {
+                URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
+                if (url != null) {
+                    Path path = getAsAbsolutePath(url);
+                    if (path == null) {
+                        path = extract(url, libName);
+                    }
+                    return loadLib(path.toAbsolutePath().toString());
                 }
-                return loadLib(path.toAbsolutePath().toString());
             }
         }
 
@@ -88,25 +91,28 @@ public class LibraryLoader {
         }
 
         // Next, try and use the system property extracted dir override.
-        String libPath = getLibPath(libName);
-        if (LIB_PATH != null) {
-            Path path = Paths.get(LIB_PATH, libPath);
-            if (Files.exists(path)) {
-                System.load(path.toAbsolutePath().toString());
-                return;
+        for (String libPath : getLibPaths(libName)) {
+            if (LIB_PATH != null) {
+                Path path = Paths.get(LIB_PATH, libPath);
+                if (Files.exists(path)) {
+                    System.load(path.toAbsolutePath().toString());
+                    return;
+                }
             }
         }
 
         // Try and load embedded
         if (!NO_EMBEDDED) {
-            URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
-            if (url != null) {
-                Path path = getAsAbsolutePath(url);
-                if (path == null) {
-                    path = extract(url, libName);
+            for (String libPath : getLibPaths(libName)) {
+                URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
+                if (url != null) {
+                    Path path = getAsAbsolutePath(url);
+                    if (path == null) {
+                        path = extract(url, libName);
+                    }
+                    System.load(path.toAbsolutePath().toString());
+                    return;
                 }
-                System.load(path.toAbsolutePath().toString());
-                return;
             }
         }
 
@@ -115,8 +121,15 @@ public class LibraryLoader {
         System.loadLibrary(libName);
     }
 
-    private static String getLibPath(String libName) {
-        return OperatingSystem.CURRENT.lowerName() + "/" + Architecture.CURRENT.lowerName() + "/" + System.mapLibraryName(libName);
+    private static String[] getLibPaths(String libName) {
+        String path = OperatingSystem.CURRENT.lowerName() + "/" + Architecture.CURRENT.lowerName() + "/";
+        if (OperatingSystem.CURRENT.isLinux()) {
+            return new String[] {
+                    path + libName + LibC.LIBC_SUFFIX,
+                    path + libName
+            };
+        }
+        return new String[] { path + libName };
     }
 
     private static Path getAsAbsolutePath(URL url) {
