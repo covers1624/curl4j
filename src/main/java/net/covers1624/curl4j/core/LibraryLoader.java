@@ -125,11 +125,11 @@ public class LibraryLoader {
         String path = OperatingSystem.CURRENT.lowerName() + "/" + Architecture.CURRENT.lowerName() + "/";
         if (OperatingSystem.CURRENT.isLinux()) {
             return new String[] {
-                    path + libName + LibC.LIBC_SUFFIX,
-                    path + libName
+                    path + System.mapLibraryName(libName + LibC.LIBC_SUFFIX),
+                    path + System.mapLibraryName(libName)
             };
         }
-        return new String[] { path + libName };
+        return new String[] { path + System.mapLibraryName(libName) };
     }
 
     private static Path getAsAbsolutePath(URL url) {
