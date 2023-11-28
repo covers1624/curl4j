@@ -43,13 +43,13 @@ public class EggSample {
 The curl4j JNI bindings may be overridden with the `net.covers1624.curl4j.libcurl4j.name` system property.
 
 The libcurl library may be overridden with the `net.covers1624.curl4j.libcurl.name` system property or
-via the `CURL.setLibCurlName` function. This may be set any time prior to any other CURL operation being performed.
+via the `CURL.setLibCurlName` function. This may be set any time prior to any CURL operation being performed.
 If both the system property and the function override are used, the function override takes priority. If the native
 library has already been loaded (by invoking a CURL operation), setting the name will nave no affect.
 
-All override properties and functions support custom library names and absolute paths.
+All overrides listed above support full paths, embedded resources, or system libraries.
 
-curl4j will automatically attempt to locate and extract its dependencies from the classpath, this may
+curl4j will automatically attempt to locate and extract its natives from the classpath, this may
 be disabled with the `net.covers1624.curl4j.no_embedded` system property.
 
 curl4j can be configured to load its native libraries from a specific directory. This may be set with the
@@ -58,12 +58,12 @@ of the `/META-INF/natives` directory inside the `libcurl` maven artifact. This i
 have custom requirements, and would like to lock down where curl4j loads natives from.
 
 NOTE: All platforms will automatically have `lib` prefixed to the library name and their platform specific extension
-appended prior to loading. The only exception to this is absolute paths, they are not modified.
+appended prior to loading, except for absolute paths, these are not modified.
 
 curl4j will attempt to load in the following order:
 - if `libname` is an absolute path, this is loaded directly.
 - if the `lib_path` system property is set, attempt to find the library inside. 
-- if `no_embedded` is not set, attempt to find the library on the classpath.
+- if `no_embedded` is **not** set, attempt to find the library on the classpath.
 - try and just load the library name using the default semantics of the operating system.
 
 ## curl impersonate

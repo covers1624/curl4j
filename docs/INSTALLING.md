@@ -100,5 +100,3 @@ curl4j's embedded dependencies are distributed under the following licenses
 | [brotli](https://github.com/google/brotli)             | [MIT](https://github.com/google/brotli/blob/master/LICENSE)                             | `libcurl` |
 | [zlib](https://github.com/madler/zlib)                 | [zlib License](https://github.com/madler/zlib/blob/develop/LICENSE)                     | `libcurl` |
 | [zstd](https://github.com/facebook/zstd)               | [BSD or GPLv2](https://github.com/facebook/zstd#license)                                | `libcurl` |
-| [gsasl](https://gitlab.com/gsasl/gsasl)                | [GPLv2.1+](https://gitlab.com/gsasl/gsasl/-/blob/master/COPYING.LESSER)                 | `libcurl` |
-| [libssh2](https://github.com/libssh2/libssh2)          | [BSD 3-Clause](https://github.com/libssh2/libssh2/blob/master/COPYING)                  | `libcurl` |

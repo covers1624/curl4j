@@ -19,7 +19,7 @@ libcurl bindings for Java 8+
 - Provides native memory management primitives for..
     - Wrapping/reading/writing native memory.
     - Java safe, native callback function pointers.
-- Support for Linux (x64/arm64), macOS (x64/arm64), and Windows (x64)
+- Support for Linux (x64/arm64)(gnu/musl), macOS (x64/arm64), and Windows (x64)
 - Supports [curl-impersonate](https://github.com/lwthiker/curl-impersonate). _*requires BYO libcurl_ See [docs](docs/EXAMPLES.md#curl-impersonate).
 
 ## Usage
