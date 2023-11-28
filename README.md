@@ -31,6 +31,7 @@ Please see our [Examples](docs/EXAMPLES.md) for usage.
 
 ## TODO list (unsorted)
 
+- Musl arm64 linux.
 - Feature parity between Windows and macOS/Linux libcurl.
 - Maven central?
 - Finish curl_easy and curl_multi bindings.
