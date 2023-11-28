@@ -1,4 +1,4 @@
-name: Build curl v2
+name: Build
 
 on:
   push:
