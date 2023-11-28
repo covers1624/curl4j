@@ -2,6 +2,7 @@
 
 !src/
 !java9/
+!native_build/
 
 !LICENSE.txt
 !README.MD

@@ -1,0 +1,9 @@
+/*
+
+!jni_helpers/
+!patches/
+!scripts/
+
+!.gitignore
+!Makefile
+!probe.c
