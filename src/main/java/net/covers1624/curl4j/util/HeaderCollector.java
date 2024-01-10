@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static net.covers1624.curl4j.CURL.CURLOPT_HEADERFUNCTION;
+import static net.covers1624.curl4j.CURL.curl_easy_setopt;
+
 /**
  * A simple wrapper around {@link CurlHeaderCallback} which
  * neatly collects all headers into a {@link Map}.
@@ -19,7 +22,7 @@ import java.util.Map;
  *
  * @author covers1624
  */
-public class HeaderCollector implements AutoCloseable {
+public class HeaderCollector implements AutoCloseable, CurlBindable {
 
     private final Map<String, List<String>> headers = new LinkedHashMap<>();
 
@@ -49,6 +52,11 @@ public class HeaderCollector implements AutoCloseable {
             });
         }
         return callback;
+    }
+
+    @Override
+    public void apply(long curl) {
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, callback());
     }
 
     /**

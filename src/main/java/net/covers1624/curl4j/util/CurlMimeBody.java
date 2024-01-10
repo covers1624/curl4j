@@ -12,7 +12,7 @@ import static net.covers1624.curl4j.CURL.*;
  * <p>
  * Created by covers1624 on 2/11/23.
  */
-public class CurlMimeBody implements Closeable {
+public class CurlMimeBody implements Closeable, CurlBindable {
 
     private final long mime;
     private final List<Closeable> resources;
@@ -38,6 +38,11 @@ public class CurlMimeBody implements Closeable {
             } catch (Throwable ignore) {
             }
         }
+    }
+
+    @Override
+    public void apply(long curl) {
+        curl_easy_setopt(curl, CURLOPT_MIMEPOST, getMime());
     }
 
     /**

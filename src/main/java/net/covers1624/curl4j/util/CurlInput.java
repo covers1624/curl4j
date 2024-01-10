@@ -11,13 +11,15 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static net.covers1624.curl4j.CURL.*;
+
 /**
  * A simple wrapper around {@link CurlReadCallback} supplying data
  * from a {@link ReadableByteChannel}, {@link InputStream}, or {@link Path}/{@link File}.
  *
  * @author covers1624
  */
-public abstract class CurlInput implements Closeable {
+public abstract class CurlInput implements Closeable, CurlBindable {
 
     private @Nullable CurlReadCallback callback;
     private @Nullable ReadableByteChannel channel;
@@ -146,6 +148,16 @@ public abstract class CurlInput implements Closeable {
             });
         }
         return callback;
+    }
+
+    @Override
+    public void apply(long curl) throws IOException {
+        long len = availableBytes();
+        if (len == -1) throw new IllegalStateException("Must have a known length.");
+
+        curl_easy_setopt(curl, CURLOPT_UPLOAD, true);
+        curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, len);
+        curl_easy_setopt(curl, CURLOPT_READFUNCTION, callback());
     }
 
     protected abstract ReadableByteChannel open() throws IOException;

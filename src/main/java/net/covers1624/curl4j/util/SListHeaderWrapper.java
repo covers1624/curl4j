@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static net.covers1624.curl4j.CURL.CURLOPT_HTTPHEADER;
+import static net.covers1624.curl4j.CURL.curl_easy_setopt;
+
 /**
  * A simple wrapper around {@link curl_slist} for automatic resource management.
  * <p>
@@ -17,7 +20,7 @@ import java.util.Map;
  *
  * @author covers1624
  */
-public class SListHeaderWrapper implements AutoCloseable {
+public class SListHeaderWrapper implements AutoCloseable, CurlBindable {
 
     private final List<String> headers = new ArrayList<>();
 
@@ -69,6 +72,11 @@ public class SListHeaderWrapper implements AutoCloseable {
             }
         }
         return list;
+    }
+
+    @Override
+    public void apply(long curl) {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, get());
     }
 
     @Override

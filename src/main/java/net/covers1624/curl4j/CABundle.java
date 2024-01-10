@@ -1,6 +1,7 @@
 package net.covers1624.curl4j;
 
 import net.covers1624.curl4j.core.Pointer;
+import net.covers1624.curl4j.util.CurlBindable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -24,9 +25,10 @@ import static net.covers1624.curl4j.CURL.*;
  * You may choose to override the default CABundle via {@link #setDefault} this will cause all calls to {@link #getDefault} to
  * use the new default. By default, the built-in bundle is used. This may always be obtained via {@link #builtIn}.
  * <p>
+ *
  * @author covers1624
  */
-public final class CABundle {
+public final class CABundle implements CurlBindable {
 
     private static final CABundle BUILT_IN;
     private static CABundle DEFAULT;
@@ -107,6 +109,7 @@ public final class CABundle {
      *
      * @param curl The curl instance.
      */
+    @Override
     public void apply(long curl) {
         curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, getCABlob());
         curl_easy_setopt(curl, CURLOPT_PROXY_CAINFO_BLOB, getCABlob());

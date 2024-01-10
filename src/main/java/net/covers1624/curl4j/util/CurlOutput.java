@@ -12,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import static net.covers1624.curl4j.CURL.CURLOPT_WRITEFUNCTION;
+import static net.covers1624.curl4j.CURL.curl_easy_setopt;
+
 /**
  * A simple wrapper around {@link CurlWriteCallback} writing data
  * to a {@link WritableByteChannel}, {@link InputStream}, or {@link Path}/{@link File}.
@@ -19,7 +22,7 @@ import java.nio.file.StandardOpenOption;
  * @author covers1624
  * @see MemoryCurlOutput
  */
-public class CurlOutput implements Closeable {
+public class CurlOutput implements Closeable, CurlBindable {
 
     private final OutputSupplier<WritableByteChannel> channelSupplier;
 
@@ -105,6 +108,11 @@ public class CurlOutput implements Closeable {
             });
         }
         return callback;
+    }
+
+    @Override
+    public void apply(long curl) {
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback());
     }
 
     @Override
