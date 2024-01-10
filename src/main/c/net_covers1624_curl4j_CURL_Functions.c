@@ -111,6 +111,42 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mim
     return ret;
 }
 
-JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mime_1data_1cb(JNIEnv * env, jclass clazz, jlong func, jlong part, jlong dataSize, jlong readFunc, jlong seekFunc, jlong freeFunc, jlong userData) {
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mime_1data_1cb(JNIEnv *env, jclass clazz, jlong func, jlong part, jlong dataSize, jlong readFunc, jlong seekFunc, jlong freeFunc, jlong userData) {
     return ((int (*)(uintptr_t, long, uintptr_t, uintptr_t, uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) part, dataSize, (uintptr_t) readFunc, (uintptr_t) seekFunc, (uintptr_t) freeFunc, (uintptr_t) userData);
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1init(JNIEnv *env, jclass clazz, jlong func) {
+    return (jlong) ((uintptr_t(*)(void)) (uintptr_t) func)();
+}
+
+JNIEXPORT void JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1cleanup(JNIEnv *env, jclass clazz, jlong func, jlong multi) {
+    ((void (*)(uintptr_t)) (uintptr_t) func)(multi);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1add_1handle(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong curl) {
+    return (jint) ((int (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) curl);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1remove_1handle(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong curl) {
+    return (jint) ((int (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) curl);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1perform(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong runningHandles) {
+    return (jint) ((int (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) runningHandles);
+}
+
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1info_1read(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong msgsInQueue) {
+    return (jlong) ((uintptr_t (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) msgsInQueue);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1timeout(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong milliseconds) {
+    return (jint) ((int (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) milliseconds);
+}
+
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1setopt(JNIEnv *env, jclass clazz, jlong func, jlong multi, jint opt, jlong value) {
+    return ((int (*)(uintptr_t, int, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, opt, (uintptr_t) value);
+}
+
+JNIEXPORT jstring JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1strerror(JNIEnv *env, jclass clazz, jlong func, jint code) {
+    return (*env)->NewStringUTF(env, ((const char *(*)(int)) (uintptr_t) func)(code));
 }

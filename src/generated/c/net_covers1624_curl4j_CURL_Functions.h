@@ -191,6 +191,78 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mim
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mime_1data_1cb
   (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jlong, jlong, jlong);
 
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_init
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1init
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_cleanup
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1cleanup
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_add_handle
+ * Signature: (JJJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1add_1handle
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_remove_handle
+ * Signature: (JJJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1remove_1handle
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_perform
+ * Signature: (JJJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1perform
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_info_read
+ * Signature: (JJJ)J
+ */
+JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1info_1read
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_timeout
+ * Signature: (JJJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1timeout
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_setopt
+ * Signature: (JJIJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1setopt
+  (JNIEnv *, jclass, jlong, jlong, jint, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_strerror
+ * Signature: (JI)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1strerror
+  (JNIEnv *, jclass, jlong, jint);
+
 #ifdef __cplusplus
 }
 #endif
