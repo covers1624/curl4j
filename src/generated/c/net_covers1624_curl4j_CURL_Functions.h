@@ -65,6 +65,14 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1eas
 
 /*
  * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_easy_pause
+ * Signature: (JJI)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1easy_1pause
+  (JNIEnv *, jclass, jlong, jlong, jint);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
  * Method:    ncurl_easy_setopt
  * Signature: (JJIJ)I
  */
