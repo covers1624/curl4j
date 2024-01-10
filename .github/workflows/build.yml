@@ -73,8 +73,10 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build_linux_x64-musl
     container:
-      image: alpine/git:latest
+      image: alpine:3.18.5
     steps:
+      - name: "Setup"
+        run: apk update && apk add openjdk8 openjdk9 openjdk17 git
       - uses: actions/checkout@v3
       - name: Gradle Cache
         uses: actions/cache@v3
@@ -88,7 +90,6 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          apk update && apk add openjdk8 openjdk9 openjdk17 git
           export JDK8=/usr/lib/jvm/java-8-openjdk/
           export JDK9=/usr/lib/jvm/java-9-openjdk/
           export JDK17=/usr/lib/jvm/java-17-openjdk/
