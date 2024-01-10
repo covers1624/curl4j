@@ -2934,6 +2934,15 @@ public class CURL {
     public static final int CURLMOPT_MAX_CONCURRENT_STREAMS = CURLOPTTYPE_LONG + 16;
     // endregion
 
+    // region CURLPAUSE
+    public static final int CURLPAUSE_RECV = 1 << 0;
+    public static final int CURLPAUSE_RECV_CONT = 0;
+    public static final int CURLPAUSE_SEND = 1 << 2;
+    public static final int CURLPAUSE_SEND_CONT = 0;
+    public static final int CURLPAUSE_ALL = CURLPAUSE_RECV | CURLPAUSE_SEND;
+    public static final int CURLPAUSE_CONT = CURLPAUSE_RECV_CONT | CURLPAUSE_SEND_CONT;
+    // endregion
+
     /**
      * See the curl <a href="https://curl.se/libcurl/c/curl_version.html">documentation</a>.
      *
@@ -3159,6 +3168,19 @@ public class CURL {
      */
     public static @NativeType ("CURLcode") int curl_easy_perform(@NativeType ("CURL *") long curl) {
         return ncurl_easy_perform(curl_easy_perform, curl);
+    }
+
+    /**
+     * Pause and unpause a connection.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_pause.html">documentation</a>.
+     *
+     * @param curl    The CURL handle.
+     * @param bitmask The bitmask.
+     * @return the curl exit code.
+     */
+    public static @NativeType ("CURLcode") int curl_easy_pause(@NativeType ("CURL *") long curl, int bitmask) {
+        return ncurl_easy_pause(curl_easy_pause, curl, bitmask);
     }
 
     /**
@@ -3490,6 +3512,7 @@ public class CURL {
         public static final long curl_easy_init = CURL.getFunction("curl_easy_init");
         public static final long curl_easy_reset = CURL.getFunction("curl_easy_reset");
         public static final long curl_easy_perform = CURL.getFunction("curl_easy_perform");
+        public static final long curl_easy_pause = CURL.getFunction("curl_easy_pause");
         public static final long curl_easy_setopt = CURL.getFunction("curl_easy_setopt");
         public static final long curl_easy_getinfo = CURL.getFunction("curl_easy_getinfo");
         public static final long curl_easy_strerror = CURL.getFunction("curl_easy_strerror");
@@ -3524,6 +3547,7 @@ public class CURL {
         public static native long ncurl_easy_init(long func);
         public static native void ncurl_easy_reset(long func, long curl);
         public static native int ncurl_easy_perform(long func, long curl);
+        public static native int ncurl_easy_pause(long func, long curl, int bitmask);
         public static native int ncurl_easy_setopt(long func, long curl, int opt, long value);
         public static native int ncurl_easy_setopt(long func, long curl, int opt, String value);
         public static native int ncurl_easy_getinfo(long func, long curl, int info, long value);

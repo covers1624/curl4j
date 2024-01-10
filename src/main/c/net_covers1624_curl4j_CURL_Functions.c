@@ -29,6 +29,10 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1eas
     return ((int (*)(uintptr_t)) (uintptr_t) func)((uintptr_t) curl);
 }
 
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1easy_1pause(JNIEnv *env, jclass clazz, jlong func, jlong curl, jint bitmask) {
+    return ((int (*)(uintptr_t, int)) (uintptr_t) func)((uintptr_t) curl, bitmask);
+}
+
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1easy_1setopt__JJIJ(JNIEnv *env, jclass clazz, jlong func, jlong curl, jint opt, jlong value) {
     return ((int (*)(uintptr_t, int, uintptr_t)) (uintptr_t) func)((uintptr_t) curl, opt, (uintptr_t) value);
 }
