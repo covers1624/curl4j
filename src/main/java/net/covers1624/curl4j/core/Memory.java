@@ -66,6 +66,9 @@ public final class Memory {
     public static void putCLong(long ptr, long value) { if (NativeTypes.CLONG_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
     public static void putSizeT(long ptr, long value) { if (NativeTypes.SIZE_T_SIZE == 8) putLong(ptr, value); else putInt(ptr, (int) value); }
     public static void putAddress(long ptr, long value) { if (NativeTypes.IS_64BIT) putLong(ptr, value); else putInt(ptr, (int) value); }
+    public static long malloc(long bytes) { return UNSAFE.allocateMemory(bytes); }
+    public static void free(long address) { UNSAFE.freeMemory(address); }
+    public static long realloc(long address, long bytes) { return UNSAFE.reallocateMemory(address, bytes); }
     public static void memcpy(long src, long dst, long len) { UNSAFE.copyMemory(src, dst, len); }
     // @formatter:on
 
