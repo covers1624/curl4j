@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build_linux_x64-musl
     container:
-      image: alpine/git:latest
+      image: alpine:3.18.5
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
