@@ -21,13 +21,18 @@ public interface CurlReadCallbackI extends Callback.CallbackInterface {
 
     @Override
     default void invoke(@NativeType ("void *") long ret, @NativeType ("void **") long args) throws IOException {
-        long ptr = getAddress(getAddress(args));
-        long size = getSizeT(getAddress(args + POINTER_SIZE));
-        long nmemb = getSizeT(getAddress(args + 2L * POINTER_SIZE));
-        long userdata = getAddress(getAddress(args + 3L * POINTER_SIZE));
+        try {
+            long ptr = getAddress(getAddress(args));
+            long size = getSizeT(getAddress(args + POINTER_SIZE));
+            long nmemb = getSizeT(getAddress(args + 2L * POINTER_SIZE));
+            long userdata = getAddress(getAddress(args + 3L * POINTER_SIZE));
 
-        long r = read(ptr, size, nmemb, userdata);
-        putSizeT(ret, r);
+            long r = read(ptr, size, nmemb, userdata);
+            putSizeT(ret, r);
+        } catch (Throwable ex) {
+            putSizeT(ret, CURL.CURL_READFUNC_ABORT);
+            throw ex;
+        }
     }
 
     /**

@@ -2816,6 +2816,36 @@ public class CURL {
     public static final int CURL_VERSION_GSASL = (1 << 29);
     //endregion
 
+    // region Curl callback return constants
+    /**
+     * This is a return code for the read callback that, when returned,
+     * will signal libcurl to immediately abort the current transfer.
+     */
+    public static final long CURL_READFUNC_ABORT = 0x10000000;
+    /**
+     * This is a return code for the read callback that, when returned,
+     * will signal libcurl to pause sending data on the current transfer.
+     */
+    public static final long CURL_READFUNC_PAUSE = 0x10000001;
+
+    /**
+     * This is a return code for the progress callback that, when returned,
+     * will signal libcurl to continue executing the default progress function.
+     */
+    public static final long CURL_PROGRESSFUNC_CONTINUE = 0x10000001;
+
+    /**
+     * This is a magic return code for the write callback that, when returned,
+     * will signal libcurl to pause receiving on the current transfer.
+     */
+    public static final long CURL_WRITEFUNC_PAUSE = 0x10000001;
+    /**
+     * This is a magic return code for the write callback that, when returned,
+     * will signal an error from the callback.
+     */
+    public static final long CURL_WRITEFUNC_ERROR = 0xFFFFFFFFL;
+    // endregion
+
     /**
      * See the curl <a href="https://curl.se/libcurl/c/curl_version.html">documentation</a>.
      *
