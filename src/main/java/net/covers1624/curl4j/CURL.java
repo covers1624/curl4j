@@ -2846,6 +2846,94 @@ public class CURL {
     public static final long CURL_WRITEFUNC_ERROR = 0xFFFFFFFFL;
     // endregion
 
+    // region CURLM results
+    public static final int CURLM_CALL_MULTI_PERFORM = -1;
+    public static final int CURLM_OK = 0;
+    public static final int CURLM_BAD_HANDLE = 1;
+    public static final int CURLM_BAD_EASY_HANDLE = 2;
+    public static final int CURLM_OUT_OF_MEMORY = 3;
+    public static final int CURLM_INTERNAL_ERROR = 4;
+    public static final int CURLM_BAD_SOCKET = 5;
+    public static final int CURLM_UNKNOWN_OPTION = 6;
+    public static final int CURLM_ADDED_ALREADY = 7;
+    public static final int CURLM_RECURSIVE_API_CALL = 8;
+    public static final int CURLM_WAKEUP_FAILURE = 9;
+    public static final int CURLM_BAD_FUNCTION_ARGUMENT = 10;
+    public static final int CURLM_ABORTED_BY_CALLBACK = 11;
+    public static final int CURLM_UNRECOVERABLE_POLL = 12;
+    //endregion
+
+    // region CURLMMSG
+    public static final int CURLMSG_DONE = 1;
+    //endregion
+
+    // region CURLMOPT
+    /**
+     * This is the socket callback function pointer
+     */
+    public static final int CURLMOPT_SOCKETFUNCTION = CURLOPTTYPE_FUNCTIONPOINT + 1;
+    /**
+     * This is the argument passed to the socket callback
+     */
+    public static final int CURLMOPT_SOCKETDATA = CURLOPTTYPE_OBJECTPOINT + 2;
+    /**
+     * set to 1 to enable pipelining for this multi handle
+     */
+    public static final int CURLMOPT_PIPELINING = CURLOPTTYPE_LONG + 2;
+    /**
+     * This is the timer callback function pointer
+     */
+    public static final int CURLMOPT_TIMERFUNCTION = CURLOPTTYPE_FUNCTIONPOINT + 4;
+    /**
+     * This is the argument passed to the timer callback
+     */
+    public static final int CURLMOPT_TIMERDATA = CURLOPTTYPE_OBJECTPOINT + 5;
+    /**
+     * maximum number of entries in the connection cache
+     */
+    public static final int CURLMOPT_MAXCONNECTS = CURLOPTTYPE_LONG + 6;
+    /**
+     * maximum number of (pipelining) connections to one host
+     */
+    public static final int CURLMOPT_MAX_HOST_CONNECTIONS = CURLOPTTYPE_LONG + 7;
+    /**
+     * maximum number of requests in a pipeline
+     */
+    public static final int CURLMOPT_MAX_PIPELINE_LENGTH = CURLOPTTYPE_LONG + 8;
+    /**
+     * a connection with a content-length longer than this will not be considered for pipelining
+     */
+    public static final int CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE = CURLOPTTYPE_OFF_T + 9;
+    /**
+     * a connection with a chunk length longer than this will not be considered for pipelining
+     */
+    public static final int CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE = CURLOPTTYPE_OFF_T + 10;
+    /**
+     * a list of site names(+port) that are blocked from pipelining
+     */
+    public static final int CURLMOPT_PIPELINING_SITE_BL = CURLOPTTYPE_OBJECTPOINT + 11;
+    /**
+     * a list of server types that are blocked from pipelining
+     */
+    public static final int CURLMOPT_PIPELINING_SERVER_BL = CURLOPTTYPE_OBJECTPOINT + 12;
+    /**
+     * maximum number of open connections in total
+     */
+    public static final int CURLMOPT_MAX_TOTAL_CONNECTIONS = CURLOPTTYPE_LONG + 13;
+    /**
+     * This is the server push callback function pointer
+     */
+    public static final int CURLMOPT_PUSHFUNCTION = CURLOPTTYPE_FUNCTIONPOINT + 14;
+    /**
+     * This is the argument passed to the server push callback
+     */
+    public static final int CURLMOPT_PUSHDATA = CURLOPTTYPE_OBJECTPOINT + 15;
+    /**
+     * maximum number of concurrent streams to support on a connection
+     */
+    public static final int CURLMOPT_MAX_CONCURRENT_STREAMS = CURLOPTTYPE_LONG + 16;
+    // endregion
+
     // region CURLPAUSE
     public static final int CURLPAUSE_RECV = 1 << 0;
     public static final int CURLPAUSE_RECV_CONT = 0;
@@ -3276,6 +3364,136 @@ public class CURL {
     }
 
     /**
+     * Create a multi handle.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_init.html">documentation</a>.
+     *
+     * @return The multi handle.
+     */
+    public static @NativeType ("CURLM *") long curl_multi_init() {
+        return ncurl_multi_init(curl_multi_init);
+    }
+
+    /**
+     * Cleanup and free a multi handle.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_cleanup.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     */
+    public static void curl_multi_cleanup(@NativeType ("CURLM *") long multi) {
+        ncurl_multi_cleanup(curl_multi_cleanup, multi);
+    }
+
+    /**
+     * Add a curl easy handle to a multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_add_handle.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     * @param curl  The curl handle.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_add_handle(@NativeType ("CURLM *") long multi, @NativeType ("CURL *") long curl) {
+        return ncurl_multi_add_handle(curl_multi_add_handle, multi, curl);
+    }
+
+    /**
+     * Remove a curl easy handle from a multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_remove_handle.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     * @param curl  The curl handle.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_remove_handle(@NativeType ("CURLM *") long multi, @NativeType ("CURL *") long curl) {
+        return ncurl_multi_remove_handle(curl_multi_remove_handle, multi, curl);
+    }
+
+    /**
+     * Read/write available data from an attached easy handles.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_perform.html">documentation</a>.
+     *
+     * @param multi          The multi handle.
+     * @param runningHandles Pointer to store number of running handles.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_perform(long multi, Pointer runningHandles) {
+        return ncurl_multi_perform(curl_multi_perform, multi, runningHandles.address);
+    }
+
+    /**
+     * Read a message from the multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_info_read.html">documentation</a>.
+     *
+     * @param multi       The multi handle.
+     * @param msgsInQueue Pointer to store number of remaining messages.
+     * @return The CURLMsg struct. Will return {@code null} when no more messages are available.
+     */
+    public static @Nullable CURLMsg curl_multi_info_read(long multi, Pointer msgsInQueue) {
+        long ret = ncurl_multi_info_read(curl_multi_info_read, multi, msgsInQueue.address);
+        if (ret == Memory.NULL) return null;
+
+        return new CURLMsg(ret);
+    }
+
+    /**
+     * Read the maximum time to wait for socket actions.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_timeout.html">documentation</a>.
+     *
+     * @param multi           The multi handle.
+     * @param millisecondsPtr Pointer to store number of milliseconds.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_timeout(long multi, Pointer millisecondsPtr) {
+        return ncurl_multi_timeout(curl_multi_timeout, multi, millisecondsPtr.address);
+    }
+
+    /**
+     * Set an option on the multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_setopt.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     * @param opt   The option.
+     * @param value The option value.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_setopt(long multi, int opt, long value) {
+        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, value);
+    }
+
+    /**
+     * Set an option on the multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_setopt.html">documentation</a>.
+     *
+     * @param multi    The multi handle.
+     * @param opt      The option.
+     * @param callback The callback function.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_setopt(long multi, int opt, CurlCallback callback) {
+        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, callback.getFunctionAddress());
+    }
+
+    /**
+     * Get a string describing the code.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_strerror.html">documentation</a>.
+     *
+     * @param code the CURLMcode.
+     * @return The CURLMcode response.
+     */
+    public static String curl_multi_strerror(@NativeType ("CURLMcode") int code) {
+        return ncurl_multi_strerror(curl_multi_strerror, code);
+    }
+
+    /**
      * Class to hold all the libCURL function pointers.
      * <p>
      * Due to class loading rules, this will only be loaded (and thus, libcurl loaded), when
@@ -3311,6 +3529,16 @@ public class CURL {
         public static final long curl_mime_data = CURL.getFunction("curl_mime_data");
         public static final long curl_mime_data_cb = CURL.getFunction("curl_mime_data_cb");
 
+        public static final long curl_multi_init = CURL.getFunction("curl_multi_init");
+        public static final long curl_multi_cleanup = CURL.getFunction("curl_multi_cleanup");
+        public static final long curl_multi_add_handle = CURL.getFunction("curl_multi_add_handle");
+        public static final long curl_multi_remove_handle = CURL.getFunction("curl_multi_remove_handle");
+        public static final long curl_multi_perform = CURL.getFunction("curl_multi_perform");
+        public static final long curl_multi_info_read = CURL.getFunction("curl_multi_info_read");
+        public static final long curl_multi_timeout = CURL.getFunction("curl_multi_timeout");
+        public static final long curl_multi_setopt = CURL.getFunction("curl_multi_setopt");
+        public static final long curl_multi_strerror = CURL.getFunction("curl_multi_strerror");
+
         // @formatter:off
         public static native String ncurl_version(long func);
         public static native long ncurl_version_info(long func);
@@ -3336,6 +3564,16 @@ public class CURL {
         public static native int ncurl_mime_type(long func, long part, String mimeType);
         public static native int ncurl_mime_data(long func, long part, byte[] data);
         public static native int ncurl_mime_data_cb(long func, long part, long dataSize, long readFunc, long seekFunc, long freeFunc, long userData);
+
+        public static native long ncurl_multi_init(long func);
+        public static native void ncurl_multi_cleanup(long func, long multi);
+        public static native int ncurl_multi_add_handle(long func, long multi, long curl);
+        public static native int ncurl_multi_remove_handle(long func, long multi, long curl);
+        public static native int ncurl_multi_perform(long func, long multi, long runningHandlesPtr);
+        public static native long ncurl_multi_info_read(long func, long multi, long msgsInQueuePtr);
+        public static native int ncurl_multi_timeout(long func, long multi, long millisecondsPtr);
+        public static native int ncurl_multi_setopt(long func, long multi, int opt, long value);
+        public static native String ncurl_multi_strerror(long func, int code);
         // @formatter:on
     }
 }

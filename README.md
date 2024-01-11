@@ -14,7 +14,7 @@ libcurl bindings for Java 8+
     - Bundled libcurl for convenience.
     - Bundled CA info for convenience.
     - Bring your own libcurl binary. Use the system libcurl, or specify your own path.
-    - Support for curl_easy. (curl_multi is planned)
+    - Support for curl_easy and curl_multi.
 - High performance, extremely low overhead
 - Provides native memory management primitives for..
     - Wrapping/reading/writing native memory.
