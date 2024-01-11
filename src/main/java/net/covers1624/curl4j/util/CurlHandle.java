@@ -1,64 +1,75 @@
 package net.covers1624.curl4j.util;
 
 import net.covers1624.curl4j.CURL;
+import net.covers1624.curl4j.util.internal.CurlHandleFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.LongFunction;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * A simple curl wrapper which will automatically
- * clean up the curl handle.
+ * A simple resource management wrapper around a
+ * curl_easy handle.
  * <p>
- * Created by covers1624 on 20/10/23.
+ * This is indented to be used for curl_easy operations only.
+ * <p>
+ * This can either be used directly with {@link AutoCloseable}
+ * or resource managed via auto-cleanup via {@link #create()}
+ * or pooled per-thread via {@link #newThreadLocal()}.
+ *
+ * @author covers1624
  */
 public class CurlHandle implements AutoCloseable {
 
-    private static final LongFunction<CurlHandle> FACTORY = chooseFactory();
-
     public final long curl;
-    private final AtomicBoolean cleaned;
+    private final AtomicLong a_curl;
 
-    CurlHandle(long curl, AtomicBoolean cleaned) {
-        this.curl = curl;
-        this.cleaned = cleaned;
+    /**
+     * Construct a new {@link CurlHandle} without any
+     * automatic cleanup. This handle must be cleaned with
+     * {@link #close()} or via Try-With-Resources.
+     */
+    public CurlHandle() {
+        this(new AtomicLong(CURL.curl_easy_init()));
     }
 
+    /**
+     * Intended for internal auto-cleaning implementations.
+     *
+     * @param a_curl The atomic holding the curl handle.
+     */
+    protected CurlHandle(AtomicLong a_curl) {
+        curl = a_curl.get();
+        this.a_curl = a_curl;
+    }
+
+    /**
+     * Create an auto-cleaning curl handle.
+     * <p>
+     * The native resources allocated by this handle will automatically
+     * be cleaned up.
+     * <p>
+     * {@implNote On Java 8, this uses Object finalization. On Java 9+ It uses ref Cleaners.
+     * These implementations are transparent and equivalent}
+     *
+     * @return The new handle.
+     */
     public static CurlHandle create() {
-        return FACTORY.apply(CURL.curl_easy_init());
+        return CurlHandleFactory.INSTANCE.newHandle(new AtomicLong(CURL.curl_easy_init()));
     }
 
+    /**
+     * Create a new {@link ThreadLocal} of auto-cleaning curl handles.
+     *
+     * @return The thread local.
+     * @see #create()
+     */
     public static ThreadLocal<CurlHandle> newThreadLocal() {
         return ThreadLocal.withInitial(CurlHandle::create);
     }
 
     @Override
     public void close() {
-        if (cleaned.get()) return;
-        cleaned.set(true);
-
-        CURL.curl_easy_cleanup(curl);
-    }
-
-    @SuppressWarnings ("unchecked")
-    private static LongFunction<CurlHandle> chooseFactory() {
-        try {
-            Class.forName("java.lang.ref.Cleaner");
-            Class<?> clazz = Class.forName("net.covers1624.curl4j.util.CleaningCurlHandle$Factory");
-            return (LongFunction<CurlHandle>) clazz.getConstructor().newInstance();
-        } catch (Throwable ex) {
-            return FinalizingCurlHandle::new;
-        }
-    }
-
-    public static class FinalizingCurlHandle extends CurlHandle {
-
-        public FinalizingCurlHandle(long curl) {
-            super(curl, new AtomicBoolean());
-        }
-
-        @Override
-        protected void finalize() {
-            close();
+        if (a_curl.compareAndSet(curl, 0)) {
+            CURL.curl_easy_cleanup(curl);
         }
     }
 }
