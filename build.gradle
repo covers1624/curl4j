@@ -31,6 +31,7 @@ def suffix = libc != null ? "-$libc" : ""
 println("OS: $os")
 println("Arch: $arch")
 println("Libc: $libc Suffix: $suffix")
+println("Version: $version")
 
 sourceSets {
     main {

@@ -290,6 +290,8 @@ jobs:
     needs: [ build_linux_x64-gnu, test_linux_x64-gnu, build_linux_x64-musl, test_linux_x64-musl, build_linux_arm64-gnu, build_linux_arm64-musl, test_linux_arm64-gnu, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
       - name: Gradle Cache
         uses: actions/cache@v3
         with:
