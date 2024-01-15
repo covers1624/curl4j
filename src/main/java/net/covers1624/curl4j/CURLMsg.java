@@ -10,11 +10,11 @@ public class CURLMsg extends Pointer {
 
     private static final Struct STRUCT = new Struct("CURLMsg");
 
-    public final Struct.Member<Integer> MSG = STRUCT.intMember("msg");
-    public final Struct.Member<Pointer> EASY_HANDLE = STRUCT.pointerMember("easy_handle");
+    public static final Struct.Member<Integer> MSG = STRUCT.intMember("msg");
+    public static final Struct.Member<Pointer> EASY_HANDLE = STRUCT.pointerMember("easy_handle");
     // TODO this is actually a union of void * and CURLcode, we should somehow support these.
     //      This is kinda cursed, we just treat it as a long as that's the width of the current union.
-    public final Struct.Member<Long> DATA = STRUCT.longMember("data");
+    public static final Struct.Member<Long> DATA = STRUCT.longMember("data");
 
     public CURLMsg(long address) {
         super(address);
