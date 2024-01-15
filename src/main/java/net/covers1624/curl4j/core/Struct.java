@@ -30,6 +30,11 @@ public class Struct {
 
     private <T> Member<T> addMember(Member<T> member) {
         if (finished) throw new IllegalArgumentException("Finish has already been called.");
+        for (Member<?> m : members) {
+            if (m.name.equals(member.name)) {
+                throw new IllegalArgumentException("Duplicate member name " + member.name);
+            }
+        }
         members.add(member);
         sizeof = member.offset + member.size();
         align = Math.max(align, member.alignment());
