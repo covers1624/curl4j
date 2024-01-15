@@ -13,10 +13,20 @@ import java.util.function.Function;
  */
 public class Struct {
 
+    private final String name;
     private final List<Member<?>> members = new ArrayList<>();
     private boolean finished;
     private int sizeof;
     private int align = 0;
+
+    @Deprecated // Use named constructor.
+    public Struct() {
+        this("$unknown$");
+    }
+
+    public Struct(String name) {
+        this.name = name;
+    }
 
     private <T> Member<T> addMember(Member<T> member) {
         if (finished) throw new IllegalArgumentException("Finish has already been called.");
@@ -88,6 +98,44 @@ public class Struct {
 
     private static int align(int o, int a) {
         return ((o - 1) | (a - 1)) + 1;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("struct ")
+                .append(name)
+                .append(" ")
+                .append(" s:").append(getSize())
+                .append(" a:").append(getAlign())
+                .append(" {\n");
+        int maxCharsName = 0;
+        int maxCharsSize = 0;
+        int maxCharsAlign = 0;
+        int maxCharsOff = 0;
+        for (Member<?> member : members) {
+            maxCharsName = Math.max(maxCharsName, member.name.length());
+            maxCharsSize = Math.max(maxCharsSize, Integer.toString(member.size()).length());
+            maxCharsAlign = Math.max(maxCharsAlign, Integer.toString(member.alignment()).length());
+            maxCharsOff = Math.max(maxCharsOff, Integer.toString(member.offset).length());
+        }
+        for (Member<?> member : members) {
+            builder.append("\t")
+                    .append(padString(member.name, maxCharsName))
+                    .append(" s:").append(padString(String.valueOf(member.size()), maxCharsSize))
+                    .append(" a:").append(padString(String.valueOf(member.alignment()), maxCharsAlign))
+                    .append(" o:").append(padString(String.valueOf(member.offset), maxCharsOff))
+                    .append("\n");
+        }
+        builder.append("}");
+        return builder.toString();
+    }
+
+    private static String padString(String str, int toLen) {
+        StringBuilder sb = new StringBuilder(str);
+        for (int i = str.length(); i < toLen; i++) {
+            sb.append(" ");
+        }
+        return sb.toString();
     }
 
     public static abstract class Member<T> {

@@ -8,7 +8,7 @@ import net.covers1624.curl4j.core.Struct;
  */
 public class CURLMsg extends Pointer {
 
-    private static final Struct STRUCT = new Struct();
+    private static final Struct STRUCT = new Struct("CURLMsg");
 
     public final Struct.Member<Integer> MSG = STRUCT.intMember("msg");
     public final Struct.Member<Pointer> EASY_HANDLE = STRUCT.pointerMember("easy_handle");

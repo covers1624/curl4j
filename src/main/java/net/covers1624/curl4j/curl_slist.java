@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class curl_slist extends Pointer {
 
-    private static final Struct STRUCT = new Struct();
+    private static final Struct STRUCT = new Struct("curl_slist");
 
     public static final Struct.Member<@Nullable String> DATA = STRUCT.stringMember("data");
     public static final Struct.Member<@Nullable curl_slist> NEXT = STRUCT.structPointerMember("next", p -> new curl_slist(p.address));

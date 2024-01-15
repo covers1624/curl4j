@@ -19,7 +19,7 @@ public class curl_blob extends Pointer {
      */
     public static final int CURL_BLOB_NOCOPY = 0;
 
-    private static final Struct STRUCT = new Struct();
+    private static final Struct STRUCT = new Struct("curl_blob");
 
     public static final Struct.Member<Pointer> DATA = STRUCT.pointerMember("data");
     public static final Struct.Member<Long> LEN = STRUCT.sizeTMember("len");

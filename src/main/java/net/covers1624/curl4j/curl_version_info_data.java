@@ -10,7 +10,7 @@ import java.util.Set;
  */
 public class curl_version_info_data extends Pointer {
 
-    private static final Struct STRUCT = new Struct();
+    private static final Struct STRUCT = new Struct("curl_version_info_data");
 
     public static final Struct.Member<Integer> AGE = STRUCT.intMember("age");
     public static final Struct.Member<String> VERSION = STRUCT.stringMember("version");
