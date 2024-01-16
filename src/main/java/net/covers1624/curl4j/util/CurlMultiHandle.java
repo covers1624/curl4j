@@ -1,6 +1,7 @@
 package net.covers1624.curl4j.util;
 
 import net.covers1624.curl4j.CURL;
+import net.covers1624.curl4j.ErrorBuffer;
 import net.covers1624.curl4j.util.internal.CurlHandleFactory;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -10,6 +11,8 @@ import static net.covers1624.curl4j.CURL.*;
 /**
  * A simple resource management wrapper around both
  * curl_easy and curl_multi handles.
+ * <p>
+ * Each handle has a {@link ErrorBuffer} already attached for convenience.
  * <p>
  * This is indented to be used for curl_multi operations only.
  * <p>

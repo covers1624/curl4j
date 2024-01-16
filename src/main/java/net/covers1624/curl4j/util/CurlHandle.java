@@ -1,6 +1,7 @@
 package net.covers1624.curl4j.util;
 
 import net.covers1624.curl4j.CURL;
+import net.covers1624.curl4j.ErrorBuffer;
 import net.covers1624.curl4j.util.internal.CurlHandleFactory;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -8,6 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * A simple resource management wrapper around a
  * curl_easy handle.
+ * <p>
+ * Each handle has a {@link ErrorBuffer} already attached for convenience.
  * <p>
  * This is indented to be used for curl_easy operations only.
  * <p>
@@ -20,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CurlHandle implements AutoCloseable {
 
     public final long curl;
+    public final ErrorBuffer errorBuffer = new ErrorBuffer();
     private final AtomicLong a_curl;
 
     /**
@@ -39,6 +43,7 @@ public class CurlHandle implements AutoCloseable {
     protected CurlHandle(AtomicLong a_curl) {
         curl = a_curl.get();
         this.a_curl = a_curl;
+        errorBuffer.apply(curl);
     }
 
     /**
