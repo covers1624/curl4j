@@ -3,6 +3,7 @@ package net.covers1624.curl4j.core;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,8 +89,24 @@ public class MemoryTests {
 
         assertEquals("Hello World", Memory.readUtf8(addr));
 
-        buffer.put(11, (byte)'A'); // Destroy the null byte.
+        buffer.put(11, (byte) 'A'); // Destroy the null byte.
         assertEquals("Hello World", Memory.readUtf8(addr, 11));
+    }
+
+    @Test
+    public void regressionStringReadOverflow() {
+        try (Memory.Stack stack = Memory.pushStack()) {
+            byte[] garbageBytes = "Hello World Hello World".getBytes(StandardCharsets.UTF_8);
+            // We write some non-null terminated data onto the stack.
+            stack.malloc(garbageBytes.length).put(garbageBytes);
+
+            // Create a new non-null terminated buffer a string.
+            ByteBuffer buff = ByteBuffer.allocateDirect(12);
+            buff.put("Hello World".getBytes(StandardCharsets.UTF_8));
+            // Read 12 bytes from the address of the buff.
+            // This should copy the data onto the stack, then append a null byte and let jni read the string.
+            assertEquals("Hello World", Memory.readUtf8(Memory.getDirectByteBufferAddress(buff), 12));
+        }
     }
 
     @Test

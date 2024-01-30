@@ -95,7 +95,7 @@ public final class Memory {
         try (Stack stack = Memory.pushStack()) {
             long buffer = stack.nmalloc(len + 1);
             memcpy(strBuf, buffer, len);
-            putByte(strBuf + len, (byte) '\0');
+            putByte(buffer + len, (byte) '\0');
             return readUtf8(buffer);
         }
     }
