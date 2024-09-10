@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [ build-native ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: '0'
       - name: Gradle Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: ./gradlew jar jarWithLibCurl -si
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jars
           path: |
