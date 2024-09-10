@@ -54,8 +54,8 @@ curl_archive=$(cache_dir)/curl-$(curl_version).tar.gz
 curl_build=$(build_dir)/curl
 curl_install=$(install_dir)/curl
 
-libffi_commit=1d0a28ab5a2ee2e12b0650d69184d561cd1fd83c
-libffi_archive=$(cache_dir)/libffi-$(shell echo $(libffi_commit) | cut -c -8).tar.gz
+libffi_version=3.4.6
+libffi_archive=$(cache_dir)/libffi-$(libffi_version).tar.gz
 libffi_build=$(build_dir)/libffi
 libffi_install=$(install_dir)/libffi
 
@@ -425,15 +425,13 @@ clean-curl:
 
 # === libffi ===
 $(libffi_archive):
-	@"$(scripts_dir)/download.sh" "https://github.com/libffi/libffi/archive/$(libffi_commit).tar.gz" "$(libffi_archive)"
+	@"$(scripts_dir)/download.sh" "https://github.com/libffi/libffi/releases/download/v$(libffi_version)/libffi-$(libffi_version).tar.gz" "$(libffi_archive)"
 
 $(libffi_build): $(libffi_archive)
 	mkdir -p "$(build_dir)"
 	echo "Extracting libffi archive.."
 	tar -xf "$(libffi_archive)" -C "$(build_dir)"
-	mv "$(build_dir)/libffi-$(libffi_commit)/" "$(libffi_build)/"
-	cd "$(libffi_build)"
-	./autogen.sh
+	mv "$(build_dir)/libffi-$(libffi_version)/" "$(libffi_build)/"
 
 $(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
 	set -e

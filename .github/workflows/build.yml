@@ -217,7 +217,7 @@ jobs:
           ./gradlew check -si
 
   build_macos_x64:
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
@@ -229,7 +229,7 @@ jobs:
       - name: Install dependencies.
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
-          brew install make coreutils
+          brew install make coreutils automake
       - name: Build
         run: |
           cd native_build
@@ -242,7 +242,7 @@ jobs:
             native_build/install/libcurl*
 
   test_macos_x64:
-    runs-on: macos-11
+    runs-on: macos-12
     needs: build_macos_x64
     steps:
       - uses: actions/checkout@v3
@@ -261,7 +261,7 @@ jobs:
           ./gradlew check -si
 
   build_macos_arm64:
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
       - name: Gradle Cache
@@ -273,7 +273,7 @@ jobs:
       - name: Install dependencies.
         run: |
           rm -rf /usr/local/Cellar/openssl*/**/include
-          brew install make coreutils
+          brew install make coreutils automake
       - name: Build
         run: |
           cd native_build
