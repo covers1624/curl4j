@@ -1,15 +1,16 @@
-name: Build
+name: Check
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
       - develop
+  pull_request:
 
 jobs:
   build-native:
     uses: ./.github/workflows/native-build.yml
-  package:
+  check:
     runs-on: ubuntu-22.04
     needs: [ build-native ]
     steps:
@@ -28,13 +29,8 @@ jobs:
           path: native_build/install/
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           run-id: "${{ needs.build-native.outputs.workflow_id }}"
-      - name: Build
-        run: ./gradlew jar jarWithLibCurl -si
-      - name: Publish
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
-        env:
-          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
-        run: ./gradlew publish -si
+      - name: Check
+        run: ./gradlew check -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
