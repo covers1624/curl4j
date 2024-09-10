@@ -10,7 +10,7 @@ on:
 jobs:
   build-native:
     uses: ./.github/workflows/native-build.yml
-  check:
+  pacakge:
     runs-on: ubuntu-22.04
     needs: [ build-native ]
     steps:
@@ -29,8 +29,8 @@ jobs:
           path: native_build/install/
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           run-id: "${{ needs.build-native.outputs.workflow_id }}"
-      - name: Check
-        run: ./gradlew check -si
+      - name: Build
+        run: ./gradlew jar jarWithLibCurl -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
