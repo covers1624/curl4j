@@ -1,0 +1,282 @@
+name: Build Natives
+
+on:
+  workflow_call:
+    outputs:
+      workflow_id:
+        description: "The ID of the workflow run."
+        value: "${{ github.run_id }}"
+
+jobs:
+  build_linux_x64-gnu:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=linux_x64 LIBC=gnu make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_x64-gnu
+          path: |
+            native_build/install/libcurl*
+
+  test_linux_x64-gnu:
+    runs-on: ubuntu-22.04
+    needs: build_linux_x64-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_x64-gnu
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check -si
+
+  build_linux_x64-musl:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=linux_x64 LIBC=musl make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_x64-musl
+          path: |
+            native_build/install/libcurl*
+
+  test_linux_x64-musl:
+    runs-on: ubuntu-22.04
+    needs: build_linux_x64-musl
+    container:
+      image: alpine:3.18.5
+    steps:
+      - name: "Setup"
+        run: apk update && apk add openjdk8 openjdk9 openjdk17 git
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_x64-musl
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          export JDK8=/usr/lib/jvm/java-8-openjdk/
+          export JDK9=/usr/lib/jvm/java-9-openjdk/
+          export JDK17=/usr/lib/jvm/java-17-openjdk/
+          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
+          export LIBC=musl
+          ./gradlew check -si -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
+
+  build_linux_arm64-gnu:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies.
+        run: |
+          sudo apt update
+          sudo apt install gcc-10-aarch64-linux-gnu
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=linux_arm64 LIBC=gnu make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_arm64-gnu
+          path: |
+            native_build/install/libcurl*
+
+  test_linux_arm64-gnu:
+    runs-on: ubuntu-22.04
+    needs: build_linux_arm64-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_arm64-gnu
+          path: native_build/install/
+      - uses: uraimo/run-on-arch-action@v2
+        name: Check
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          install: apt update && apt install -y openjdk-8-jdk-headless git
+          run: |
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
+            ./gradlew check -si
+
+  build_linux_arm64-musl:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies.
+        run: |
+          sudo apt update
+          sudo apt install gcc-10-aarch64-linux-gnu
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=linux_arm64 LIBC=musl make build-libcurl4j
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_arm64-musl
+          path: |
+            native_build/install/libcurl*
+
+  build_windows_x64:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies.
+        run: |
+          sudo apt update
+          sudo apt install mingw-w64
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=windows_x64 make
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows_x64
+          path: |
+            native_build/install/libcurl*
+
+  test_windows_x64:
+    runs-on: windows-2022
+    needs: build_windows_x64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows_x64
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check -si
+
+  build_macos_x64:
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies.
+        run: |
+          rm -rf /usr/local/Cellar/openssl*/**/include
+          brew install make coreutils automake
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=macos_x64 gmake
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos_x64
+          path: |
+            native_build/install/libcurl*
+
+  test_macos_x64:
+    runs-on: macos-12
+    needs: build_macos_x64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos_x64
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check -si
+
+  build_macos_arm64:
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies.
+        run: |
+          rm -rf /usr/local/Cellar/openssl*/**/include
+          brew install make coreutils automake
+      - name: Build
+        run: |
+          cd native_build
+          PLATFORM=macos_arm64 gmake
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos_arm64
+          path: |
+            native_build/install/libcurl*
+  collate:
+    runs-on: ubuntu-22.04
+    needs: [ build_linux_x64-gnu, test_linux_x64-gnu, build_linux_x64-musl, test_linux_x64-musl, build_linux_arm64-gnu, build_linux_arm64-musl, test_linux_arm64-gnu, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_x64-gnu
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_x64-musl
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_arm64-gnu
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_arm64-musl
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows_x64
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos_x64
+          path: native_build/install/
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos_arm64
+          path: native_build/install/
+      - name: Upload All Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: natives
+          path: |
+            native_build/install/libcurl*
