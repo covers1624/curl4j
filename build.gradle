@@ -74,7 +74,7 @@ jar {
 }
 
 tasks.register('jarWithLibCurl', Jar) {
-    classifier = 'libcurl'
+    archiveClassifier = 'libcurl'
 
     from sourceSets.main.output
     from project(":java9").sourceSets.main.output
