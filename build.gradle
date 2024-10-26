@@ -94,6 +94,7 @@ tasks.register('testJ17', Test) {
 check.dependsOn('testJ17')
 
 jar {
+    finalizedBy 'signJar'
     from project(":java9").sourceSets.main.output
     from(file('native_build/install/libcurl4j')) {
         into 'META-INF/natives/'
@@ -101,6 +102,7 @@ jar {
 }
 
 tasks.register('jarWithLibCurl', Jar) {
+    finalizedBy 'signJarWithLibCurl'
     archiveClassifier = 'libcurl'
 
     from sourceSets.main.output
