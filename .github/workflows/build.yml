@@ -34,6 +34,10 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
         env:
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+          KEY_STORE_FILE: ${{ secrets.KEY_STORE_FILE }}
+          KEY_STORE_PROPS_FILE: ${{ secrets.KEY_STORE_PROPS_FILE }}
+          GPG_PRIVATE_KEY_FILE: ${{ secrets.GPG_PRIVATE_KEY_FILE }}
+          GPG_PRIVATE_KEY_PASS: ${{ secrets.GPG_PRIVATE_KEY_PASS }}
         run: ./gradlew publish -si
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
