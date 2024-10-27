@@ -1,6 +1,7 @@
 package net.covers1624.curl4j.util;
 
 import net.covers1624.curl4j.CurlReadCallback;
+import net.covers1624.curl4j.CurlSeekCallback;
 import net.covers1624.curl4j.core.Memory;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +9,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -21,7 +23,8 @@ import static net.covers1624.curl4j.CURL.*;
  */
 public abstract class CurlInput implements Closeable, CurlBindable {
 
-    private @Nullable CurlReadCallback callback;
+    private @Nullable CurlReadCallback readCallback;
+    private @Nullable CurlSeekCallback seekCallback;
     private @Nullable ReadableByteChannel channel;
     private boolean closed;
 
@@ -134,8 +137,8 @@ public abstract class CurlInput implements Closeable, CurlBindable {
     public CurlReadCallback callback() {
         if (closed) throw new IllegalStateException("Already closed.");
 
-        if (callback == null) {
-            callback = new CurlReadCallback((ptr, size, nmemb, userdata) -> {
+        if (readCallback == null) {
+            readCallback = new CurlReadCallback((ptr, size, nmemb, userdata) -> {
                 if (channel == null) {
                     channel = open();
                 }
@@ -147,7 +150,27 @@ public abstract class CurlInput implements Closeable, CurlBindable {
 
             });
         }
-        return callback;
+        return readCallback;
+    }
+
+    /**
+     * @return The {@link CurlSeekCallback} function.
+     */
+    public CurlSeekCallback seekCallback() {
+        if (closed) throw new IllegalStateException("Already closed.");
+
+        if (seekCallback == null) {
+            seekCallback = new CurlSeekCallback(((userdata, offset, origin) -> {
+                if (origin != SEEK_SET) return CURL_SEEKFUNC_CANTSEEK;
+
+                if (!(channel instanceof SeekableByteChannel)) {
+                    return CURL_SEEKFUNC_CANTSEEK;
+                }
+                ((SeekableByteChannel) channel).position(offset);
+                return CURL_SEEKFUNC_OK;
+            }));
+        }
+        return seekCallback;
     }
 
     @Override
@@ -158,6 +181,7 @@ public abstract class CurlInput implements Closeable, CurlBindable {
         curl_easy_setopt(curl, CURLOPT_UPLOAD, true);
         curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, len);
         curl_easy_setopt(curl, CURLOPT_READFUNCTION, callback());
+        curl_easy_setopt(curl, CURLOPT_SEEKFUNCTION, seekCallback());
     }
 
     protected abstract ReadableByteChannel open() throws IOException;
@@ -171,7 +195,7 @@ public abstract class CurlInput implements Closeable, CurlBindable {
     public void close() throws IOException {
         if (closed) return;
 
-        if (callback != null) callback.close();
+        if (readCallback != null) readCallback.close();
         if (channel != null) channel.close();
         closed = true;
     }
