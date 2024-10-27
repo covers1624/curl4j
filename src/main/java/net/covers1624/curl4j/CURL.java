@@ -2817,6 +2817,29 @@ public class CURL {
     //endregion
 
     // region Curl callback return constants
+    public static final int CURL_SEEKFUNC_OK = 0;
+    /**
+     * Fail the entire transfer.
+     */
+    public static final int CURL_SEEKFUNC_FAIL = 1;
+    /**
+     * Tell libcurl seeking cannot be done, so libcurl might try another means instead.
+     */
+    public static final int CURL_SEEKFUNC_CANTSEEK = 2;
+
+    /**
+     * Seek from beginning of file.
+     */
+    public static final int SEEK_SET = 0;
+    /**
+     * Seek from current position.
+     */
+    public static final int SEEK_CUR = 1;
+    /**
+     * Seek from end of file.
+     */
+    public static final int SEEK_END = 2;
+
     /**
      * This is a return code for the read callback that, when returned,
      * will signal libcurl to immediately abort the current transfer.
@@ -3359,8 +3382,23 @@ public class CURL {
      * @param readfunc The read function.
      * @return The CURLcode response.
      */
+    @Deprecated // Use the variant bellow with a seek function.
     public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
         return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), Memory.NULL, Memory.NULL, Memory.NULL);
+    }
+
+    /**
+     * Set mime part data source from callback function.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_data_cb.html">documentation</a>.
+     *
+     * @param mime     The curl_mime handle.
+     * @param datasize The size of the body.
+     * @param readfunc The read function.
+     * @return The CURLcode response.
+     */
+    public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc, CurlSeekCallback seekfunc) {
+        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), seekfunc.getFunctionAddress(), Memory.NULL, Memory.NULL);
     }
 
     /**

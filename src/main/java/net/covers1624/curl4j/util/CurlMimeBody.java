@@ -150,7 +150,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
                 }
                 if (len == -1) throw new IllegalArgumentException("Input must have a known length.");
                 resources.add(input);
-                curl_mime_data_cb(part, len, input.callback());
+                curl_mime_data_cb(part, len, input.callback(), input.seekCallback());
                 return this;
             }
 
