@@ -57,6 +57,7 @@ public class CURLTests extends TestBase {
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
                 assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertEquals("127.0.0.1", curl_easy_getinfo_String(curl, CURL.CURLINFO_PRIMARY_IP));
                 assertArrayEquals(data, output.bytes());
             }
         } finally {

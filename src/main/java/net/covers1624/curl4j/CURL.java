@@ -3154,7 +3154,8 @@ public class CURL {
             if (ret != CURLE_OK) {
                 throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
             }
-            return pointer.readUtf8Safe();
+            Pointer strPtr = pointer.readPointer();
+            return strPtr != null ? strPtr.readUtf8Safe() : null;
         }
     }
 
