@@ -490,7 +490,7 @@ $(curl4j_build): $(COMPILER_DEPS) $(libffi_install) $(java_install)
 
 $(libcurl4j_install): $(curl4j_build)
 	set -e
-	mkdir "$(libcurl4j_install)"
+	mkdir -p "$(libcurl4j_install)"
 	# Copy licenses
 	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi" && cp "$(libffi_build)/LICENSE" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi/LICENSE"
 ifeq (linux, $(flavour))
