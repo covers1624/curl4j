@@ -260,11 +260,11 @@ jobs:
           distribution: 'zulu'
           java-version: '8'
           architecture: 'aarch64'
-      - name: Setup Java 9 Arm64
+      - name: Setup Java 11 Arm64
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '9'
+          distribution: 'temurin'
+          java-version: '11'
           architecture: 'aarch64'
       - uses: actions/download-artifact@v4
         with:
