@@ -119,3 +119,37 @@ public class EggSample {
     }
 }
 ```
+
+## Quack httpapi
+
+Curl4j contains an implementation of [Quack's httpapi](https://github.com/covers1624/Quack/tree/ead0991bf215b67186449f980af0addee1b38dd0/src/main/java/net/covers1624/quack/net/httpapi) abstraction.
+
+This api is Optional and only **requires** Quack to be installed and available on the classpath if you wish to use it.
+The low-level api does not require Quack to be installed.
+
+This api should be familiar for anyone that has used OkHttp or Apache http client, most 'standard' libcurl operations should be supported,
+including multipart uploads. If you see anything missing please create an issue or make a PR.
+
+```java
+import net.covers1624.curl4j.CABundle;
+import net.covers1624.curl4j.httpapi.Curl4jHttpEngine;
+import net.covers1624.quack.net.httpapi.EngineRequest;
+import net.covers1624.quack.net.httpapi.EngineResponse;
+import net.covers1624.quack.net.httpapi.HttpEngine;
+
+public class EggSample {
+
+    public static void main(String[] args) throws Throwable {
+        HttpEngine engine = new Curl4jHttpEngine(CABundle.builtIn());
+
+        EngineRequest request = engine.newRequest()
+                .method("GET", null)
+                .url("https://httpbin.org/anything");
+        try (EngineResponse response = request.execute()) {
+            System.out.println("Http code: " + response.statusCode());
+            System.out.println("Body:\n" + response.body().asString());
+        }
+    }
+}
+
+```
