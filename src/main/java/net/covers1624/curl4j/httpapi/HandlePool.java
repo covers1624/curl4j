@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * <p>
  * Created by covers1624 on 16/1/24.
  */
-final class HandlePool<T extends AutoCloseable> {
+final class HandlePool<T extends AutoCloseable> implements AutoCloseable {
 
     private final Supplier<T> factory;
     private final LinkedList<Entry> entries = new LinkedList<>();
@@ -73,6 +73,20 @@ final class HandlePool<T extends AutoCloseable> {
             // Add to front. Allows for usage pressure to discard old
             // handles automatically.
             entries.addFirst(entry);
+        }
+    }
+
+    @Override
+    public void close() {
+        executor.shutdownNow();
+        synchronized (entries) {
+            for (Entry entry : entries) {
+                try {
+                    entry.handle.close();
+                } catch (Throwable ignored) {
+                }
+            }
+            entries.clear();
         }
     }
 

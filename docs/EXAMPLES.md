@@ -140,7 +140,7 @@ import net.covers1624.quack.net.httpapi.HttpEngine;
 public class EggSample {
 
     public static void main(String[] args) throws Throwable {
-        HttpEngine engine = new Curl4jHttpEngine(CABundle.builtIn());
+        Curl4jHttpEngine engine = new Curl4jHttpEngine(CABundle.builtIn());
 
         EngineRequest request = engine.newRequest()
                 .method("GET", null)
@@ -149,6 +149,10 @@ public class EggSample {
             System.out.println("Http code: " + response.statusCode());
             System.out.println("Body:\n" + response.body().asString());
         }
+        
+        // Close the engine. Engines should have a long lifetime, allocated curl handles will be re-used,
+        // but for this EggSample, we just close.
+        engine.close();
     }
 }
 

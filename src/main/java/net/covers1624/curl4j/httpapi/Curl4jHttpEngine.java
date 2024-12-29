@@ -15,15 +15,17 @@ import org.jetbrains.annotations.Nullable;
  * Created by covers1624 on 1/11/23.
  */
 @Requires (value = "net.covers1624:Quack", minVersion = "0.4.111")
-public class Curl4jHttpEngine implements HttpEngine {
+public class Curl4jHttpEngine implements HttpEngine, AutoCloseable {
 
     private static boolean CURL_GLOBAL_INIT = false;
 
     private final HandlePool<CurlHandle> CURL_HANDLES = new HandlePool<>(CurlHandle::create);
     private final HandlePool<CurlMultiHandle> MULTI_HANDLES = new HandlePool<>(CurlMultiHandle::createMulti);
 
-    private @Nullable CABundle caBundle;
+    private final @Nullable CABundle caBundle;
     public final @Nullable String impersonate;
+
+    private boolean closed = false;
 
     public Curl4jHttpEngine() {
         this((CABundle) null);
@@ -54,7 +56,19 @@ public class Curl4jHttpEngine implements HttpEngine {
 
     @Override
     public Curl4jEngineRequest newRequest() {
+        if (closed) throw new RuntimeException("Engine already closed.");
+
         return new Curl4jEngineRequest(this).useCABundle(caBundle);
+    }
+
+    /**
+     * Optionally close this engine and release all resources.
+     */
+    @Override
+    public void close() {
+        CURL_HANDLES.close();
+        MULTI_HANDLES.close();
+        closed = true;
     }
 
     @Nullable String getImpersonate() {
