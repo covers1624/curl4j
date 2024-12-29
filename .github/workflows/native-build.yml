@@ -64,7 +64,7 @@ jobs:
       image: alpine:3.18.5
     steps:
       - name: "Setup"
-        run: apk update && apk add openjdk8 openjdk9 openjdk17 git
+        run: apk update && apk add openjdk8 openjdk11 openjdk17 git
       - uses: actions/checkout@v4
       - name: Gradle Cache
         uses: actions/cache@v4
@@ -79,11 +79,11 @@ jobs:
       - name: "Check"
         run: |
           export JDK8=/usr/lib/jvm/java-8-openjdk/
-          export JDK9=/usr/lib/jvm/java-9-openjdk/
+          export JDK11=/usr/lib/jvm/java-11-openjdk/
           export JDK17=/usr/lib/jvm/java-17-openjdk/
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
+          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
