@@ -83,7 +83,7 @@ jobs:
           export JDK17=/usr/lib/jvm/java-17-openjdk/
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
+          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
