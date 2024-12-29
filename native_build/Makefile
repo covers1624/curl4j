@@ -117,6 +117,8 @@ C_COMPILER=clang
 
 ifeq (x64, $(arch))
 HOST=x86_64-apple-darwin20.6.0
+CMAKE_ARGS=-DCMAKE_OSX_ARCHITECTURES=x86_64
+CFLAGS=--target=x86_64-apple-darwin20.6.0
 QUICTLS_ARGS=darwin64-x86_64
 else
 HOST=aarch64-apple-darwin20.6.0
@@ -490,7 +492,7 @@ $(curl4j_build): $(COMPILER_DEPS) $(libffi_install) $(java_install)
 
 $(libcurl4j_install): $(curl4j_build)
 	set -e
-	mkdir "$(libcurl4j_install)"
+	mkdir -p "$(libcurl4j_install)"
 	# Copy licenses
 	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi" && cp "$(libffi_build)/LICENSE" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi/LICENSE"
 ifeq (linux, $(flavour))

@@ -64,7 +64,7 @@ jobs:
       image: alpine:3.18.5
     steps:
       - name: "Setup"
-        run: apk update && apk add openjdk8 openjdk9 openjdk17 git
+        run: apk update && apk add openjdk8 openjdk11 openjdk17 git
       - uses: actions/checkout@v4
       - name: Gradle Cache
         uses: actions/cache@v4
@@ -79,11 +79,11 @@ jobs:
       - name: "Check"
         run: |
           export JDK8=/usr/lib/jvm/java-8-openjdk/
-          export JDK9=/usr/lib/jvm/java-9-openjdk/
+          export JDK11=/usr/lib/jvm/java-11-openjdk/
           export JDK17=/usr/lib/jvm/java-17-openjdk/
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.java.installations.fromEnv=JDK8,JDK9,JDK17
+          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
@@ -187,7 +187,7 @@ jobs:
           ./gradlew check -si
 
   build_macos_x64:
-    runs-on: macos-12
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies.
@@ -206,7 +206,7 @@ jobs:
             native_build/install/libcurl*
 
   test_macos_x64:
-    runs-on: macos-12
+    runs-on: macos-15
     needs: build_macos_x64
     steps:
       - uses: actions/checkout@v4
@@ -216,6 +216,24 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
+      - name: Setup Java 8 x64
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          architecture: 'x64'
+      - name: Setup Java 11 x64
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          architecture: 'x64'
+      - name: Setup Java 17 x64
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          architecture: 'x64'
       - uses: actions/download-artifact@v4
         with:
           name: macos_x64
@@ -225,7 +243,7 @@ jobs:
           ./gradlew check -si
 
   build_macos_arm64:
-    runs-on: macos-12
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies.
@@ -242,9 +260,41 @@ jobs:
           name: macos_arm64
           path: |
             native_build/install/libcurl*
+
+  test_macos_arm64:
+    runs-on: macos-15
+    needs: build_macos_arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - name: Setup Java 8 Arm64
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          architecture: 'aarch64'
+      - name: Setup Java 11 Arm64
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          architecture: 'aarch64'
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos_arm64
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          ./gradlew check -si
+
   collate:
     runs-on: ubuntu-22.04
-    needs: [ build_linux_x64-gnu, test_linux_x64-gnu, build_linux_x64-musl, test_linux_x64-musl, build_linux_arm64-gnu, build_linux_arm64-musl, test_linux_arm64-gnu, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64 ]
+    needs: [ build_linux_x64-gnu, test_linux_x64-gnu, build_linux_x64-musl, test_linux_x64-musl, build_linux_arm64-gnu, build_linux_arm64-musl, test_linux_arm64-gnu, build_windows_x64, test_windows_x64, build_macos_x64, test_macos_x64, build_macos_arm64, test_macos_arm64 ]
     steps:
       - uses: actions/download-artifact@v4
         with:

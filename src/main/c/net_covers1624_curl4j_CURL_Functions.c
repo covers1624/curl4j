@@ -34,12 +34,12 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1eas
 }
 
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1easy_1setopt__JJIJ(JNIEnv *env, jclass clazz, jlong func, jlong curl, jint opt, jlong value) {
-    return ((int (*)(uintptr_t, int, uintptr_t)) (uintptr_t) func)((uintptr_t) curl, opt, (uintptr_t) value);
+    return ((int (*)(uintptr_t, int, ...)) (uintptr_t) func)((uintptr_t) curl, opt, (uintptr_t) value);
 }
 
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1easy_1setopt__JJILjava_lang_String_2(JNIEnv *env, jclass clazz, jlong func, jlong curl, jint opt, jstring value) {
     const char *valStr = (*env)->GetStringUTFChars(env, value, NULL);
-    int ret = ((int (*)(uintptr_t, int, const char *)) (uintptr_t) func)((uintptr_t) curl, opt, valStr);
+    int ret = ((int (*)(uintptr_t, int, ...)) (uintptr_t) func)((uintptr_t) curl, opt, valStr);
     (*env)->ReleaseStringUTFChars(env, value, valStr);
     return ret;
 }
@@ -148,7 +148,7 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mul
 }
 
 JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1setopt(JNIEnv *env, jclass clazz, jlong func, jlong multi, jint opt, jlong value) {
-    return ((int (*)(uintptr_t, int, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, opt, (uintptr_t) value);
+    return ((int (*)(uintptr_t, int, ...)) (uintptr_t) func)((uintptr_t) multi, opt, (uintptr_t) value);
 }
 
 JNIEXPORT jstring JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1strerror(JNIEnv *env, jclass clazz, jlong func, jint code) {
