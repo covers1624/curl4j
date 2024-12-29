@@ -240,7 +240,7 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          cat /Users/runner/.m2/settings.xml
+          find -depth 3 /Users/runner/hostedtoolcache
           ./gradlew check -si
 
   build_macos_arm64:
