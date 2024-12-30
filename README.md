@@ -16,6 +16,7 @@ libcurl bindings for Java 8+
     - Bring your own libcurl binary. Use the system libcurl, or specify your own path.
     - Support for curl_easy and curl_multi.
 - High performance, extremely low overhead
+- High-level bindings via [Quack](https://github.com/covers1624/Quack) httpapi abstraction.
 - Provides native memory management primitives for..
     - Wrapping/reading/writing native memory.
     - Java safe, native callback function pointers.
@@ -31,11 +32,9 @@ Please see our [Examples](docs/EXAMPLES.md) for usage.
 
 ## TODO list (unsorted)
 
-- Musl arm64 linux.
 - Feature parity between Windows and macOS/Linux libcurl.
 - Maven central?
 - Finish curl_easy and curl_multi bindings.
 - Windows arm64
-- 32 bit support
 - At some point we need to leave J8 behind, experiment with Java FFM API.
 
