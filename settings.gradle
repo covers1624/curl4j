@@ -11,5 +11,3 @@ plugins {
 
 rootProject.name = 'curl4j'
 
-include 'java9'
-

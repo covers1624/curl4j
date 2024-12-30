@@ -8,7 +8,8 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(23)
+        vendor = JvmVendorSpec.ADOPTIUM
     }
     withSourcesJar()
     withJavadocJar()
@@ -65,35 +66,15 @@ compileJava {
     options.compilerArgs += ['-h', file('src/generated/c')]
 }
 
-evaluationDependsOn(":java9")
-
 test {
-    classpath += project(":java9").sourceSets.main.output
-
     useJUnitPlatform()
 
     systemProperty('net.covers1624.curl4j.libcurl4j.name', file("native_build/install/libcurl4j/${os}/${arch}/${System.mapLibraryName("curl4j$suffix")}"))
     systemProperty('net.covers1624.curl4j.libcurl.name', file("native_build/install/libcurl/${os}/${arch}/${System.mapLibraryName("curl$suffix")}"))
 }
-
-tasks.register('testJ17', Test) {
-    classpath += project(":java9").sourceSets.main.output
-
-    useJUnitPlatform()
-
-    javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-
-    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("native_build/install/libcurl4j/${os}/${arch}/${System.mapLibraryName("curl4j$suffix")}"))
-    systemProperty('net.covers1624.curl4j.libcurl.name', file("native_build/install/libcurl/${os}/${arch}/${System.mapLibraryName("curl$suffix")}"))
-}
-
-check.dependsOn('testJ17')
 
 jar {
     finalizedBy 'signJar'
-    from project(":java9").sourceSets.main.output
     from(file('native_build/install/libcurl4j')) {
         into 'META-INF/natives/'
     }
@@ -104,7 +85,6 @@ tasks.register('jarWithLibCurl', Jar) {
     archiveClassifier = 'libcurl'
 
     from sourceSets.main.output
-    from project(":java9").sourceSets.main.output
 
     from(file('native_build/install/libcurl4j')) {
         into 'META-INF/natives/'

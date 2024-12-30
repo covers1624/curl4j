@@ -34,6 +34,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
+      - name: Setup Java 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '23'
       - uses: actions/download-artifact@v4
         with:
           name: linux_x64-gnu
@@ -64,7 +69,9 @@ jobs:
       image: alpine:3.18.5
     steps:
       - name: "Setup"
-        run: apk update && apk add openjdk8 openjdk11 openjdk17 git
+        run: | 
+          apk update && apk add git
+          apk add openjdk23 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
       - uses: actions/checkout@v4
       - name: Gradle Cache
         uses: actions/cache@v4
@@ -78,12 +85,10 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          export JDK8=/usr/lib/jvm/java-8-openjdk/
-          export JDK11=/usr/lib/jvm/java-11-openjdk/
-          export JDK17=/usr/lib/jvm/java-17-openjdk/
-          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
+          export JDK23=/usr/lib/jvm/java-23-openjdk/
+          export JAVA_HOME=/usr/lib/jvm/java-23-openjdk/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
+          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK23
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04
@@ -123,10 +128,16 @@ jobs:
         name: Check
         with:
           arch: aarch64
-          distro: ubuntu22.04
-          install: apt update && apt install -y openjdk-8-jdk-headless git
+          distro: bookworm
+          install: | 
+            apt update
+            apt install -y git curl
+            curl -L https://packages.adoptium.net/artifactory/api/gpg/key/public | tee /etc/apt/keyrings/adoptium.asc
+            echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list
+            apt update
+            apt install -y temurin-23-jre
           run: |
-            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
+            export JAVA_HOME=/usr/lib/jvm/java-23-openjdk-arm64
             ./gradlew check -si
 
   build_linux_arm64-musl:
@@ -178,6 +189,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
+      - name: Setup Java 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '23'
       - uses: actions/download-artifact@v4
         with:
           name: windows_x64
@@ -216,23 +232,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 8 x64
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '8'
-          architecture: 'x64'
-      - name: Setup Java 11 x64
+      - name: Setup Java 23
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
-          architecture: 'x64'
-      - name: Setup Java 17 x64
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+          java-version: '23'
           architecture: 'x64'
       - uses: actions/download-artifact@v4
         with:
@@ -272,17 +276,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 8 Arm64
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '8'
-          architecture: 'aarch64'
-      - name: Setup Java 11 Arm64
+      - name: Setup Java 23
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '23'
           architecture: 'aarch64'
       - uses: actions/download-artifact@v4
         with:

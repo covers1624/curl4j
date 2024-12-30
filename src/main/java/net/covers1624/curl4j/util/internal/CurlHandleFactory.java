@@ -12,24 +12,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @ApiStatus.Internal
 public interface CurlHandleFactory {
 
-    CurlHandleFactory INSTANCE = Internal.selectFactory();
+    CurlHandleFactory INSTANCE = new CleaningCurlHandleFactory();
 
     CurlHandle newHandle(AtomicLong curl);
 
     CurlMultiHandle newMultiHandle(AtomicLong curl, AtomicLong multi);
-
-    class Internal {
-
-        private static CurlHandleFactory selectFactory() {
-            try {
-                // Java 9!
-                Class.forName("java.lang.ref.Cleaner");
-                Class<?> clazz = Class.forName("net.covers1624.curl4j.util.internal.CleaningCurlHandleFactory");
-                return (CurlHandleFactory) clazz.getConstructor().newInstance();
-            } catch (Throwable ex) {
-                // Java 8 fallback, use object finalization.
-                return new FinalizingCurlHandleFactory();
-            }
-        }
-    }
 }
