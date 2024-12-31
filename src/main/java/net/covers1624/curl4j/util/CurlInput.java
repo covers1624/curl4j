@@ -196,6 +196,7 @@ public abstract class CurlInput implements Closeable, CurlBindable {
         if (closed) return;
 
         if (readCallback != null) readCallback.close();
+        if (seekCallback != null) seekCallback.close();
         if (channel != null) channel.close();
         closed = true;
     }
