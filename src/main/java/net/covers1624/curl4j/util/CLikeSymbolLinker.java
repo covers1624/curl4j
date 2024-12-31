@@ -69,7 +69,7 @@ public final class CLikeSymbolLinker {
         String prevType;
         do {
             prevType = resolvedType;
-            resolvedType = typeAliases.getOrDefault(resolvedType, resolvedType);
+            resolvedType = resolveTypeAlias(resolvedType);
         }
         while (!prevType.equals(resolvedType));
 
@@ -78,6 +78,14 @@ public final class CLikeSymbolLinker {
             throw new RuntimeException("Unable to resolve type " + type + " (" + resolvedType + ")");
         }
         return layout;
+    }
+
+    private String resolveTypeAlias(String type) {
+        if (!type.equals("void*") && type.endsWith("*")) {
+            return "void*";
+        }
+
+        return typeAliases.getOrDefault(type, type);
     }
 
     private static MethodSig parse(String prototype, String varArgsPrototype) {
