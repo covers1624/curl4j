@@ -2,6 +2,8 @@ package net.covers1624.curl4j.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.foreign.Arena;
+import java.lang.foreign.SymbolLookup;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -26,10 +28,11 @@ public class LibraryLoader {
     public static void initialize() {
     }
 
-    public static Library loadLibrary(String libName) throws UnsatisfiedLinkError {
+    public static SymbolLookup loadLibrary(String libName, Arena arena) throws UnsatisfiedLinkError {
         // First try absolute path.
-        if (Paths.get(libName).isAbsolute()) {
-            return loadLib(libName);
+        Path libNamePath = Path.of(libName);
+        if (libNamePath.isAbsolute()) {
+            return SymbolLookup.libraryLookup(libNamePath, arena);
         }
 
         // Next, try and use the system property extracted dir override.
@@ -37,7 +40,7 @@ public class LibraryLoader {
             if (LIB_PATH != null) {
                 Path path = Paths.get(LIB_PATH, libPath);
                 if (Files.exists(path)) {
-                    return loadLib(path.toAbsolutePath().toString());
+                    return SymbolLookup.libraryLookup(path.toAbsolutePath(), arena);
                 }
             }
         }
@@ -51,30 +54,14 @@ public class LibraryLoader {
                     if (path == null) {
                         path = extract(url, libName);
                     }
-                    return loadLib(path.toAbsolutePath().toString());
+                    return SymbolLookup.libraryLookup(path.toAbsolutePath(), arena);
                 }
             }
         }
 
         // TODO better error messages, stating where we searched, etc.
         // We tried, just sendit and see what happens!
-        return loadLib(System.mapLibraryName(libName));
-    }
-
-    private static Library loadLib(String libName) {
-        switch (OperatingSystem.CURRENT) {
-            case WINDOWS:
-                return new Library.WindowsLibrary(libName);
-            case LINUX:
-                return new Library.LinuxLibrary(libName);
-            case MACOS:
-                return new Library.MacosLibrary(libName);
-            case FREEBSD:
-                break;
-            case UNKNOWN:
-                break;
-        }
-        throw new UnsupportedOperationException("Unknown/unsupported Operating System. " + OperatingSystem.CURRENT);
+        return SymbolLookup.libraryLookup(System.mapLibraryName(libName), arena);
     }
 
     /**

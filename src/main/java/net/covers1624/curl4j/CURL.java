@@ -1,7 +1,10 @@
 package net.covers1624.curl4j;
 
 import net.covers1624.curl4j.core.*;
+import net.covers1624.curl4j.util.LibCurl;
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.foreign.Arena;
 
 import static net.covers1624.curl4j.CURL.Functions.*;
 
@@ -23,8 +26,10 @@ import static net.covers1624.curl4j.CURL.Functions.*;
 @SuppressWarnings ("unused") // Hey! This is library.
 public class CURL {
 
+    private static final Arena ARENA = Arena.ofShared();
+
     private static @Nullable String LIB_CURL_OVERRIDE;
-    private static @Nullable Library CURL;
+    private static @Nullable LibCurl CURL;
 
     private CURL() { }
 
@@ -52,17 +57,18 @@ public class CURL {
      *
      * @return The {@link Library} for curl.
      */
-    public static Library getLbCURL() {
+    public static LibCurl getLbCURL() {
         if (CURL == null) {
             String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", "curl");
             if (LIB_CURL_OVERRIDE != null) {
                 lib = LIB_CURL_OVERRIDE;
             }
-            CURL = LibraryLoader.loadLibrary(lib);
+            CURL = new LibCurl(LibraryLoader.loadLibrary(lib, ARENA));
         }
         return CURL;
     }
 
+    // region cURL constants
     // region curl_global_init constants
     /**
      * <a href="https://curl.se/libcurl/c/curl_global_init.html">curl_global_init</a> constants.
@@ -2965,6 +2971,7 @@ public class CURL {
     public static final int CURLPAUSE_ALL = CURLPAUSE_RECV | CURLPAUSE_SEND;
     public static final int CURLPAUSE_CONT = CURLPAUSE_RECV_CONT | CURLPAUSE_SEND_CONT;
     // endregion
+    // endregion
 
     /**
      * See the curl <a href="https://curl.se/libcurl/c/curl_version.html">documentation</a>.
@@ -2972,7 +2979,7 @@ public class CURL {
      * @return a static ascii string of the libcurl version.
      */
     public static String curl_version() {
-        return ncurl_version(Functions.curl_version);
+        return getLbCURL().curl_version();
     }
 
     /**
@@ -2982,9 +2989,8 @@ public class CURL {
      *
      * @return The curl version data.
      */
-    @NativeType ("curl_version_info_data *")
     public static curl_version_info_data curl_version_info() {
-        return new curl_version_info_data(ncurl_version_info(Functions.curl_version_info));
+        return getLbCURL().curl_version_info();
     }
 
     /**
@@ -3542,7 +3548,7 @@ public class CURL {
 
         private Functions() { }
 
-        private static final Library CURL = getLbCURL();
+        private static final Library CURL = null;// = getLbCURL();
 
         public static final long curl_version = CURL.getFunction("curl_version");
         public static final long curl_version_info = CURL.getFunction("curl_version_info");

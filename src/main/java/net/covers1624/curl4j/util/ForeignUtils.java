@@ -14,19 +14,25 @@ import static java.lang.foreign.ValueLayout.ADDRESS;
 public class ForeignUtils {
 
     /**
-     * Read a null terminated UTF-8 string from the given memory address.
+     * Read a null-terminated UTF-8 string from the given memory address.
      * <p>
-     * The address is first reinterpreted as an infinite length segment,
-     * then a string is read.
+     * The caller is responsible for ensuring the string has a null terminator, otherwise a
+     * native exception could be raised.
      *
-     * @param seg The segment.
+     * @param seg A pointer to the first character in the string.
      * @return The string.
      */
     public static String readNTString(MemorySegment seg) {
         return seg.reinterpret(Long.MAX_VALUE).getString(0);
     }
 
-    public static Set<String> readUTF8List(MemorySegment seg) {
+    /**
+     * Reads an array of null-terminated UTF-8 Strings from the given memory address.
+     *
+     * @param seg The pointer to the first string pointer in the list.
+     * @return The resulting strings.
+     */
+    public static Set<String> readNTStringArray(MemorySegment seg) {
         Set<String> protocols = new LinkedHashSet<>();
         for (int i = 0; true; i++) {
             MemorySegment addr = seg.getAtIndex(ADDRESS, i);
