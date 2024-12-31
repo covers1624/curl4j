@@ -14,8 +14,15 @@ import static net.covers1624.curl4j.util.ForeignUtils.rethrowUnchecked;
  */
 public class LibCurl {
 
+    public static final CLikeSymbolResolver SYMBOL_RESOLVER = new CLikeSymbolResolver()
+            .addAlias("CURLversion", "int")
+            .addAlias("CURLcode", "int")
+            .addAlias("CURLoption", "int")
+            .addAlias("CURLINFO", "int");
+
+    public static final CLikeStructParser STRUCT_PARSER = new CLikeStructParser(SYMBOL_RESOLVER);
+
     public final SymbolLookup lookup;
-    private final CLikeSymbolLinker linker;
 
     public final MethodHandle curl_version;
     public final MethodHandle curl_version_info;
@@ -39,11 +46,7 @@ public class LibCurl {
 
     public LibCurl(SymbolLookup lookup) {
         this.lookup = lookup;
-        linker = new CLikeSymbolLinker(lookup)
-                .addAlias("CURLversion", "int")
-                .addAlias("CURLcode", "int")
-                .addAlias("CURLoption", "int")
-                .addAlias("CURLINFO", "int");
+        var linker = new CLikeSymbolLinker(lookup, SYMBOL_RESOLVER);
 
         curl_version = linker.link("char *curl_version(void);");
         curl_version_info = linker.link("curl_version_info_data *curl_version_info(CURLversion);");

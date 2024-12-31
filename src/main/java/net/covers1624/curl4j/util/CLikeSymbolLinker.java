@@ -1,10 +1,17 @@
 package net.covers1624.curl4j.util;
 
+import net.covers1624.curl4j.util.CLikeSymbolResolver.NameTypePair;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.foreign.*;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * @author covers1624
@@ -15,15 +22,11 @@ public final class CLikeSymbolLinker {
     private static final FunctionDescriptor VOID_FUN = FunctionDescriptor.ofVoid();
 
     private final SymbolLookup lookup;
-    private final Map<String, String> typeAliases = new HashMap<>();
+    private final CLikeSymbolResolver symbolResolver;
 
-    public CLikeSymbolLinker(SymbolLookup lookup) {
+    public CLikeSymbolLinker(SymbolLookup lookup, CLikeSymbolResolver symbolResolver) {
         this.lookup = lookup;
-    }
-
-    public CLikeSymbolLinker addAlias(String from, String to) {
-        typeAliases.put(from, to);
-        return this;
+        this.symbolResolver = symbolResolver;
     }
 
     public MethodHandle link(String prototype, String... varArgs) {
@@ -50,53 +53,29 @@ public final class CLikeSymbolLinker {
     private FunctionDescriptor resolveFunction(MethodSig sig) {
         FunctionDescriptor func = VOID_FUN;
         if (!sig.retType.equals("void")) {
-            func = func.changeReturnLayout(getType(sig.retType));
+            func = func.changeReturnLayout(symbolResolver.resolveType(sig.retType));
         }
 
         for (String argument : sig.arguments) {
-            func = func.appendArgumentLayouts(getType(argument));
+            func = func.appendArgumentLayouts(symbolResolver.resolveType(argument));
         }
 
         for (String argument : sig.varArgs) {
-            func = func.appendArgumentLayouts(getType(argument));
+            func = func.appendArgumentLayouts(symbolResolver.resolveType(argument));
         }
 
         return func;
     }
 
-    private MemoryLayout getType(String type) {
-        String resolvedType = type;
-        String prevType;
-        do {
-            prevType = resolvedType;
-            resolvedType = resolveTypeAlias(resolvedType);
-        }
-        while (!prevType.equals(resolvedType));
-
-        MemoryLayout layout = LINKER.canonicalLayouts().get(resolvedType);
-        if (layout == null) {
-            throw new RuntimeException("Unable to resolve type " + type + " (" + resolvedType + ")");
-        }
-        return layout;
-    }
-
-    private String resolveTypeAlias(String type) {
-        if (!type.equals("void*") && type.endsWith("*")) {
-            return "void*";
-        }
-
-        return typeAliases.getOrDefault(type, type);
-    }
-
-    private static MethodSig parse(String prototype, String varArgsPrototype) {
+    private MethodSig parse(String prototype, String varArgsPrototype) {
         int startBrace = prototype.indexOf("(");
         int endBrace = prototype.indexOf(")");
         if (startBrace == -1 || endBrace == -1) {
             throw new RuntimeException("Expected opening and closing brace to exist.");
         }
 
-        NameTypePair retAndFunc = parseNamePair(prototype.substring(0, startBrace));
-        if (retAndFunc.name == null) throw new RuntimeException("Expected function name.");
+        NameTypePair retAndFunc = symbolResolver.parseNamePair(prototype.substring(0, startBrace));
+        if (retAndFunc.name() == null) throw new RuntimeException("Expected function name.");
 
         boolean hasVarArgs = false;
         List<String> arguments = new ArrayList<>();
@@ -107,12 +86,12 @@ public final class CLikeSymbolLinker {
                 if (arg.isEmpty()) continue;
                 if (hasVarArgs) throw new RuntimeException("Expected no more arguments after varargs.");
 
-                NameTypePair pair = parseNamePair(arg);
-                if (pair.type.equals("...")) {
+                NameTypePair pair = symbolResolver.parseNamePair(arg);
+                if (pair.type().equals("...")) {
                     hasVarArgs = true;
                     continue;
                 }
-                arguments.add(pair.type);
+                arguments.add(pair.type());
             }
         }
 
@@ -120,45 +99,15 @@ public final class CLikeSymbolLinker {
         for (String arg : varArgsPrototype.split(",")) {
             arg = arg.trim();
             if (arg.isEmpty()) continue;
-            varArgs.add(parseNamePair(arg).type);
+            varArgs.add(symbolResolver.parseNamePair(arg).type());
         }
 
         if (!hasVarArgs && !varArgs.isEmpty()) {
             throw new RuntimeException("Expected var args prototypes to be empty, method sig does not contain ...");
         }
 
-        return new MethodSig(retAndFunc.name, retAndFunc.type, arguments, varArgs);
+        return new MethodSig(retAndFunc.name(), retAndFunc.type(), arguments, varArgs);
     }
-
-    private static NameTypePair parseNamePair(String str) {
-        if (str.startsWith("const ")) {
-            str = str.substring(7);
-        }
-        int starPos = str.lastIndexOf("*");
-        int spacePos = str.lastIndexOf(' ');
-
-        String type;
-        String name = null;
-        if (starPos != -1) {
-            type = str.substring(0, starPos + 1).replaceAll(" ", "");
-            name = str.substring(starPos + 1).trim();
-        } else if (spacePos != -1) {
-            type = str.substring(0, spacePos).trim();
-            if (type.equals("struct")) {
-                // Last space was the only space in 'struct myStruct', which means
-                // the entire String is just the type, there is no name component.
-                type = str;
-            } else {
-                name = str.substring(spacePos + 1);
-            }
-        } else {
-            type = str;
-        }
-
-        return new NameTypePair(type, name);
-    }
-
-    private record NameTypePair(String type, @Nullable String name) { }
 
     private record MethodSig(
             String mName,

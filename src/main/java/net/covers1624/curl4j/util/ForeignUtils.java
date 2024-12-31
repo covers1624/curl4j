@@ -33,6 +33,7 @@ public class ForeignUtils {
      * @return The resulting strings.
      */
     public static Set<String> readNTStringArray(MemorySegment seg) {
+        seg = seg.reinterpret(Long.MAX_VALUE);
         Set<String> protocols = new LinkedHashSet<>();
         for (int i = 0; true; i++) {
             MemorySegment addr = seg.getAtIndex(ADDRESS, i);

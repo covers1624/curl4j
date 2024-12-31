@@ -1,7 +1,6 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Pointer;
-import net.covers1624.curl4j.core.Struct;
+import net.covers1624.curl4j.util.LibCurl;
 import net.covers1624.curl4j.util.StructUtils;
 
 import java.lang.foreign.MemorySegment;
@@ -19,35 +18,64 @@ import static net.covers1624.curl4j.util.ForeignUtils.readNTStringArray;
  */
 public record curl_version_info_data(MemorySegment address) {
 
-    // TODO auto parse from struct definition as well?
-    public static final StructLayout CURL_VERSION_INFO_DATA = StructUtils.paddedLayout(
-            JAVA_INT.withName("age"),
-            ADDRESS.withName("version"),
-            JAVA_INT.withName("version_num"),
-            ADDRESS.withName("host"),
-            JAVA_INT.withName("features"),
-            ADDRESS.withName("ssl_version"),
-            JAVA_LONG.withName("ssl_version_num"),
-            ADDRESS.withName("libz_version"),
-            ADDRESS.withName("protocols"),
-            ADDRESS.withName("ares"),
-            JAVA_INT.withName("ares_num"),
-            ADDRESS.withName("libidn"),
-            JAVA_INT.withName("iconv_ver_num"),
-            ADDRESS.withName("libssh_version"),
-            JAVA_INT.withName("brotli_ver_num"),
-            ADDRESS.withName("brotli_version"),
-            JAVA_INT.withName("nghttp2_ver_num"),
-            ADDRESS.withName("nghttp2_version"),
-            ADDRESS.withName("quic_version"),
-            ADDRESS.withName("cainfo"),
-            ADDRESS.withName("capath"),
-            JAVA_INT.withName("zstd_ver_num"),
-            ADDRESS.withName("zstd_version"),
-            ADDRESS.withName("hyper_version"),
-            ADDRESS.withName("gsasl_version"),
-            ADDRESS.withName("feature_names")
-    );
+    public static final StructLayout CURL_VERSION_INFO_DATA = LibCurl.STRUCT_PARSER.parseStruct("""
+            struct curl_version_info_data {
+                CURLversion age;          /* age of the returned struct */
+                const char *version;      /* LIBCURL_VERSION */
+                unsigned int version_num; /* LIBCURL_VERSION_NUM */
+                const char *host;         /* OS/host/cpu/machine when configured */
+                int features;             /* bitmask, see defines below */
+                const char *ssl_version;  /* human readable string */
+                long ssl_version_num;     /* not used anymore, always 0 */
+                const char *libz_version; /* human readable string */
+                /* protocols is terminated by an entry with a NULL protoname */
+                const char * const *protocols;
+            
+                /* The fields below this were added in CURLVERSION_SECOND */
+                const char *ares;
+                int ares_num;
+            
+                /* This field was added in CURLVERSION_THIRD */
+                const char *libidn;
+            
+                /* These field were added in CURLVERSION_FOURTH */
+            
+                /* Same as '_libiconv_version' if built with HAVE_ICONV */
+                int iconv_ver_num;
+            
+                const char *libssh_version; /* human readable string */
+            
+                /* These fields were added in CURLVERSION_FIFTH */
+                unsigned int brotli_ver_num; /* Numeric Brotli version (MAJOR << 24) | (MINOR << 12) | PATCH */
+                const char *brotli_version; /* human readable string. */
+            
+                /* These fields were added in CURLVERSION_SIXTH */
+                unsigned int nghttp2_ver_num; /* Numeric nghttp2 version (MAJOR << 16) | (MINOR << 8) | PATCH */
+                const char *nghttp2_version; /* human readable string. */
+                const char *quic_version;    /* human readable quic (+ HTTP/3) library + version or NULL */
+            
+                /* These fields were added in CURLVERSION_SEVENTH */
+                const char *cainfo;          /* the built-in default CURLOPT_CAINFO, might be NULL */
+                const char *capath;          /* the built-in default CURLOPT_CAPATH, might be NULL */
+            
+                /* These fields were added in CURLVERSION_EIGHTH */
+                unsigned int zstd_ver_num; /* Numeric Zstd version (MAJOR << 24) | (MINOR << 12) | PATCH */
+                const char *zstd_version; /* human readable string. */
+            
+                /* These fields were added in CURLVERSION_NINTH */
+                const char *hyper_version; /* human readable string. */
+            
+                /* These fields were added in CURLVERSION_TENTH */
+                const char *gsasl_version; /* human readable string. */
+            
+                /* These fields were added in CURLVERSION_ELEVENTH */
+                /* feature_names is terminated by an entry with a NULL feature name */
+                const char * const *feature_names;
+            
+                /* These fields were added in CURLVERSION_TWELFTH */
+                const char *rtmp_version; /* human readable string. */
+            };
+            """);
 
     public static final VarHandle AGE = CURL_VERSION_INFO_DATA.varHandle(groupElement("age"));
     public static final VarHandle VERSION = CURL_VERSION_INFO_DATA.varHandle(groupElement("version"));
@@ -75,6 +103,10 @@ public record curl_version_info_data(MemorySegment address) {
     public static final VarHandle HYPER_VERSION = CURL_VERSION_INFO_DATA.varHandle(groupElement("hyper_version"));
     public static final VarHandle GSASL_VERSION = CURL_VERSION_INFO_DATA.varHandle(groupElement("gsasl_version"));
     public static final VarHandle FEATURE_NAMES = CURL_VERSION_INFO_DATA.varHandle(groupElement("feature_names"));
+
+    public curl_version_info_data {
+        address = address.reinterpret(CURL_VERSION_INFO_DATA.byteSize());
+    }
 
     // @formatter:off
     public int getAge() { return (int) AGE.get(address, 0); }
