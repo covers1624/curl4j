@@ -57,6 +57,9 @@ public class LibCurl {
 
     public final @Nullable MethodHandle curl_easy_impersonate;
 
+    public final MethodHandle curl_slist_append;
+    public final MethodHandle curl_slist_free_all;
+
     public LibCurl(SymbolLookup lookup) {
         this.lookup = lookup;
         var linker = new CLikeSymbolLinker(lookup, SYMBOL_RESOLVER);
@@ -85,6 +88,9 @@ public class LibCurl {
         curl_easy_strerror = linker.link("const char *curl_easy_strerror(CURLcode);");
 
         curl_easy_impersonate = linker.linkOptionally("CURLcode curl_easy_impersonate(CURL *curl, const char *target, int default_headers);");
+
+        curl_slist_append = linker.link("struct curl_slist *curl_slist_append(struct curl_slist *list, const char *data);");
+        curl_slist_free_all = linker.link("void curl_slist_free_all(struct curl_slist *list);");
     }
 
     public final String curl_version() {
@@ -320,6 +326,30 @@ public class LibCurl {
 
         try {
             return (int) curl_easy_impersonate.invokeExact(curl, target, defaultHeaders);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final @Nullable curl_slist curl_slist_append(@Nullable curl_slist slist, String data) {
+        MemorySegment listPtr = slist != null ? slist.address() : MemorySegment.NULL;
+        try (Arena arena = Arena.ofShared()) {
+            MemorySegment result = (MemorySegment) curl_slist_append.invokeExact(listPtr, arena.allocateFrom(data));
+            if (result.equals(listPtr)) return slist;
+
+            if (result.equals(MemorySegment.NULL)) return null;
+
+            return new curl_slist(result);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final void curl_slist_free_all(@Nullable curl_slist slist) {
+        if (slist == null) return;
+
+        try {
+            curl_slist_free_all.invokeExact(slist.address());
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }

@@ -3131,8 +3131,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param slist The {@link curl_slist}.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_slist slist) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, slist != null ? slist.address : Memory.NULL);
+    public static int curl_easy_setopt(MemorySegment curl, int opt, @Nullable curl_slist slist) {
+        return getLibCURL().curl_easy_setopt(curl, opt, slist != null ? slist.address() : MemorySegment.NULL);
     }
 
     /**
@@ -3347,16 +3347,8 @@ public class CURL {
      * @param data The String to append.
      * @return The list with the string appended.
      */
-    @Nullable
-    public static curl_slist curl_slist_append(@Nullable curl_slist list, String data) {
-        long listPtr = list != null ? list.address : Memory.NULL;
-
-        long ptr = ncurl_slist_append(Functions.curl_slist_append, listPtr, data);
-        if (ptr == listPtr) {
-            return list;
-        }
-        if (ptr == Memory.NULL) return null;
-        return new curl_slist(ptr);
+    public static @Nullable curl_slist curl_slist_append(@Nullable curl_slist list, String data) {
+        return getLibCURL().curl_slist_append(list, data);
     }
 
     /**
@@ -3367,8 +3359,7 @@ public class CURL {
      * @param list The list to free.
      */
     public static void curl_slist_free_all(@Nullable curl_slist list) {
-        if (list == null) return;
-        ncurl_slist_free_all(Functions.curl_slist_free_all, list.address);
+        getLibCURL().curl_slist_free_all(list);
     }
 
     /**

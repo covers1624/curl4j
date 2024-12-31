@@ -1,8 +1,13 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Pointer;
-import net.covers1624.curl4j.core.Struct;
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.StructLayout;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
+import static net.covers1624.curl4j.util.ForeignUtils.readNTString;
 
 /**
  * curl_slist struct.
@@ -11,24 +16,29 @@ import org.jetbrains.annotations.Nullable;
  * @see CURL#curl_slist_append
  * @see CURL#curl_slist_free_all
  */
-public class curl_slist extends Pointer {
+public record curl_slist(MemorySegment address) {
 
-    private static final Struct STRUCT = new Struct("curl_slist");
+    public static final StructLayout CURL_SLIST = LibCurl.STRUCT_PARSER.parseStruct("""
+            struct curl_slist {
+                char *data;
+                struct curl_slist *next;
+            };
+            """);
 
-    public static final Struct.Member<@Nullable String> DATA = STRUCT.stringMember("data");
-    public static final Struct.Member<@Nullable curl_slist> NEXT = STRUCT.structPointerMember("next", p -> new curl_slist(p.address));
+    public static final VarHandle DATA = CURL_SLIST.varHandle(groupElement("data"));
+    public static final VarHandle NEXT = CURL_SLIST.varHandle(groupElement("next"));
 
-    public curl_slist(long address) {
-        super(address);
+    public curl_slist {
+        address = address.reinterpret(CURL_SLIST.byteSize());
     }
 
-    @Nullable
     public String data() {
-        return DATA.read(this);
+        return readNTString((MemorySegment) DATA.get(address, 0));
     }
 
     @Nullable
     public curl_slist next() {
-        return NEXT.read(this);
+        MemorySegment nextPtr = (MemorySegment) NEXT.get(address, 0);
+        return !nextPtr.equals(MemorySegment.NULL) ? new curl_slist(nextPtr) : null;
     }
 }

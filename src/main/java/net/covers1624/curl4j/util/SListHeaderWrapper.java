@@ -4,6 +4,7 @@ import net.covers1624.curl4j.CURL;
 import net.covers1624.curl4j.curl_slist;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +21,7 @@ import static net.covers1624.curl4j.CURL.curl_easy_setopt;
  *
  * @author covers1624
  */
+// TODO use arenas?
 public class SListHeaderWrapper implements AutoCloseable, CurlBindable {
 
     private final List<String> headers = new ArrayList<>();
@@ -75,7 +77,7 @@ public class SListHeaderWrapper implements AutoCloseable, CurlBindable {
     }
 
     @Override
-    public void apply(long curl) {
+    public void apply(MemorySegment curl) {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, get());
     }
 
