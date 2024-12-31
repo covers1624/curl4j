@@ -131,6 +131,9 @@ public final class CLikeSymbolLinker {
     }
 
     private static NameTypePair parseNamePair(String str) {
+        if (str.startsWith("const ")) {
+            str = str.substring(7);
+        }
         int starPos = str.lastIndexOf("*");
         int spacePos = str.lastIndexOf(' ');
 
