@@ -159,7 +159,12 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
 
             // Fill the buffer! This will populate all headers and response codes.
             fillBuffer();
-            statusCode = (int) curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE);
+            long[] statusCode = {0};
+            int result = curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE, statusCode);
+            if (result != CURLE_OK) {
+                throw new IOException("Unable to get CURLINFO_RESPONSE_CODE result. " + curl_easy_strerror(result) + "/" + handle.errorBuffer);
+            }
+            this.statusCode = (int) statusCode[0];
 
             responseHeaders.addAllMulti(headerCollector.getHeaders());
             String contentType = responseHeaders.get("Content-Type");

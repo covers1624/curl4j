@@ -5,6 +5,9 @@ import net.covers1624.curl4j.util.LibCurl;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 import static net.covers1624.curl4j.CURL.Functions.*;
 
@@ -57,7 +60,7 @@ public class CURL {
      *
      * @return The {@link Library} for curl.
      */
-    public static LibCurl getLbCURL() {
+    public static LibCurl getLibCURL() {
         if (CURL == null) {
             String lib = System.getProperty("net.covers1624.curl4j.libcurl.name", "curl");
             if (LIB_CURL_OVERRIDE != null) {
@@ -2981,7 +2984,7 @@ public class CURL {
      * @return a static ascii string of the libcurl version.
      */
     public static String curl_version() {
-        return getLbCURL().curl_version();
+        return getLibCURL().curl_version();
     }
 
     /**
@@ -2992,7 +2995,7 @@ public class CURL {
      * @return The curl version data.
      */
     public static curl_version_info_data curl_version_info(int curlVersion) {
-        return getLbCURL().curl_version_info(curlVersion);
+        return getLibCURL().curl_version_info(curlVersion);
     }
 
     /**
@@ -3005,7 +3008,7 @@ public class CURL {
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_init.html">documentation</a>.
      */
     public static void curl_global_init(long flags) {
-        ncurl_global_init(Functions.curl_global_init, flags);
+        getLibCURL().curl_global_init(flags);
     }
 
     /**
@@ -3017,7 +3020,7 @@ public class CURL {
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_cleanup.html">documentation</a>.
      */
     public static void curl_global_cleanup() {
-        ncurl_global_cleanup(Functions.curl_global_cleanup);
+        getLibCURL().curl_global_cleanup();
     }
 
     /**
@@ -3027,23 +3030,17 @@ public class CURL {
      *
      * @return The CURL handle.
      */
-    public static @NativeType ("CURL *") long curl_easy_init() {
-        return ncurl_easy_init(Functions.curl_easy_init);
+    public static MemorySegment curl_easy_init() {
+        return getLibCURL().curl_easy_init();
     }
 
     /**
-     * Re-initializes a CURL handle to the default values. This puts back the
-     * handle to the same state as it was in when it was just created.
-     * <p>
-     * It does keep: live connections, the Session ID cache, the DNS cache and the
-     * cookies.
-     * <p>
-     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_reset.html">documentation</a>.
+     * Destroy the CURL handle.
      *
-     * @param curl The CURL handle.
+     * @param curl The curl handle destroy.
      */
-    public static void curl_easy_reset(@NativeType ("CURL *") long curl) {
-        ncurl_easy_reset(Functions.curl_easy_reset, curl);
+    public static void curl_easy_cleanup(MemorySegment curl) {
+        getLibCURL().curl_easy_cleanup(curl);
     }
 
     /**
@@ -3055,8 +3052,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, long value) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
+    public static int curl_easy_setopt(MemorySegment curl, int opt, int value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
     }
 
     /**
@@ -3070,8 +3067,34 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, boolean value) {
-        return curl_easy_setopt(curl, opt, value ? 1 : 0);
+    public static int curl_easy_setopt(MemorySegment curl, int opt, boolean value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
+    }
+
+    /**
+     * Set a CURL option.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_setopt.html">documentation</a>.
+     *
+     * @param curl  The CURL handle.
+     * @param opt   The option being set.
+     * @param value The value.
+     */
+    public static int curl_easy_setopt(MemorySegment curl, int opt, long value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
+    }
+
+    /**
+     * Set a CURL option.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_setopt.html">documentation</a>.
+     *
+     * @param curl  The CURL handle.
+     * @param opt   The option being set.
+     * @param value The value.
+     */
+    public static int curl_easy_setopt(MemorySegment curl, int opt, MemorySegment value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
     }
 
     /**
@@ -3083,8 +3106,8 @@ public class CURL {
      * @param opt   The option being set.
      * @param value The value to set.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, String value) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, value);
+    public static int curl_easy_setopt(MemorySegment curl, int opt, String value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
     }
 
     /**
@@ -3127,6 +3150,18 @@ public class CURL {
     }
 
     /**
+     * Perform the curl operation.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_perform.html">documentation</a>.
+     *
+     * @param curl The CURL handle.
+     * @return The curl exit code.
+     */
+    public static int curl_easy_perform(MemorySegment curl) {
+        return getLibCURL().curl_easy_perform(curl);
+    }
+
+    /**
      * Request internal information from the curl session with this function.
      * The data pointed to will be filled in accordingly and can be relied upon
      * only if the function returns {@link #CURLE_OK}. This function is intended to get
@@ -3141,65 +3176,104 @@ public class CURL {
      * @param opt   The info to select.
      * @param value Pointer to store the value in.
      */
-    public static @NativeType ("CURLcode") int curl_easy_getinfo(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt, Pointer value) {
-        return ncurl_easy_getinfo(Functions.curl_easy_getinfo, curl, opt, value.address);
+    public static int curl_easy_getinfo(MemorySegment curl, int opt, MemorySegment value) {
+        return getLibCURL().curl_easy_setopt(curl, opt, value);
     }
 
     /**
-     * Overload of {@link #curl_easy_getinfo(long, int, Pointer)} for {@link #CURLINFO_STRING} types.
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for {@link #CURLINFO_STRING} types.
      *
      * @param curl The CURL handle.
-     * @param opt  The info to select.
-     * @return The string.
+     * @param info The info to select.
+     * @return The result containing the exit code and the String result.
+     * The String result will only be present if curl returns {@link #CURLE_OK}.
      */
-    @Nullable
-    public static String curl_easy_getinfo_String(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
-        assert (opt & CURLINFO_TYPEMASK) == CURLINFO_STRING;
-
-        try (Memory.Stack stack = Memory.pushStack()) {
-            Pointer pointer = stack.mallocPointer();
-            int ret = curl_easy_getinfo(curl, opt, pointer);
-            if (ret != CURLE_OK) {
-                throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
-            }
-            Pointer strPtr = pointer.readPointer();
-            return strPtr != null ? strPtr.readUtf8Safe() : null;
-        }
+    public static InfoResult<String> curl_easy_getinfo_String(MemorySegment curl, int info) {
+        return getLibCURL().curl_easy_getinfo_String(curl, info);
     }
 
     /**
-     * Overload of {@link #curl_easy_getinfo(long, int, Pointer)} for
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for {@link #CURLINFO_STRING} types.
+     *
+     * @param curl The CURL handle.
+     * @param info The info to select.
+     * @param cons The consumer to accept the string. Will only be called if the result is {@link #CURLE_OK}
+     * @return The curl exit code.
+     */
+    public static int curl_easy_getinfo_String(MemorySegment curl, int info, Consumer<String> cons) {
+        return getLibCURL().curl_easy_getinfo_String(curl, info, cons);
+    }
+
+    /**
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for {@link #CURLINFO_STRING} types.
+     *
+     * @param curl   The CURL handle.
+     * @param info   The info to select.
+     * @param result A single sized array to store the result in. This will only be filled if the result is {@link #CURLE_OK}.
+     * @return The curl exit code.
+     */
+    public static int curl_easy_getinfo_String(MemorySegment curl, int info, String[] result) {
+        return getLibCURL().curl_easy_getinfo_String(curl, info, result);
+    }
+
+    /**
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
      * @param opt  The info to select.
-     * @return The string.
+     * @return The result containing the exit code and the long result.
+     * The long result will only be present if curl returns {@link #CURLE_OK}.
      */
-    public static long curl_easy_getinfo_long(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
+    public static InfoResult<Long> curl_easy_getinfo_long(MemorySegment curl, int opt) {
         boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
         assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
 
-        try (Memory.Stack stack = Memory.pushStack()) {
-            Pointer pointer = stack.mallocPointer();
-            int ret = curl_easy_getinfo(curl, opt, pointer);
-            if (ret != CURLE_OK) {
-                throw new IllegalStateException("CURL error querying info: " + curl_easy_strerror(ret));
-            }
-
-            return isLong ? pointer.readCLong() : pointer.readSizeT();
-        }
+        return getLibCURL().curl_easy_getinfo_long(curl, opt);
     }
 
     /**
-     * Perform the curl operation.
-     * <p>
-     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_perform.html">documentation</a>.
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for
+     * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
+     * @param opt  The info to select.
+     * @param cons The consumer to accept the long. Will only be called if the result is {@link #CURLE_OK}
      * @return The curl exit code.
      */
-    public static @NativeType ("CURLcode") int curl_easy_perform(@NativeType ("CURL *") long curl) {
-        return ncurl_easy_perform(curl_easy_perform, curl);
+    public static int curl_easy_getinfo_long(MemorySegment curl, int opt, LongConsumer cons) {
+        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
+        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+
+        return getLibCURL().curl_easy_getinfo_long(curl, opt, cons);
+    }
+
+    /**
+     * Overload of {@link #curl_easy_getinfo(MemorySegment, int, MemorySegment)} for
+     * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
+     *
+     * @param curl   The CURL handle.
+     * @param opt    The info to select.
+     * @param result A single sized array to store the result in. This will only be filled if the result is {@link #CURLE_OK}.
+     * @return The curl exit code.
+     */
+    public static int curl_easy_getinfo_long(MemorySegment curl, int opt, long[] result) {
+        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
+        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+
+        return getLibCURL().curl_easy_getinfo_long(curl, opt, result);
+    }
+
+    /**
+     * Duplicates the curl handle.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_duphandle.html">documentation</a>.
+     *
+     * @param curl The curl handle to duplicate.
+     * @return The duplicated curl handle.
+     */
+    public static MemorySegment curl_easy_duphandle(MemorySegment curl) {
+        return getLibCURL().curl_easy_duphandle(curl);
     }
 
     /**
@@ -3211,8 +3285,23 @@ public class CURL {
      * @param bitmask The bitmask.
      * @return the curl exit code.
      */
-    public static @NativeType ("CURLcode") int curl_easy_pause(@NativeType ("CURL *") long curl, int bitmask) {
-        return ncurl_easy_pause(curl_easy_pause, curl, bitmask);
+    public static int curl_easy_pause(MemorySegment curl, int bitmask) {
+        return getLibCURL().curl_easy_pause(curl, bitmask);
+    }
+
+    /**
+     * Re-initializes a CURL handle to the default values. This puts back the
+     * handle to the same state as it was in when it was just created.
+     * <p>
+     * It does keep: live connections, the Session ID cache, the DNS cache and the
+     * cookies.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_easy_reset.html">documentation</a>.
+     *
+     * @param curl The CURL handle.
+     */
+    public static void curl_easy_reset(MemorySegment curl) {
+        getLibCURL().curl_easy_reset(curl);
     }
 
     /**
@@ -3226,17 +3315,9 @@ public class CURL {
      * @return The string.
      */
     public static String curl_easy_strerror(@NativeType ("CURLcode") int errornum) {
-        return ncurl_easy_strerror(Functions.curl_easy_strerror, errornum);
+        return getLibCURL().curl_easy_strerror(errornum);
     }
 
-    /**
-     * Destroy the CURL handle.
-     *
-     * @param curl The curl handle destroy.
-     */
-    public static void curl_easy_cleanup(@NativeType ("CURL *") long curl) {
-        ncurl_easy_cleanup(Functions.curl_easy_cleanup, curl);
-    }
 
     /**
      * If the bound CURL library supports curl-impersonate features.

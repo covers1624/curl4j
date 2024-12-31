@@ -6,6 +6,7 @@ import net.covers1624.curl4j.tests.TestBase;
 import net.covers1624.curl4j.tests.TestWebServer;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.MemorySegment;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class CallbackExceptionTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> bytesResponse(Response.Status.OK, data));
@@ -51,7 +52,7 @@ public class CallbackExceptionTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> bytesResponse(Response.Status.OK, data));

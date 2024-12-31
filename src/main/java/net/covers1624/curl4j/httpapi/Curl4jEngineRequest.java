@@ -200,13 +200,17 @@ public class Curl4jEngineRequest extends AbstractEngineRequest {
             HeaderList responseHeaders = new HeaderList();
             responseHeaders.addAllMulti(headerCollector.getHeaders());
 
-            long responseCode = curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE);
+            long[] responseCode = {0};
+            result = curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE, responseCode);
+            if (result != CURLE_OK) {
+                throw new IOException("Unable to get CURLINFO_RESPONSE_CODE result. " + curl_easy_strerror(result) + "/" + handle.errorBuffer);
+            }
             String contentType = responseHeaders.get("Content-Type");
             WebBody respBody = new WebBody.PathBody(destFile, contentType);
             return new Curl4jEngineResponse() {
                 // @formatter:off
                 @Override public Curl4jEngineRequest request() { return Curl4jEngineRequest.this; }
-                @Override public int statusCode() { return (int) responseCode; }
+                @Override public int statusCode() { return (int) responseCode[0]; }
                 @Override public String message() { return ""; }
                 @Override public HeaderList headers() { return responseHeaders; }
                 @Override public WebBody body() { return respBody; }

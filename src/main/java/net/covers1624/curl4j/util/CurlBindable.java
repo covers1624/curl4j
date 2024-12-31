@@ -1,6 +1,7 @@
 package net.covers1624.curl4j.util;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 
 /**
  * Utility interface for helpers which can be bound to a curl instance.
@@ -13,5 +14,5 @@ public interface CurlBindable {
         apply(handle.curl);
     }
 
-    void apply(long curl) throws IOException;
+    void apply(MemorySegment curl) throws IOException;
 }

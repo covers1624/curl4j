@@ -7,6 +7,7 @@ import net.covers1624.curl4j.util.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,7 +38,7 @@ public class CURLTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {
@@ -71,7 +72,7 @@ public class CURLTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {
@@ -110,7 +111,7 @@ public class CURLTests extends TestBase {
         String header = randomHex(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {
@@ -152,7 +153,7 @@ public class CURLTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer("/selfsigned.jks", "password")) {
             server.addHandler("/", r -> {
@@ -189,7 +190,7 @@ public class CURLTests extends TestBase {
         byte[] data = randomBytes(32);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        long curl = curl_easy_init();
+        MemorySegment curl = curl_easy_init();
 
         try (TestWebServer server = new TestWebServer()) {
             server.addHandler("/", r -> {

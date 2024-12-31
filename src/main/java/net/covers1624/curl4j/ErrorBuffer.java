@@ -1,12 +1,11 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Memory;
 import net.covers1624.curl4j.util.CurlBindable;
 import net.covers1624.curl4j.util.CurlHandle;
-import org.jetbrains.annotations.VisibleForTesting;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 
 /**
  * A buffer for CURL to put error messages.
@@ -33,13 +32,15 @@ public class ErrorBuffer implements CurlBindable {
         }
     }
 
+    // Keep arena in scope for GC cleanup.
+    @SuppressWarnings ("FieldCanBeLocal")
+    private final Arena arena = Arena.ofAuto();
+
     /**
      * The size of the error buffer.
      */
     public final int size;
-    @VisibleForTesting
-    final ByteBuffer buf;
-    public final long address;
+    public final MemorySegment buffer;
 
     /**
      * Construct an error buffer with the default size.
@@ -55,15 +56,14 @@ public class ErrorBuffer implements CurlBindable {
      */
     public ErrorBuffer(int size) {
         this.size = size;
-        buf = ByteBuffer.allocateDirect(size);
-        address = Memory.getDirectByteBufferAddress(buf);
+        buffer = arena.allocate(ValueLayout.JAVA_BYTE, size);
     }
 
     /**
      * Clear the buffer.
      */
     public void clear() {
-        Memory.putByte(address, (byte) 0);
+        buffer.set(ValueLayout.JAVA_BYTE, 0, (byte) 0);
     }
 
     /**
@@ -73,14 +73,7 @@ public class ErrorBuffer implements CurlBindable {
      */
     @Override
     public String toString() {
-        int len = 0;
-        while (len < size && Memory.getByte(address + len) != 0) {
-            len++;
-        }
-        if (len == 0) return "";
-        // Curl docs say this should not be possible, but we did not find a null char, so there must be _some_ data in the buffer
-        if (len == size) return Memory.readUtf8(address, size);
-        return Memory.readUtf8(address);
+        return buffer.getString(0);
     }
 
     @Override
@@ -89,7 +82,7 @@ public class ErrorBuffer implements CurlBindable {
     }
 
     @Override
-    public void apply(long curl) {
-        CURL.curl_easy_setopt(curl, CURL.CURLOPT_ERRORBUFFER, address);
+    public void apply(MemorySegment curl) {
+        CURL.curl_easy_setopt(curl, CURL.CURLOPT_ERRORBUFFER, buffer);
     }
 }
