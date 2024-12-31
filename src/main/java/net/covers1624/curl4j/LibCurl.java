@@ -55,6 +55,8 @@ public class LibCurl {
 
     public final MethodHandle curl_easy_strerror;
 
+    public final @Nullable MethodHandle curl_easy_impersonate;
+
     public LibCurl(SymbolLookup lookup) {
         this.lookup = lookup;
         var linker = new CLikeSymbolLinker(lookup, SYMBOL_RESOLVER);
@@ -81,6 +83,8 @@ public class LibCurl {
         curl_easy_upkeep = linker.link("CURLcode curl_easy_upkeep(CURL *curl);");
 
         curl_easy_strerror = linker.link("const char *curl_easy_strerror(CURLcode);");
+
+        curl_easy_impersonate = linker.linkOptionally("CURLcode curl_easy_impersonate(CURL *curl, const char *target, int default_headers);");
     }
 
     public final String curl_version() {
@@ -302,6 +306,20 @@ public class LibCurl {
     public final String curl_easy_strerror(int n) {
         try {
             return readNTString((MemorySegment) curl_easy_strerror.invokeExact(n));
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public boolean isCurlImpersonateSupported() {
+        return curl_easy_impersonate != null;
+    }
+
+    public final int curl_easy_impersonate(MemorySegment curl, String target, int defaultHeaders) {
+        if (curl_easy_impersonate == null) throw new NullPointerException("curl_easy_impersonate is not supported with this libcurl.");
+
+        try {
+            return (int) curl_easy_impersonate.invokeExact(curl, target, defaultHeaders);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }

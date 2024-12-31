@@ -3317,14 +3317,13 @@ public class CURL {
         return getLibCURL().curl_easy_strerror(errornum);
     }
 
-
     /**
      * If the bound CURL library supports curl-impersonate features.
      *
      * @return If curl-impersonate is supported.
      */
     public static boolean isCurlImpersonateSupported() {
-        return Functions.curl_easy_impersonate != Memory.NULL;
+        return getLibCURL().isCurlImpersonateSupported();
     }
 
     /**
@@ -3334,8 +3333,8 @@ public class CURL {
      * @param target          The impersonation target. E.g. "chrome110"
      * @param default_headers If the default headers should be applied. You probably want true here.
      */
-    public static int curl_easy_impersonate(@NativeType ("CURL *") long curl, String target, boolean default_headers) {
-        return ncurl_easy_impersonate(Functions.curl_easy_impersonate, curl, target, default_headers);
+    public static int curl_easy_impersonate(MemorySegment curl, String target, boolean default_headers) {
+        return getLibCURL().curl_easy_impersonate(curl, target, default_headers ? 1 : 0);
     }
 
     /**
