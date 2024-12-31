@@ -27,7 +27,7 @@ public class CURLTests extends TestBase {
     public void testCurlVersion() {
         assertNotNull(curl_version());
 
-        curl_version_info_data versionData = curl_version_info();
+        curl_version_info_data versionData = curl_version_info(CURLVERSION_MAX);
         assertNotNull(versionData);
         assertNotNull(versionData.getVersion());
     }

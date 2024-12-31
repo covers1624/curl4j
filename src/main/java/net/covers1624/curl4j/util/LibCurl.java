@@ -74,9 +74,9 @@ public class LibCurl {
         }
     }
 
-    public final curl_version_info_data curl_version_info() {
+    public final curl_version_info_data curl_version_info(int curlVersion) {
         try {
-            return new curl_version_info_data((MemorySegment) curl_version_info.invokeExact());
+            return new curl_version_info_data((MemorySegment) curl_version_info.invokeExact(curlVersion));
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }

@@ -2694,8 +2694,10 @@ public class CURL {
     public static final int CURLVERSION_EIGHTH = 7;
     public static final int CURLVERSION_NINTH = 8;
     public static final int CURLVERSION_TENTH = 9;
-    public static final int CURLVERSION_ELEVENTH = 11;
+    public static final int CURLVERSION_ELEVENTH = 10;
     public static final int CURLVERSION_NOW = CURLVERSION_ELEVENTH;
+    // Non-standard, Math.abs to ensure it's not a constant for folding.
+    public static final int CURLVERSION_MAX = Math.abs(CURLVERSION_ELEVENTH);
 
     /**
      * IPv6-enabled
@@ -2989,8 +2991,8 @@ public class CURL {
      *
      * @return The curl version data.
      */
-    public static curl_version_info_data curl_version_info() {
-        return getLbCURL().curl_version_info();
+    public static curl_version_info_data curl_version_info(int curlVersion) {
+        return getLbCURL().curl_version_info(curlVersion);
     }
 
     /**
