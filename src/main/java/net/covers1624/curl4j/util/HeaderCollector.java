@@ -3,6 +3,7 @@ package net.covers1624.curl4j.util;
 import net.covers1624.curl4j.CurlHeaderCallback;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,19 +23,16 @@ import static net.covers1624.curl4j.CURL.curl_easy_setopt;
  *
  * @author covers1624
  */
-public class HeaderCollector implements AutoCloseable, CurlBindable {
+public class HeaderCollector implements CurlBindable {
 
     private final Map<String, List<String>> headers = new LinkedHashMap<>();
 
     private @Nullable CurlHeaderCallback callback;
-    private boolean closed;
 
     public HeaderCollector() {
     }
 
     public CurlHeaderCallback callback() {
-        if (closed) throw new IllegalStateException("Already closed");
-
         if (callback == null) {
             callback = new CurlHeaderCallback((header, userdata) -> {
                 int colon = header.indexOf(":");
@@ -55,7 +53,7 @@ public class HeaderCollector implements AutoCloseable, CurlBindable {
     }
 
     @Override
-    public void apply(long curl) {
+    public void apply(MemorySegment curl) {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, callback());
     }
 
@@ -66,11 +64,5 @@ public class HeaderCollector implements AutoCloseable, CurlBindable {
      */
     public Map<String, List<String>> getHeaders() {
         return headers;
-    }
-
-    @Override
-    public void close() {
-        if (callback != null) callback.close();
-        closed = true;
     }
 }

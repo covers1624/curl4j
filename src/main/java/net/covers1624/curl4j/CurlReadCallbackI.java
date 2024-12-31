@@ -1,12 +1,7 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Callback;
-import net.covers1624.curl4j.core.NativeType;
-
 import java.io.IOException;
-
-import static net.covers1624.curl4j.core.Memory.*;
-import static net.covers1624.curl4j.core.NativeTypes.POINTER_SIZE;
+import java.lang.foreign.MemorySegment;
 
 /**
  * A functional interface callback for reading POST/PUT data.
@@ -17,23 +12,7 @@ import static net.covers1624.curl4j.core.NativeTypes.POINTER_SIZE;
  * @see CurlReadCallback
  */
 @FunctionalInterface
-public interface CurlReadCallbackI extends Callback.CallbackInterface {
-
-    @Override
-    default void invoke(@NativeType ("void *") long ret, @NativeType ("void **") long args) throws IOException {
-        try {
-            long ptr = getAddress(getAddress(args));
-            long size = getSizeT(getAddress(args + POINTER_SIZE));
-            long nmemb = getSizeT(getAddress(args + 2L * POINTER_SIZE));
-            long userdata = getAddress(getAddress(args + 3L * POINTER_SIZE));
-
-            long r = read(ptr, size, nmemb, userdata);
-            putSizeT(ret, r);
-        } catch (Throwable ex) {
-            putSizeT(ret, CURL.CURL_READFUNC_ABORT);
-            throw ex;
-        }
-    }
+public interface CurlReadCallbackI {
 
     /**
      * Called to fill the curl buffer with data.
@@ -44,5 +23,5 @@ public interface CurlReadCallbackI extends Callback.CallbackInterface {
      *                     If the curl operation is running on a Java thread, this will bubble out. Otherwise, it will
      *                     be printed to stderr, and ignored.
      */
-    long read(long ptr, long size, long nmemb, long userdata) throws IOException;
+    long read(MemorySegment ptr, long size, long nmemb, MemorySegment userdata) throws IOException;
 }

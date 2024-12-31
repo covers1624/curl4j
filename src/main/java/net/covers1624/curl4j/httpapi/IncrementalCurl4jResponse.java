@@ -129,58 +129,58 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
         headers = new SListHeaderWrapper(request.headers().toStrings());
         xferCallback = request.xferCallback(request.listener());
 
-        try (HeaderCollector headerCollector = new HeaderCollector()) {
-            if (input != null) {
-                input.apply(handle);
-            } else if (mimeBody != null) {
-                mimeBody.apply(handle);
-            }
-            headers.apply(handle);
-            headerCollector.apply(handle);
-
-            curl_easy_setopt(handle.curl, CURLOPT_WRITEFUNCTION, writeCallback.getFunctionAddress());
-
-            if (request.caBundle() != null) {
-                request.caBundle().apply(handle);
-            }
-
-            if (xferCallback != null) {
-                curl_easy_setopt(handle.curl, CURLOPT_NOPROGRESS, false);
-                curl_easy_setopt(handle.curl, CURLOPT_XFERINFOFUNCTION, xferCallback);
-            }
-
-            curl_easy_setopt(handle.curl, CURLOPT_NOSIGNAL, true);
-
-            for (Consumer<CurlHandle> customOption : request.customOptions()) {
-                customOption.accept(handle);
-            }
-
-            curl_multi_add_handle(handle.multi, handle.curl);
-
-            // Fill the buffer! This will populate all headers and response codes.
-            fillBuffer();
-            long[] statusCode = {0};
-            int result = curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE, statusCode);
-            if (result != CURLE_OK) {
-                throw new IOException("Unable to get CURLINFO_RESPONSE_CODE result. " + curl_easy_strerror(result) + "/" + handle.errorBuffer);
-            }
-            this.statusCode = (int) statusCode[0];
-
-            responseHeaders.addAllMulti(headerCollector.getHeaders());
-            String contentType = responseHeaders.get("Content-Type");
-            String len = responseHeaders.get("Content-Length");
-            long contentLength = len != null && !len.isEmpty() ? Long.parseLong(len) : -1;
-
-            // @formatter:off
-            webBody = new WebBody() {
-                @Override public InputStream open() { return is; }
-                @Override public ReadableByteChannel openChannel() { return channel; }
-                @Override public boolean multiOpenAllowed() { return false; }
-                @Override public long length() { return contentLength; }
-                @Override public @Nullable String contentType() { return contentType; }
-            };
-            // @formatter:on
+        if (input != null) {
+            input.apply(handle);
+        } else if (mimeBody != null) {
+            mimeBody.apply(handle);
         }
+        headers.apply(handle);
+
+        HeaderCollector headerCollector = new HeaderCollector();
+        headerCollector.apply(handle);
+
+        curl_easy_setopt(handle.curl, CURLOPT_WRITEFUNCTION, writeCallback.getFunctionAddress());
+
+        if (request.caBundle() != null) {
+            request.caBundle().apply(handle);
+        }
+
+        if (xferCallback != null) {
+            curl_easy_setopt(handle.curl, CURLOPT_NOPROGRESS, false);
+            curl_easy_setopt(handle.curl, CURLOPT_XFERINFOFUNCTION, xferCallback);
+        }
+
+        curl_easy_setopt(handle.curl, CURLOPT_NOSIGNAL, true);
+
+        for (Consumer<CurlHandle> customOption : request.customOptions()) {
+            customOption.accept(handle);
+        }
+
+        curl_multi_add_handle(handle.multi, handle.curl);
+
+        // Fill the buffer! This will populate all headers and response codes.
+        fillBuffer();
+        long[] statusCode = { 0 };
+        int result = curl_easy_getinfo_long(handle.curl, CURLINFO_RESPONSE_CODE, statusCode);
+        if (result != CURLE_OK) {
+            throw new IOException("Unable to get CURLINFO_RESPONSE_CODE result. " + curl_easy_strerror(result) + "/" + handle.errorBuffer);
+        }
+        this.statusCode = (int) statusCode[0];
+
+        responseHeaders.addAllMulti(headerCollector.getHeaders());
+        String contentType = responseHeaders.get("Content-Type");
+        String len = responseHeaders.get("Content-Length");
+        long contentLength = len != null && !len.isEmpty() ? Long.parseLong(len) : -1;
+
+        // @formatter:off
+        webBody = new WebBody() {
+            @Override public InputStream open() { return is; }
+            @Override public ReadableByteChannel openChannel() { return channel; }
+            @Override public boolean multiOpenAllowed() { return false; }
+            @Override public long length() { return contentLength; }
+            @Override public @Nullable String contentType() { return contentType; }
+        };
+        // @formatter:on
     }
 
     private void fillBuffer() throws IOException {

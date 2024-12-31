@@ -3118,8 +3118,8 @@ public class CURL {
      * @param opt  The option being set.
      * @param func The function.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, CurlCallback func) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, func.getFunctionAddress());
+    public static int curl_easy_setopt(MemorySegment curl, int opt, CurlCallback func) {
+        return getLibCURL().curl_easy_setopt(curl, opt, func.address());
     }
 
     /**
@@ -3463,7 +3463,7 @@ public class CURL {
      */
     @Deprecated // Use the variant bellow with a seek function.
     public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
-        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), Memory.NULL, Memory.NULL, Memory.NULL);
+        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.address(), Memory.NULL, Memory.NULL, Memory.NULL);
     }
 
     /**
@@ -3477,7 +3477,7 @@ public class CURL {
      * @return The CURLcode response.
      */
     public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc, CurlSeekCallback seekfunc) {
-        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.getFunctionAddress(), seekfunc.getFunctionAddress(), Memory.NULL, Memory.NULL);
+        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.address(), seekfunc.address(), Memory.NULL, Memory.NULL);
     }
 
     /**
@@ -3595,7 +3595,7 @@ public class CURL {
      * @return The CURLMcode response.
      */
     public static @NativeType ("CURLMcode") int curl_multi_setopt(long multi, int opt, CurlCallback callback) {
-        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, callback.getFunctionAddress());
+        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, callback.address());
     }
 
     /**

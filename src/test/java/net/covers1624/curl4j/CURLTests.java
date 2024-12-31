@@ -127,8 +127,8 @@ public class CURLTests extends TestBase {
             curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
 
             try (MemoryCurlOutput output = MemoryCurlOutput.create();
-                 HeaderCollector headerCollector = new HeaderCollector();
                  SListHeaderWrapper headerOutput = new SListHeaderWrapper("X-Magic: " + header)) {
+                HeaderCollector headerCollector = new HeaderCollector();
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, output.callback());
 
                 curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headerCollector.callback());

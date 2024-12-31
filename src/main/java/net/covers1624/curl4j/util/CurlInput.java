@@ -6,6 +6,7 @@ import net.covers1624.curl4j.core.Memory;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -144,8 +145,7 @@ public abstract class CurlInput implements Closeable, CurlBindable {
                 }
 
                 int rs = (int) (size * nmemb);
-                ByteBuffer buffer = Memory.newDirectByteBuffer(ptr, rs);
-                int len = channel.read(buffer);
+                int len = channel.read(ptr.reinterpret(rs).asByteBuffer());
                 return len != -1 ? len : 0;
 
             });
@@ -174,7 +174,7 @@ public abstract class CurlInput implements Closeable, CurlBindable {
     }
 
     @Override
-    public void apply(long curl) throws IOException {
+    public void apply(MemorySegment curl) throws IOException {
         long len = availableBytes();
         if (len == -1) throw new IllegalStateException("Must have a known length.");
 
@@ -195,8 +195,6 @@ public abstract class CurlInput implements Closeable, CurlBindable {
     public void close() throws IOException {
         if (closed) return;
 
-        if (readCallback != null) readCallback.close();
-        if (seekCallback != null) seekCallback.close();
         if (channel != null) channel.close();
         closed = true;
     }

@@ -20,34 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class CallbackExceptionTests extends TestBase {
 
     @Test
-    public void testCallbackBubble() throws Throwable {
-        byte[] data = randomBytes(32);
-
-        curl_global_init(CURL_GLOBAL_DEFAULT);
-        MemorySegment curl = curl_easy_init();
-
-        try (TestWebServer server = new TestWebServer()) {
-            server.addHandler("/", r -> bytesResponse(Response.Status.OK, data));
-
-            curl_easy_reset(curl);
-
-            curl_easy_setopt(curl, CURLOPT_URL, server.addr("/"));
-            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-
-            try (CurlWriteCallback output = new CurlWriteCallback((ptr, size, nmemb, userdata) -> {
-                throw new RuntimeException("Thrown inside callback!");
-            })) {
-                output.setExceptionHandler(Callback.CallbackExceptionHandler.RETHROW);
-                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, output);
-
-                RuntimeException ex = assertThrows(RuntimeException.class, () -> curl_easy_perform(curl));
-                assertEquals("Thrown inside callback!", ex.getMessage());
-            }
-        }
-
-    }
-
-    @Test
     public void testCallbackCustomPolicy() throws Throwable {
         byte[] data = randomBytes(32);
 

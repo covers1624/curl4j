@@ -56,6 +56,7 @@ public class ForeignUtils {
      * @return Never returns anything.
      */
     @Contract ("_->fail")
+    @SuppressWarnings ("unchecked")
     public static <T extends Throwable> RuntimeException rethrowUnchecked(Throwable ex) throws T {
         throw (T) ex;
     }

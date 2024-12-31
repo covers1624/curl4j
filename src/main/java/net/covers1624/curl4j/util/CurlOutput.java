@@ -5,6 +5,7 @@ import net.covers1624.curl4j.core.Memory;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
@@ -103,15 +104,14 @@ public class CurlOutput implements Closeable, CurlBindable {
                 }
 
                 int rs = (int) (size * nmemb);
-                ByteBuffer buffer = Memory.newDirectByteBuffer(ptr, rs);
-                return channel.write(buffer);
+                return channel.write(ptr.reinterpret(rs).asByteBuffer());
             });
         }
         return callback;
     }
 
     @Override
-    public void apply(long curl) {
+    public void apply(MemorySegment curl) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback());
     }
 
@@ -119,7 +119,6 @@ public class CurlOutput implements Closeable, CurlBindable {
     public void close() throws IOException {
         if (closed) return;
 
-        if (callback != null) callback.close();
         if (channel != null) channel.close();
         closed = true;
     }

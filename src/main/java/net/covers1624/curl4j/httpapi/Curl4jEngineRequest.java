@@ -164,9 +164,9 @@ public class Curl4jEngineRequest extends AbstractEngineRequest {
              CurlOutput output = CurlOutput.toFile(destFile);
              CurlInput input = makeInput();
              CurlMimeBody mimeBody = buildMime(handle);
-             SListHeaderWrapper headers = new SListHeaderWrapper(this.headers.toStrings());
-             HeaderCollector headerCollector = new HeaderCollector();
-             CurlXferInfoCallback xferCallback = xferCallback(listener)) {
+             SListHeaderWrapper headers = new SListHeaderWrapper(this.headers.toStrings())) {
+            HeaderCollector headerCollector = new HeaderCollector();
+            CurlXferInfoCallback xferCallback = xferCallback(listener);
 
             output.apply(handle);
             headerCollector.apply(handle);
