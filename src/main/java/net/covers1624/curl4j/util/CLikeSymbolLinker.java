@@ -103,6 +103,7 @@ public final class CLikeSymbolLinker {
         String args = prototype.substring(startBrace + 1, endBrace);
         if (!args.trim().equals("void")) {
             for (String arg : args.split(",")) {
+                arg = arg.trim();
                 if (arg.isEmpty()) continue;
                 if (hasVarArgs) throw new RuntimeException("Expected no more arguments after varargs.");
 
@@ -117,6 +118,7 @@ public final class CLikeSymbolLinker {
 
         List<String> varArgs = new ArrayList<>();
         for (String arg : varArgsPrototype.split(",")) {
+            arg = arg.trim();
             if (arg.isEmpty()) continue;
             varArgs.add(parseNamePair(arg).type);
         }
