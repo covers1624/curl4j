@@ -1,15 +1,11 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.util.LibCurl;
-import net.covers1624.curl4j.util.StructUtils;
-
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.StructLayout;
 import java.lang.invoke.VarHandle;
 import java.util.Set;
 
 import static java.lang.foreign.MemoryLayout.PathElement.groupElement;
-import static java.lang.foreign.ValueLayout.*;
 import static net.covers1624.curl4j.util.ForeignUtils.readNTString;
 import static net.covers1624.curl4j.util.ForeignUtils.readNTStringArray;
 

@@ -1,8 +1,8 @@
-package net.covers1624.curl4j.util;
+package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.CURL;
-import net.covers1624.curl4j.InfoResult;
-import net.covers1624.curl4j.curl_version_info_data;
+import net.covers1624.curl4j.util.CLikeStructParser;
+import net.covers1624.curl4j.util.CLikeSymbolLinker;
+import net.covers1624.curl4j.util.CLikeSymbolResolver;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.Arena;

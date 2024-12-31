@@ -1,7 +1,6 @@
 package net.covers1624.curl4j;
 
 import net.covers1624.curl4j.core.*;
-import net.covers1624.curl4j.util.LibCurl;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.Arena;
