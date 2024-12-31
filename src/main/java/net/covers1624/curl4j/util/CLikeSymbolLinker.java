@@ -42,7 +42,7 @@ public final class CLikeSymbolLinker {
 
         Linker.Option[] options = new Linker.Option[0];
         if (!sig.varArgs.isEmpty()) {
-            options = new Linker.Option[] { Linker.Option.firstVariadicArg(sig.arguments.size() - 1) };
+            options = new Linker.Option[] { Linker.Option.firstVariadicArg(sig.arguments.size()) };
         }
         return LINKER.downcallHandle(addr.get(), resolveFunction(sig), options);
     }
