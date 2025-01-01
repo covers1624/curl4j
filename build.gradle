@@ -64,6 +64,7 @@ dependencies {
 test {
     useJUnitPlatform()
 
+    jvmArgs('--enable-native-access=ALL-UNNAMED')
     systemProperty('net.covers1624.curl4j.libcurl.name', file("native_build/install/libcurl/${os}/${arch}/${System.mapLibraryName("curl$suffix")}"))
 }
 
