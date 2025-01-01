@@ -101,7 +101,7 @@ public class LibCurl {
 
         curl_easy_init = linker.link("CURL *curl_easy_init(void);");
         curl_easy_setopt_int = linker.link("CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);", "int");
-        curl_easy_setopt_long = linker.link("CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);", "long");
+        curl_easy_setopt_long = linker.link("CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);", "jlong");
         curl_easy_setopt_ptr = linker.link("CURLcode curl_easy_setopt(CURL *curl, CURLoption option, ...);", "void*");
         curl_easy_perform = linker.link("CURLcode curl_easy_perform(CURL *curl);");
         curl_easy_cleanup = linker.link("void curl_easy_cleanup(CURL *curl);");
@@ -144,7 +144,7 @@ public class LibCurl {
         curl_multi_strerror = linker.link("const char *curl_multi_strerror(CURLMcode);");
         curl_multi_timeout = linker.link("CURLMcode curl_multi_timeout(CURLM *multi_handle, long *milliseconds);");
         curl_multi_setopt_int = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "int");
-        curl_multi_setopt_long = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "long");
+        curl_multi_setopt_long = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "jlong");
         curl_multi_setopt_ptr = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "void*");
     }
 
@@ -166,7 +166,7 @@ public class LibCurl {
 
     public final int curl_global_init(long flags) {
         try {
-            return (int) curl_global_init.invokeExact(flags);
+            return (int) curl_global_init.invoke(flags);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
