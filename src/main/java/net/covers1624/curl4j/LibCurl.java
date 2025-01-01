@@ -317,7 +317,7 @@ public class LibCurl {
         }
     }
 
-    public boolean isCurlImpersonateSupported() {
+    public final boolean isCurlImpersonateSupported() {
         return curl_easy_impersonate != null;
     }
 

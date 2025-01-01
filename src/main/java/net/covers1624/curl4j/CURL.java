@@ -3144,8 +3144,8 @@ public class CURL {
      * @param opt  The option being set.
      * @param blob The {@link curl_blob}.
      */
-    public static @NativeType ("CURLcode") int curl_easy_setopt(@NativeType ("CURL *") long curl, @NativeType ("CURLoption") int opt, @Nullable curl_blob blob) {
-        return ncurl_easy_setopt(Functions.curl_easy_setopt, curl, opt, blob != null ? blob.address : Memory.NULL);
+    public static int curl_easy_setopt(MemorySegment curl, int opt, @Nullable curl_blob blob) {
+        return getLibCURL().curl_easy_setopt(curl, opt, blob != null ? blob.address() : MemorySegment.NULL);
     }
 
     /**

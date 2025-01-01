@@ -7,6 +7,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,13 +45,13 @@ public final class CABundle implements CurlBindable {
         DEFAULT = BUILT_IN;
     }
 
-    private final curl_blob blob;
+    private final Arena arena = Arena.ofShared();
+    private final curl_blob blob = new curl_blob(arena);
 
     public CABundle(byte[] data) {
-        blob = new curl_blob();
-        blob.setFlags(curl_blob.CURL_BLOB_NOCOPY);
-        blob.setData(toNativeBuffer(data));
+        blob.setData(arena.allocateFrom(ValueLayout.JAVA_BYTE, data));
         blob.setLen((long) data.length);
+        blob.setFlags(curl_blob.CURL_BLOB_NOCOPY);
     }
 
     /**
@@ -88,7 +91,7 @@ public final class CABundle implements CurlBindable {
         try (InputStream is = CABundle.class.getResourceAsStream(resource)) {
             if (is == null) throw new FileNotFoundException("Embedded resource does not exist: " + resource);
 
-            return new CABundle(toBytes(is));
+            return new CABundle(is.readAllBytes());
         }
     }
 
@@ -110,7 +113,7 @@ public final class CABundle implements CurlBindable {
      * @param curl The curl instance.
      */
     @Override
-    public void apply(long curl) {
+    public void apply(MemorySegment curl) {
         curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, getCABlob());
         curl_easy_setopt(curl, CURLOPT_PROXY_CAINFO_BLOB, getCABlob());
     }
@@ -122,22 +125,5 @@ public final class CABundle implements CurlBindable {
      */
     public curl_blob getCABlob() {
         return blob;
-    }
-
-    private static Pointer toNativeBuffer(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
-        buffer.put(bytes);
-        buffer.flip();
-        return new Pointer(buffer);
-    }
-
-    private static byte[] toBytes(InputStream is) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        int len;
-        byte[] buf = new byte[1024];
-        while ((len = is.read(buf)) != -1) {
-            bos.write(buf, 0, len);
-        }
-        return bos.toByteArray();
     }
 }
