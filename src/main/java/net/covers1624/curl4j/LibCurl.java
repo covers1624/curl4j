@@ -436,7 +436,8 @@ public class LibCurl {
 
     public final int curl_mime_name(MemorySegment part, @Nullable String name) {
         try (Arena arena = Arena.ofShared()) {
-            return (int) curl_mime_name.invokeExact(part, name != null ? arena.allocateFrom(name) : MemorySegment.NULL);
+            MemorySegment namePtr = name != null ? arena.allocateFrom(name) : MemorySegment.NULL;
+            return (int) curl_mime_name.invokeExact(part, namePtr);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
@@ -444,7 +445,8 @@ public class LibCurl {
 
     public final int curl_mime_filename(MemorySegment part, @Nullable String filename) {
         try (Arena arena = Arena.ofShared()) {
-            return (int) curl_mime_filename.invokeExact(part, filename != null ? arena.allocateFrom(filename) : MemorySegment.NULL);
+            MemorySegment filenamePtr = filename != null ? arena.allocateFrom(filename) : MemorySegment.NULL;
+            return (int) curl_mime_filename.invokeExact(part, filenamePtr);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
@@ -452,7 +454,8 @@ public class LibCurl {
 
     public final int curl_mime_type(MemorySegment part, @Nullable String mimetype) {
         try (Arena arena = Arena.ofShared()) {
-            return (int) curl_mime_type.invokeExact(part, mimetype != null ? arena.allocateFrom(mimetype) : MemorySegment.NULL);
+            MemorySegment mimetypePtr = mimetype != null ? arena.allocateFrom(mimetype) : MemorySegment.NULL;
+            return (int) curl_mime_type.invokeExact(part, mimetypePtr);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
@@ -460,7 +463,8 @@ public class LibCurl {
 
     public final int curl_mime_encoder(MemorySegment part, @Nullable String encoding) {
         try (Arena arena = Arena.ofShared()) {
-            return (int) curl_mime_encoder.invokeExact(part, encoding != null ? arena.allocateFrom(encoding) : MemorySegment.NULL);
+            MemorySegment encodingPtr = encoding != null ? arena.allocateFrom(encoding) : MemorySegment.NULL;
+            return (int) curl_mime_encoder.invokeExact(part, encodingPtr);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
@@ -482,7 +486,8 @@ public class LibCurl {
 
     public final int curl_mime_filedata(MemorySegment part, @Nullable String filedata) {
         try (Arena arena = Arena.ofConfined()) {
-            return (int) curl_mime_filedata.invokeExact(part, filedata != null ? arena.allocateFrom(filedata) : MemorySegment.NULL);
+            MemorySegment fileDataPtr = filedata != null ? arena.allocateFrom(filedata) : MemorySegment.NULL;
+            return (int) curl_mime_filedata.invokeExact(part, fileDataPtr);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
@@ -510,7 +515,8 @@ public class LibCurl {
 
     public final int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, int takeOwnership) {
         try {
-            return (int) curl_mime_headers.invokeExact(part, headers != null ? headers.address() : MemorySegment.NULL, takeOwnership);
+            MemorySegment headersPtr = headers != null ? headers.address() : MemorySegment.NULL;
+            return (int) curl_mime_headers.invokeExact(part, headersPtr, takeOwnership);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
