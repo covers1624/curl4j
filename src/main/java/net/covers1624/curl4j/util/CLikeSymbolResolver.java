@@ -65,7 +65,11 @@ public class CLikeSymbolResolver {
             throw new RuntimeException("Expected opening and closing brace to exist.");
         }
 
-        NameTypePair retAndFunc = parseNamePair(prototype.substring(0, startBrace));
+        String funcRetAndName = prototype.substring(0, startBrace);
+        if (funcRetAndName.contains("(*") && funcRetAndName.contains(")")) {
+            funcRetAndName = funcRetAndName.replace("(*", "").replace(")", "");
+        }
+        NameTypePair retAndFunc = parseNamePair(funcRetAndName);
         if (retAndFunc.name() == null) throw new RuntimeException("Expected function name.");
 
         boolean hasVarArgs = false;
