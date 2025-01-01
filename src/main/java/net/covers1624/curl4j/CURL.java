@@ -74,12 +74,12 @@ public class CURL {
      * <a href="https://curl.se/libcurl/c/curl_global_init.html">curl_global_init</a> constants.
      */
     @SuppressWarnings ("PointlessBitwiseExpression")
-    public static final long CURL_GLOBAL_SSL = 1 << 0;
-    public static final long CURL_GLOBAL_WIN32 = 1 << 1;
-    public static final long CURL_GLOBAL_ALL = CURL_GLOBAL_SSL | CURL_GLOBAL_WIN32;
-    public static final long CURL_GLOBAL_NOTHING = 0;
-    public static final long CURL_GLOBAL_DEFAULT = CURL_GLOBAL_ALL;
-    public static final long CURL_GLOBAL_ACK_EINTR = 1 << 2;
+    public static final int CURL_GLOBAL_SSL = 1 << 0;
+    public static final int CURL_GLOBAL_WIN32 = 1 << 1;
+    public static final int CURL_GLOBAL_ALL = CURL_GLOBAL_SSL | CURL_GLOBAL_WIN32;
+    public static final int CURL_GLOBAL_NOTHING = 0;
+    public static final int CURL_GLOBAL_DEFAULT = CURL_GLOBAL_ALL;
+    public static final int CURL_GLOBAL_ACK_EINTR = 1 << 2;
     // endregion
 
     //region CURLoption
@@ -3004,7 +3004,7 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_global_init.html">documentation</a>.
      */
-    public static void curl_global_init(long flags) {
+    public static void curl_global_init(int flags) {
         getLibCURL().curl_global_init(flags);
     }
 

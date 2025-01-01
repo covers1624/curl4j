@@ -164,7 +164,7 @@ public class LibCurl {
         }
     }
 
-    public final int curl_global_init(long flags) {
+    public final int curl_global_init(int flags) {
         try {
             return (int) curl_global_init.invoke(flags);
         } catch (Throwable ex) {
