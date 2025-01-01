@@ -60,6 +60,19 @@ public class LibCurl {
     public final MethodHandle curl_slist_append;
     public final MethodHandle curl_slist_free_all;
 
+    public final MethodHandle curl_mime_init;
+    public final MethodHandle curl_mime_free;
+    public final MethodHandle curl_mime_addpart;
+    public final MethodHandle curl_mime_name;
+    public final MethodHandle curl_mime_filename;
+    public final MethodHandle curl_mime_type;
+    public final MethodHandle curl_mime_encoder;
+    public final MethodHandle curl_mime_data;
+    public final MethodHandle curl_mime_filedata;
+    public final MethodHandle curl_mime_data_cb;
+    public final MethodHandle curl_mime_subparts;
+    public final MethodHandle curl_mime_headers;
+
     public LibCurl(SymbolLookup lookup) {
         this.lookup = lookup;
         var linker = new CLikeSymbolLinker(lookup, SYMBOL_RESOLVER);
@@ -91,6 +104,19 @@ public class LibCurl {
 
         curl_slist_append = linker.link("struct curl_slist *curl_slist_append(struct curl_slist *list, const char *data);");
         curl_slist_free_all = linker.link("void curl_slist_free_all(struct curl_slist *list);");
+
+        curl_mime_init = linker.link("curl_mime *curl_mime_init(CURL *easy);");
+        curl_mime_free = linker.link("void curl_mime_free(curl_mime *mime);");
+        curl_mime_addpart = linker.link("curl_mimepart *curl_mime_addpart(curl_mime *mime);");
+        curl_mime_name = linker.link("CURLcode curl_mime_name(curl_mimepart *part, const char *name);");
+        curl_mime_filename = linker.link("CURLcode curl_mime_filename(curl_mimepart *part, const char *filename);");
+        curl_mime_type = linker.link("CURLcode curl_mime_type(curl_mimepart *part, const char *mimetype);");
+        curl_mime_encoder = linker.link("CURLcode curl_mime_encoder(curl_mimepart *part, const char *encoding);");
+        curl_mime_data = linker.link("CURLcode curl_mime_data(curl_mimepart *part, const char *data, size_t datasize);");
+        curl_mime_filedata = linker.link("CURLcode curl_mime_filedata(curl_mimepart *part, const char *filename);");
+        curl_mime_data_cb = linker.link("CURLcode curl_mime_data_cb(curl_mimepart *part, curl_off_t datasize, curl_read_callback *readfunc, curl_seek_callback *seekfunc, curl_free_callback *freefunc, void *arg);");
+        curl_mime_subparts = linker.link("CURLcode curl_mime_subparts(curl_mimepart *part, curl_mime *subparts);");
+        curl_mime_headers = linker.link("CURLcode curl_mime_headers(curl_mimepart *part, struct curl_slist *headers, int take_ownership);");
     }
 
     public final String curl_version() {
@@ -350,6 +376,112 @@ public class LibCurl {
 
         try {
             curl_slist_free_all.invokeExact(slist.address());
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final MemorySegment curl_mime_init(MemorySegment curl) {
+        try {
+            return (MemorySegment) curl_mime_init.invokeExact(curl);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final void curl_mime_free(MemorySegment mime) {
+        try {
+            curl_mime_free.invokeExact(mime);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final MemorySegment curl_mime_addpart(MemorySegment mime) {
+        try {
+            return (MemorySegment) curl_mime_addpart.invokeExact(mime);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_name(MemorySegment part, @Nullable String name) {
+        try (Arena arena = Arena.ofShared()) {
+            return (int) curl_mime_name.invokeExact(part, name != null ? arena.allocateFrom(name) : MemorySegment.NULL);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_filename(MemorySegment part, @Nullable String filename) {
+        try (Arena arena = Arena.ofShared()) {
+            return (int) curl_mime_filename.invokeExact(part, filename != null ? arena.allocateFrom(filename) : MemorySegment.NULL);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_type(MemorySegment part, @Nullable String mimetype) {
+        try (Arena arena = Arena.ofShared()) {
+            return (int) curl_mime_type.invokeExact(part, mimetype != null ? arena.allocateFrom(mimetype) : MemorySegment.NULL);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_encoder(MemorySegment part, @Nullable String encoding) {
+        try (Arena arena = Arena.ofShared()) {
+            return (int) curl_mime_encoder.invokeExact(part, encoding != null ? arena.allocateFrom(encoding) : MemorySegment.NULL);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_data(MemorySegment part, byte[] data) {
+        try (Arena arena = Arena.ofShared()) {
+            return curl_mime_data(part, arena.allocateFrom(ValueLayout.JAVA_BYTE, data));
+        }
+    }
+
+    public final int curl_mime_data(MemorySegment part, MemorySegment data) {
+        try {
+            return (int) curl_mime_data.invokeExact(part, data, data.byteSize());
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_filedata(MemorySegment part, @Nullable String filedata) {
+        try (Arena arena = Arena.ofConfined()) {
+            return (int) curl_mime_filedata.invokeExact(part, filedata != null ? arena.allocateFrom(filedata) : MemorySegment.NULL);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_data_cb(MemorySegment part, long datasize, MemorySegment readfunc, MemorySegment seekfunc, MemorySegment freefunc, MemorySegment arg) {
+        try {
+            return (int) curl_mime_data_cb.invokeExact(part, datasize, readfunc, seekfunc, freefunc, arg);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_subparts(MemorySegment part, MemorySegment subparts) {
+        try {
+            return (int) curl_mime_subparts.invokeExact(part, subparts);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, boolean takeOwnership) {
+        return curl_mime_headers(part, headers, takeOwnership ? 1 : 0);
+    }
+
+    public final int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, int takeOwnership) {
+        try {
+            return (int) curl_mime_headers.invokeExact(part, headers != null ? headers.address() : MemorySegment.NULL, takeOwnership);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }

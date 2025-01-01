@@ -3371,8 +3371,8 @@ public class CURL {
      * @param curl The CURL handle.
      * @return The curl_mime handle.
      */
-    public static @NativeType ("curl_mime *") long curl_mime_init(@NativeType ("CURL *") long curl) {
-        return ncurl_mime_init(Functions.curl_mime_init, curl);
+    public static MemorySegment curl_mime_init(MemorySegment curl) {
+        return getLibCURL().curl_mime_init(curl);
     }
 
     /**
@@ -3382,8 +3382,8 @@ public class CURL {
      *
      * @param mime The curl_mime handle.
      */
-    public static void curl_mime_free(@NativeType ("curl_mime *") long mime) {
-        ncurl_mime_free(Functions.curl_mime_free, mime);
+    public static void curl_mime_free(MemorySegment mime) {
+        getLibCURL().curl_mime_free(mime);
     }
 
     /**
@@ -3395,8 +3395,8 @@ public class CURL {
      * @param mime The curl_mime handle.
      * @return The new curl_mimepart handle.
      */
-    public static @NativeType ("curl_mimepart *") long curl_mime_addpart(@NativeType ("curl_mime *") long mime) {
-        return ncurl_mime_addpart(Functions.curl_mime_addpart, mime);
+    public static MemorySegment curl_mime_addpart(MemorySegment mime) {
+        return getLibCURL().curl_mime_addpart(mime);
     }
 
     /**
@@ -3404,12 +3404,12 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_mime_name.html">documentation</a>.
      *
-     * @param mime The curl_mime handle.
+     * @param part The curl_mimepart handle.
      * @param name The name.
      * @return The CURLcode response.
      */
-    public static @NativeType ("CURLcode") int curl_mime_name(@NativeType ("curl_mime *") long mime, @Nullable String name) {
-        return ncurl_mime_name(Functions.curl_mime_name, mime, name);
+    public static int curl_mime_name(MemorySegment part, @Nullable String name) {
+        return getLibCURL().curl_mime_name(part, name);
     }
 
     /**
@@ -3417,12 +3417,12 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_mime_filename.html">documentation</a>.
      *
-     * @param mime     The curl_mime handle.
+     * @param part     The curl_mimepart handle.
      * @param filename The remote file name.
      * @return The CURLcode response.
      */
-    public static @NativeType ("CURLcode") int curl_mime_filename(@NativeType ("curl_mime *") long mime, @Nullable String filename) {
-        return ncurl_mime_filename(Functions.curl_mime_filename, mime, filename);
+    public static int curl_mime_filename(MemorySegment part, @Nullable String filename) {
+        return getLibCURL().curl_mime_filename(part, filename);
     }
 
     /**
@@ -3430,12 +3430,25 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_mime_type.html">documentation</a>.
      *
-     * @param mime     The curl_mime handle.
+     * @param part     The curl_mimepart handle.
      * @param mimetype The Content-Type for this part.
      * @return The CURLcode response.
      */
-    public static @NativeType ("CURLcode") int curl_mime_type(@NativeType ("curl_mime *") long mime, String mimetype) {
-        return ncurl_mime_type(Functions.curl_mime_type, mime, mimetype);
+    public static int curl_mime_type(MemorySegment part, String mimetype) {
+        return getLibCURL().curl_mime_type(part, mimetype);
+    }
+
+    /**
+     * Set mime part transfer encoding.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_encoder.html">documentation</a>.
+     *
+     * @param part     The curl_mimepart handle.
+     * @param encoding Encoding type.
+     * @return The CURLcode response.
+     */
+    public static int curl_mime_encoder(MemorySegment part, String encoding) {
+        return getLibCURL().curl_mime_encoder(part, encoding);
     }
 
     /**
@@ -3443,12 +3456,38 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_mime_data.html">documentation</a>.
      *
-     * @param mime The curl_mime handle.
+     * @param part The curl_mimepart handle.
      * @param data The data.
      * @return The CURLcode response.
      */
-    public static @NativeType ("CURLcode") int curl_mime_data(@NativeType ("curl_mime *") long mime, byte[] data) {
-        return ncurl_mime_data(Functions.curl_mime_data, mime, data);
+    public static int curl_mime_data(MemorySegment part, byte[] data) {
+        return getLibCURL().curl_mime_data(part, data);
+    }
+
+    /**
+     * Set mime part data source from memory data.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_data.html">documentation</a>.
+     *
+     * @param part The curl_mimepart handle.
+     * @param data The data.
+     * @return The CURLcode response.
+     */
+    public static int curl_mime_data(MemorySegment part, MemorySegment data) {
+        return getLibCURL().curl_mime_data(part, data);
+    }
+
+    /**
+     * Set mime part data source from a file path.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_filedata.html">documentation</a>.
+     *
+     * @param part     The curl_mimepart handle.
+     * @param filename The file path.
+     * @return The CURLcode response.
+     */
+    public static int curl_mime_filedata(MemorySegment part, String filename) {
+        return getLibCURL().curl_mime_filedata(part, filename);
     }
 
     /**
@@ -3456,28 +3495,56 @@ public class CURL {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_mime_data_cb.html">documentation</a>.
      *
-     * @param mime     The curl_mime handle.
+     * @param part     The curl_mimepart handle.
      * @param datasize The size of the body.
      * @param readfunc The read function.
      * @return The CURLcode response.
      */
-    @Deprecated // Use the variant bellow with a seek function.
-    public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc) {
-        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.address(), Memory.NULL, Memory.NULL, Memory.NULL);
+    public static int curl_mime_data_cb(MemorySegment part, long datasize, CurlReadCallback readfunc, CurlSeekCallback seekfunc) {
+        return getLibCURL().curl_mime_data_cb(part, datasize, readfunc.address(), seekfunc != null ? seekfunc.address() : MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL);
     }
 
     /**
-     * Set mime part data source from callback function.
+     * Set sub-parts of a multipart mime part.
      * <p>
-     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_data_cb.html">documentation</a>.
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_subparts.html">documentation</a>.
      *
-     * @param mime     The curl_mime handle.
-     * @param datasize The size of the body.
-     * @param readfunc The read function.
+     * @param part     The curl_mimepart handle.
+     * @param subparts The curl_mime subparts handle.
      * @return The CURLcode response.
      */
-    public static @NativeType ("CURLcode") int curl_mime_data_cb(@NativeType ("curl_mime *") long mime, long datasize, CurlReadCallback readfunc, CurlSeekCallback seekfunc) {
-        return ncurl_mime_data_cb(Functions.curl_mime_data_cb, mime, datasize, readfunc.address(), seekfunc.address(), Memory.NULL, Memory.NULL);
+    public static int curl_mime_subparts(MemorySegment part, MemorySegment subparts) {
+        return getLibCURL().curl_mime_subparts(part, subparts);
+    }
+
+    /**
+     * Sets a mime part's custom headers.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_headers.html">documentation</a>.
+     *
+     * @param part           The curl_mimepart handle.
+     * @param headers        The headers curl_slist handle. {@code null} to remove any previously assigned headers.
+     * @param take_ownership If the curl_slist handle ownership should be taken by the part.
+     *                       If false/0, the headers must be free'd manually when the part is no longer in use.
+     * @return The CURLcode response.
+     */
+    public static int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, boolean take_ownership) {
+        return getLibCURL().curl_mime_headers(part, headers, take_ownership);
+    }
+
+    /**
+     * Sets a mime part's custom headers.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_mime_headers.html">documentation</a>.
+     *
+     * @param part           The curl_mimepart handle.
+     * @param headers        The headers curl_slist handle. {@code null} to remove any previously assigned headers.
+     * @param take_ownership If the curl_slist handle ownership should be taken by the part.
+     *                       If false/0, the headers must be free'd manually when the part is no longer in use.
+     * @return The CURLcode response.
+     */
+    public static int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, int take_ownership) {
+        return getLibCURL().curl_mime_headers(part, headers, take_ownership);
     }
 
     /**

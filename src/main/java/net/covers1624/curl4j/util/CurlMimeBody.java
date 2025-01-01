@@ -2,6 +2,7 @@ package net.covers1624.curl4j.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,10 +15,10 @@ import static net.covers1624.curl4j.CURL.*;
  */
 public class CurlMimeBody implements Closeable, CurlBindable {
 
-    private final long mime;
+    private final MemorySegment mime;
     private final List<Closeable> resources;
 
-    private CurlMimeBody(long mime, List<Closeable> resources) {
+    private CurlMimeBody(MemorySegment mime, List<Closeable> resources) {
         this.mime = mime;
         this.resources = resources;
     }
@@ -25,7 +26,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
     /**
      * @return The mime pointer.
      */
-    public long getMime() {
+    public MemorySegment getMime() {
         return mime;
     }
 
@@ -41,7 +42,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
     }
 
     @Override
-    public void apply(long curl) {
+    public void apply(MemorySegment curl) {
         curl_easy_setopt(curl, CURLOPT_MIMEPOST, getMime());
     }
 
@@ -61,7 +62,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
      * @param curl The curl pointer.
      * @return The builder.
      */
-    public static Builder builder(long curl) {
+    public static Builder builder(MemorySegment curl) {
         return new Builder(curl);
     }
 
@@ -70,10 +71,10 @@ public class CurlMimeBody implements Closeable, CurlBindable {
      */
     public static final class Builder {
 
-        private final long mime;
+        private final MemorySegment mime;
         private final List<Closeable> resources = new LinkedList<>();
 
-        private Builder(long curl) {
+        private Builder(MemorySegment curl) {
             mime = curl_mime_init(curl);
         }
 
@@ -92,7 +93,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
          */
         public class PartBuilder {
 
-            private final long part;
+            private final MemorySegment part;
 
             private PartBuilder(String name) {
                 part = curl_mime_addpart(mime);
@@ -157,7 +158,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
             /**
              * @return The pointer to the part.
              */
-            public long getPart() {
+            public MemorySegment getPart() {
                 return part;
             }
 
@@ -174,7 +175,7 @@ public class CurlMimeBody implements Closeable, CurlBindable {
         /**
          * @return The mime entity pointer.
          */
-        public long getMime() {
+        public MemorySegment getMime() {
             return mime;
         }
 
