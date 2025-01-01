@@ -57,8 +57,8 @@ public class CURLTests extends TestBase {
                 int result = curl_easy_perform(curl);
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
-                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
-                assertEquals("127.0.0.1", curl_easy_getinfo_String(curl, CURL.CURLINFO_PRIMARY_IP));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
+                assertEquals("127.0.0.1", curl_easy_getinfo_String(curl, CURL.CURLINFO_PRIMARY_IP).result());
                 assertArrayEquals(data, output.bytes());
             }
         } finally {
@@ -97,7 +97,7 @@ public class CURLTests extends TestBase {
                 int result = curl_easy_perform(curl);
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
-                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
             }
         } finally {
             curl_easy_cleanup(curl);
@@ -138,7 +138,7 @@ public class CURLTests extends TestBase {
                 int result = curl_easy_perform(curl);
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
-                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
                 assertEquals(header, headerCollector.getHeaders().get("X-Magic").get(0));
                 assertArrayEquals(data, output.bytes());
             }
@@ -176,7 +176,7 @@ public class CURLTests extends TestBase {
                 int result = curl_easy_perform(curl);
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
-                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
                 assertArrayEquals(data, output.bytes());
             }
         } finally {
@@ -228,7 +228,7 @@ public class CURLTests extends TestBase {
                 int result = curl_easy_perform(curl);
 
                 assertEquals(CURLE_OK, result, () -> curl_easy_strerror(result));
-                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE));
+                assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
             }
         } finally {
             curl_easy_cleanup(curl);
