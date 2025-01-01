@@ -16,7 +16,7 @@ import java.lang.foreign.MemorySegment;
  *
  * @author covers1624
  */
-public class CurlHandle {
+public sealed class CurlHandle permits CurlMultiHandle {
 
     public final ErrorBuffer errorBuffer = new ErrorBuffer();
     public final MemorySegment curl;
@@ -24,7 +24,7 @@ public class CurlHandle {
     @SuppressWarnings ("FieldCanBeLocal")
     private final @Nullable Arena arena;
 
-    private CurlHandle(MemorySegment curl, @Nullable Arena arena) {
+    protected CurlHandle(MemorySegment curl, @Nullable Arena arena) {
         if (arena != null) {
             // TODO use libcurl instance here?
             curl = curl.reinterpret(arena, CURL::curl_easy_cleanup);

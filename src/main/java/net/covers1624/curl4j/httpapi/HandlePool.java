@@ -6,7 +6,8 @@ package net.covers1624.curl4j.httpapi;
 import net.covers1624.curl4j.util.CurlHandle;
 import net.covers1624.quack.util.Duration;
 
-import java.util.Iterator;
+import java.lang.foreign.Arena;
+import java.lang.ref.Cleaner;
 import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,12 +17,13 @@ import java.util.function.Supplier;
  * A simple pool of {@link CurlHandle} instances.
  * <p>
  * This is a time based pool. By default, after 5 minutes of inactivity the
- * entry will be purged from the pool and cleaned up. When an entry is removed,
- * it will have {@link CurlHandle#close()} called.
+ * entry will be purged from the pool. It is expected that the resource contained
+ * within the pool does automatic native resource cleanup based on some reference {@link Cleaner}.
+ * Such as {@link Arena#ofAuto} for native memory segment.
  * <p>
  * Created by covers1624 on 16/1/24.
  */
-final class HandlePool<T extends AutoCloseable> implements AutoCloseable {
+final class HandlePool<T> implements AutoCloseable {
 
     private final Supplier<T> factory;
     private final LinkedList<Entry> entries = new LinkedList<>();
@@ -80,12 +82,6 @@ final class HandlePool<T extends AutoCloseable> implements AutoCloseable {
     public void close() {
         executor.shutdownNow();
         synchronized (entries) {
-            for (Entry entry : entries) {
-                try {
-                    entry.handle.close();
-                } catch (Throwable ignored) {
-                }
-            }
             entries.clear();
         }
     }
@@ -94,17 +90,7 @@ final class HandlePool<T extends AutoCloseable> implements AutoCloseable {
         long lt = liveTime.unit.toMillis(liveTime.time);
         synchronized (entries) {
             long currTime = System.currentTimeMillis();
-            for (Iterator<Entry> iterator = entries.iterator(); iterator.hasNext(); ) {
-                Entry entry = iterator.next();
-                if (entry.lastUsed + lt > currTime) {
-                    iterator.remove();
-                    try {
-                        entry.handle.close();
-                    } catch (Throwable ignored) {
-                        // TODO log??
-                    }
-                }
-            }
+            entries.removeIf(entry -> entry.lastUsed + lt > currTime);
         }
     }
 

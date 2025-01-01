@@ -7,7 +7,6 @@ import net.covers1624.curl4j.CURLMsg;
 import net.covers1624.curl4j.CurlWriteCallback;
 import net.covers1624.curl4j.CurlXferInfoCallback;
 import net.covers1624.curl4j.core.Memory;
-import net.covers1624.curl4j.core.Pointer;
 import net.covers1624.curl4j.util.*;
 import net.covers1624.quack.net.httpapi.HeaderList;
 import net.covers1624.quack.net.httpapi.WebBody;
@@ -16,10 +15,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.function.Consumer;
 
+import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static net.covers1624.curl4j.CURL.*;
 
 /**
@@ -27,12 +30,10 @@ import static net.covers1624.curl4j.CURL.*;
  */
 class IncrementalCurl4jResponse extends Curl4jEngineResponse {
 
-    private static final HandlePool<NativeBuffer> BUFFERS = new HandlePool<>(() -> new NativeBuffer(64 * 1024));
-
     // 64k buffer.
-    private final HandlePool<NativeBuffer>.Entry bufEnt = BUFFERS.get();
-    private long buf = bufEnt.handle.address;
-    private ByteBuffer buffer = bufEnt.handle.buffer;
+    private Arena bufferArena = Arena.ofAuto();
+    private MemorySegment buf = bufferArena.allocate(JAVA_BYTE, 64 * 1024);
+    private ByteBuffer buffer = buf.asByteBuffer();
 
     private boolean done;
     private boolean paused;
@@ -65,7 +66,7 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
             // and we can't partially consume.
             growBuffer(rs - buffer.remaining());
         }
-        Memory.memcpy(ptr, buf + buffer.position(), rs);
+        buf.asSlice(buffer.position()).copyFrom(ptr);
         buffer.position(buffer.position() + rs);
         return rs;
     });
@@ -139,7 +140,7 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
         HeaderCollector headerCollector = new HeaderCollector();
         headerCollector.apply(handle);
 
-        curl_easy_setopt(handle.curl, CURLOPT_WRITEFUNCTION, writeCallback.getFunctionAddress());
+        curl_easy_setopt(handle.curl, CURLOPT_WRITEFUNCTION, writeCallback);
 
         if (request.caBundle() != null) {
             request.caBundle().apply(handle);
@@ -197,8 +198,8 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
             curl_easy_pause(handle.curl, CURLPAUSE_RECV_CONT);
         }
 
-        try (Memory.Stack stack = Memory.pushStack()) {
-            Pointer nHandles = stack.mallocPointer();
+        try (Arena arena = Arena.ofShared()) {
+            MemorySegment nHandles = arena.allocate(ValueLayout.ADDRESS, 1);
             // Do work until we are finished, or we paused.
             while (!done && !paused) {
                 int ret = curl_multi_perform(handle.multi, nHandles);
@@ -207,7 +208,7 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
                 if (ret != CURLM_OK) throw new Curl4jHttpException("Curl multi returned error: " + handle.errorBuffer + "(" + curl_multi_strerror(ret) + ")");
 
                 // curl_multi_perform gives us an out pointer for the number of active curl requests.
-                done = nHandles.readInt() == 0;
+                done = nHandles.get(ValueLayout.JAVA_INT, 0) == 0;
             }
             // We are done!
             if (done) {
@@ -228,15 +229,25 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
     }
 
     private void growBuffer(int more) {
+        // FFM api has no way to reallocate a memory segment efficiently.
+        // We must allocate a new segment and copy the data.
         // Calculate new buffer size.
-        int newSize = buffer.limit() + more;
-        // reallocate the buffer.
-        bufEnt.handle = bufEnt.handle.newRealloc(newSize);
-        // Carry position
-        bufEnt.handle.buffer.position(buffer.position());
+        // We simply let the old arena and segment get GC'd auto cleaning up the native memory
+        // We can't 'un allocate' memory from an arena either.
 
-        buf = bufEnt.handle.address;
-        buffer = bufEnt.handle.buffer;
+        int newSize = buffer.limit() + more;
+        Arena newArena = Arena.ofAuto();
+        // Allocate new buffer
+        MemorySegment newSegment = newArena.allocate(JAVA_BYTE, newSize);
+        ByteBuffer newBuffer = newSegment.asByteBuffer();
+        // Copy the data.
+        newSegment.copyFrom(buf);
+        // Carry position
+        newBuffer.position(buffer.position());
+
+        buf = newSegment;
+        buffer = newBuffer;
+        bufferArena = newArena;
     }
 
     @Override
@@ -244,9 +255,7 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
         // Removing the curl handle from the multi handle will abort the request
         // if one is still running.
         curl_multi_remove_handle(handle.multi, handle.curl);
-        bufEnt.handle.buffer.position(0);
-        bufEnt.handle.buffer.limit(bufEnt.handle.buffer.capacity());
-        closeSafe(writeCallback, input, mimeBody, headers, xferCallback, handleEntry, bufEnt);
+        closeSafe(input, mimeBody, headers, handleEntry);
         if (request.listener() != null) {
             request.listener().end();
         }

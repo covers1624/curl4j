@@ -1,14 +1,14 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.*;
+import net.covers1624.curl4j.core.Library;
+import net.covers1624.curl4j.core.LibraryLoader;
+import net.covers1624.curl4j.core.NativeType;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
-
-import static net.covers1624.curl4j.CURL.Functions.*;
 
 /**
  * Native bindings to the <a href="https://curl.se/libcurl">libcurl</a> library.
@@ -3554,19 +3554,8 @@ public class CURL {
      *
      * @return The multi handle.
      */
-    public static @NativeType ("CURLM *") long curl_multi_init() {
-        return ncurl_multi_init(curl_multi_init);
-    }
-
-    /**
-     * Cleanup and free a multi handle.
-     * <p>
-     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_cleanup.html">documentation</a>.
-     *
-     * @param multi The multi handle.
-     */
-    public static void curl_multi_cleanup(@NativeType ("CURLM *") long multi) {
-        ncurl_multi_cleanup(curl_multi_cleanup, multi);
+    public static MemorySegment curl_multi_init() {
+        return getLibCURL().curl_multi_init();
     }
 
     /**
@@ -3578,8 +3567,8 @@ public class CURL {
      * @param curl  The curl handle.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_add_handle(@NativeType ("CURLM *") long multi, @NativeType ("CURL *") long curl) {
-        return ncurl_multi_add_handle(curl_multi_add_handle, multi, curl);
+    public static int curl_multi_add_handle(MemorySegment multi, MemorySegment curl) {
+        return getLibCURL().curl_multi_add_handle(multi, curl);
     }
 
     /**
@@ -3591,8 +3580,8 @@ public class CURL {
      * @param curl  The curl handle.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_remove_handle(@NativeType ("CURLM *") long multi, @NativeType ("CURL *") long curl) {
-        return ncurl_multi_remove_handle(curl_multi_remove_handle, multi, curl);
+    public static int curl_multi_remove_handle(MemorySegment multi, MemorySegment curl) {
+        return getLibCURL().curl_multi_remove_handle(multi, curl);
     }
 
     /**
@@ -3604,8 +3593,19 @@ public class CURL {
      * @param runningHandles Pointer to store number of running handles.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_perform(long multi, Pointer runningHandles) {
-        return ncurl_multi_perform(curl_multi_perform, multi, runningHandles.address);
+    public static int curl_multi_perform(MemorySegment multi, MemorySegment runningHandles) {
+        return getLibCURL().curl_multi_perform(multi, runningHandles);
+    }
+
+    /**
+     * Cleanup and free a multi handle.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_cleanup.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     */
+    public static void curl_multi_cleanup(MemorySegment multi) {
+        getLibCURL().curl_multi_cleanup(multi);
     }
 
     /**
@@ -3617,11 +3617,20 @@ public class CURL {
      * @param msgsInQueue Pointer to store number of remaining messages.
      * @return The CURLMsg struct. Will return {@code null} when no more messages are available.
      */
-    public static @Nullable CURLMsg curl_multi_info_read(long multi, Pointer msgsInQueue) {
-        long ret = ncurl_multi_info_read(curl_multi_info_read, multi, msgsInQueue.address);
-        if (ret == Memory.NULL) return null;
+    public static @Nullable CURLMsg curl_multi_info_read(MemorySegment multi, MemorySegment msgsInQueue) {
+        return getLibCURL().curl_multi_info_read(multi, msgsInQueue);
+    }
 
-        return new CURLMsg(ret);
+    /**
+     * Get a string describing the code.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_strerror.html">documentation</a>.
+     *
+     * @param code the CURLMcode.
+     * @return The CURLMcode response.
+     */
+    public static String curl_multi_strerror(int code) {
+        return getLibCURL().curl_multi_strerror(code);
     }
 
     /**
@@ -3633,8 +3642,8 @@ public class CURL {
      * @param millisecondsPtr Pointer to store number of milliseconds.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_timeout(long multi, Pointer millisecondsPtr) {
-        return ncurl_multi_timeout(curl_multi_timeout, multi, millisecondsPtr.address);
+    public static int curl_multi_timeout(MemorySegment multi, MemorySegment millisecondsPtr) {
+        return getLibCURL().curl_multi_timeout(multi, millisecondsPtr);
     }
 
     /**
@@ -3647,8 +3656,36 @@ public class CURL {
      * @param value The option value.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_setopt(long multi, int opt, long value) {
-        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, value);
+    public static int curl_multi_setopt(MemorySegment multi, int opt, int value) {
+        return getLibCURL().curl_multi_setopt(multi, opt, value);
+    }
+
+    /**
+     * Set an option on the multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_setopt.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     * @param opt   The option.
+     * @param value The option value.
+     * @return The CURLMcode response.
+     */
+    public static int curl_multi_setopt(MemorySegment multi, int opt, long value) {
+        return getLibCURL().curl_multi_setopt(multi, opt, value);
+    }
+
+    /**
+     * Set an option on the multi session.
+     * <p>
+     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_setopt.html">documentation</a>.
+     *
+     * @param multi The multi handle.
+     * @param opt   The option.
+     * @param value The option value.
+     * @return The CURLMcode response.
+     */
+    public static int curl_multi_setopt(MemorySegment multi, int opt, MemorySegment value) {
+        return getLibCURL().curl_multi_setopt(multi, opt, value);
     }
 
     /**
@@ -3661,103 +3698,7 @@ public class CURL {
      * @param callback The callback function.
      * @return The CURLMcode response.
      */
-    public static @NativeType ("CURLMcode") int curl_multi_setopt(long multi, int opt, CurlCallback callback) {
-        return ncurl_multi_setopt(curl_multi_setopt, multi, opt, callback.address());
-    }
-
-    /**
-     * Get a string describing the code.
-     * <p>
-     * See the curl <a href="https://curl.se/libcurl/c/curl_multi_strerror.html">documentation</a>.
-     *
-     * @param code the CURLMcode.
-     * @return The CURLMcode response.
-     */
-    public static String curl_multi_strerror(@NativeType ("CURLMcode") int code) {
-        return ncurl_multi_strerror(curl_multi_strerror, code);
-    }
-
-    /**
-     * Class to hold all the libCURL function pointers.
-     * <p>
-     * Due to class loading rules, this will only be loaded (and thus, libcurl loaded), when
-     * a curl function is called.
-     */
-    public static final class Functions {
-
-        private Functions() { }
-
-        private static final Library CURL = null;// = getLbCURL();
-
-        public static final long curl_version = CURL.getFunction("curl_version");
-        public static final long curl_version_info = CURL.getFunction("curl_version_info");
-        public static final long curl_global_init = CURL.getFunction("curl_global_init");
-        public static final long curl_global_cleanup = CURL.getFunction("curl_global_cleanup");
-        public static final long curl_easy_init = CURL.getFunction("curl_easy_init");
-        public static final long curl_easy_reset = CURL.getFunction("curl_easy_reset");
-        public static final long curl_easy_perform = CURL.getFunction("curl_easy_perform");
-        public static final long curl_easy_pause = CURL.getFunction("curl_easy_pause");
-        public static final long curl_easy_setopt = CURL.getFunction("curl_easy_setopt");
-        public static final long curl_easy_getinfo = CURL.getFunction("curl_easy_getinfo");
-        public static final long curl_easy_strerror = CURL.getFunction("curl_easy_strerror");
-        public static final long curl_easy_cleanup = CURL.getFunction("curl_easy_cleanup");
-        public static final long curl_easy_impersonate = CURL.getOptionalFunction("curl_easy_impersonate");
-        public static final long curl_slist_append = CURL.getFunction("curl_slist_append");
-        public static final long curl_slist_free_all = CURL.getFunction("curl_slist_free_all");
-        public static final long curl_mime_init = CURL.getFunction("curl_mime_init");
-        public static final long curl_mime_free = CURL.getFunction("curl_mime_free");
-        public static final long curl_mime_addpart = CURL.getFunction("curl_mime_addpart");
-        public static final long curl_mime_name = CURL.getFunction("curl_mime_name");
-        public static final long curl_mime_filename = CURL.getFunction("curl_mime_filename");
-        public static final long curl_mime_type = CURL.getFunction("curl_mime_type");
-        public static final long curl_mime_data = CURL.getFunction("curl_mime_data");
-        public static final long curl_mime_data_cb = CURL.getFunction("curl_mime_data_cb");
-
-        public static final long curl_multi_init = CURL.getFunction("curl_multi_init");
-        public static final long curl_multi_cleanup = CURL.getFunction("curl_multi_cleanup");
-        public static final long curl_multi_add_handle = CURL.getFunction("curl_multi_add_handle");
-        public static final long curl_multi_remove_handle = CURL.getFunction("curl_multi_remove_handle");
-        public static final long curl_multi_perform = CURL.getFunction("curl_multi_perform");
-        public static final long curl_multi_info_read = CURL.getFunction("curl_multi_info_read");
-        public static final long curl_multi_timeout = CURL.getFunction("curl_multi_timeout");
-        public static final long curl_multi_setopt = CURL.getFunction("curl_multi_setopt");
-        public static final long curl_multi_strerror = CURL.getFunction("curl_multi_strerror");
-
-        // @formatter:off
-        public static native String ncurl_version(long func);
-        public static native long ncurl_version_info(long func);
-        public static native int ncurl_global_init(long func, long flags);
-        public static native void ncurl_global_cleanup(long func);
-        public static native long ncurl_easy_init(long func);
-        public static native void ncurl_easy_reset(long func, long curl);
-        public static native int ncurl_easy_perform(long func, long curl);
-        public static native int ncurl_easy_pause(long func, long curl, int bitmask);
-        public static native int ncurl_easy_setopt(long func, long curl, int opt, long value);
-        public static native int ncurl_easy_setopt(long func, long curl, int opt, String value);
-        public static native int ncurl_easy_getinfo(long func, long curl, int info, long value);
-        public static native String ncurl_easy_strerror(long func, int code);
-        public static native void ncurl_easy_cleanup(long func, long curl);
-        public static native int ncurl_easy_impersonate(long func, long curl, String target, boolean defaultHeaders);
-        public static native long ncurl_slist_append(long func, long list, String data);
-        public static native void ncurl_slist_free_all(long func, long list);
-        public static native long ncurl_mime_init(long func, long curl);
-        public static native void ncurl_mime_free(long func, long mime);
-        public static native long ncurl_mime_addpart(long func, long mime);
-        public static native int ncurl_mime_name(long func, long part, String name);
-        public static native int ncurl_mime_filename(long func, long part, String fileName);
-        public static native int ncurl_mime_type(long func, long part, String mimeType);
-        public static native int ncurl_mime_data(long func, long part, byte[] data);
-        public static native int ncurl_mime_data_cb(long func, long part, long dataSize, long readFunc, long seekFunc, long freeFunc, long userData);
-
-        public static native long ncurl_multi_init(long func);
-        public static native void ncurl_multi_cleanup(long func, long multi);
-        public static native int ncurl_multi_add_handle(long func, long multi, long curl);
-        public static native int ncurl_multi_remove_handle(long func, long multi, long curl);
-        public static native int ncurl_multi_perform(long func, long multi, long runningHandlesPtr);
-        public static native long ncurl_multi_info_read(long func, long multi, long msgsInQueuePtr);
-        public static native int ncurl_multi_timeout(long func, long multi, long millisecondsPtr);
-        public static native int ncurl_multi_setopt(long func, long multi, int opt, long value);
-        public static native String ncurl_multi_strerror(long func, int code);
-        // @formatter:on
+    public static int curl_multi_setopt(MemorySegment multi, int opt, CurlCallback callback) {
+        return curl_multi_setopt(multi, opt, callback != null ? callback.address() : MemorySegment.NULL);
     }
 }

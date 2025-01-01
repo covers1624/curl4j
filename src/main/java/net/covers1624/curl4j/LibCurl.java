@@ -73,6 +73,20 @@ public class LibCurl {
     public final MethodHandle curl_mime_subparts;
     public final MethodHandle curl_mime_headers;
 
+    public final MethodHandle curl_multi_init;
+    public final MethodHandle curl_multi_add_handle;
+    public final MethodHandle curl_multi_remove_handle;
+    public final MethodHandle curl_multi_perform;
+    public final MethodHandle curl_multi_cleanup;
+    public final MethodHandle curl_multi_info_read;
+    public final MethodHandle curl_multi_strerror;
+
+    public final MethodHandle curl_multi_timeout;
+
+    public final MethodHandle curl_multi_setopt_int;
+    public final MethodHandle curl_multi_setopt_long;
+    public final MethodHandle curl_multi_setopt_ptr;
+
     public LibCurl(SymbolLookup lookup) {
         this.lookup = lookup;
         var linker = new CLikeSymbolLinker(lookup, SYMBOL_RESOLVER);
@@ -117,6 +131,18 @@ public class LibCurl {
         curl_mime_data_cb = linker.link("CURLcode curl_mime_data_cb(curl_mimepart *part, curl_off_t datasize, curl_read_callback *readfunc, curl_seek_callback *seekfunc, curl_free_callback *freefunc, void *arg);");
         curl_mime_subparts = linker.link("CURLcode curl_mime_subparts(curl_mimepart *part, curl_mime *subparts);");
         curl_mime_headers = linker.link("CURLcode curl_mime_headers(curl_mimepart *part, struct curl_slist *headers, int take_ownership);");
+
+        curl_multi_init = linker.link("CURLM *curl_multi_init(void);");
+        curl_multi_add_handle = linker.link("CURLMcode curl_multi_add_handle(CURLM *multi_handle, CURL *curl_handle);");
+        curl_multi_remove_handle = linker.link("CURLMcode curl_multi_remove_handle(CURLM *multi_handle, CURL *curl_handle);");
+        curl_multi_perform = linker.link("CURLMcode curl_multi_perform(CURLM *multi_handle, int *running_handles);");
+        curl_multi_cleanup = linker.link("CURLMcode curl_multi_cleanup(CURLM *multi_handle);");
+        curl_multi_info_read = linker.link("CURLMsg *curl_multi_info_read(CURLM *multi_handle, int *msgs_in_queue);");
+        curl_multi_strerror = linker.link("const char *curl_multi_strerror(CURLMcode);");
+        curl_multi_timeout = linker.link("CURLMcode curl_multi_timeout(CURLM *multi_handle, long *milliseconds);");
+        curl_multi_setopt_int = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "int");
+        curl_multi_setopt_long = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "long");
+        curl_multi_setopt_ptr = linker.link("CURLMcode curl_multi_setopt(CURLM *multi_handle, CURLMoption option, ...);", "void*");
     }
 
     public final String curl_version() {
@@ -482,6 +508,94 @@ public class LibCurl {
     public final int curl_mime_headers(MemorySegment part, @Nullable curl_slist headers, int takeOwnership) {
         try {
             return (int) curl_mime_headers.invokeExact(part, headers != null ? headers.address() : MemorySegment.NULL, takeOwnership);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final MemorySegment curl_multi_init() {
+        try {
+            return (MemorySegment) curl_multi_init.invokeExact();
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_add_handle(MemorySegment multi, MemorySegment curl) {
+        try {
+            return (int) curl_multi_add_handle.invokeExact(multi, curl);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_remove_handle(MemorySegment multi, MemorySegment curl) {
+        try {
+            return (int) curl_multi_remove_handle.invokeExact(multi, curl);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_perform(MemorySegment multi, MemorySegment running_handles) {
+        try {
+            return (int) curl_multi_perform.invokeExact(multi, running_handles);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_cleanup(MemorySegment multi) {
+        try {
+            return (int) curl_multi_cleanup.invokeExact(multi);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final @Nullable CURLMsg curl_multi_info_read(MemorySegment multi, MemorySegment msgs_in_queue) {
+        try {
+            return safeGetStruct((MemorySegment) curl_multi_info_read.invokeExact(multi, msgs_in_queue), CURLMsg::new);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final String curl_multi_strerror(int code) {
+        try {
+            return readNTString((MemorySegment) curl_multi_strerror.invokeExact(code));
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_timeout(MemorySegment multi, MemorySegment milliseconds) {
+        try {
+            return (int) curl_multi_timeout.invokeExact(multi, milliseconds);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_setopt(MemorySegment multi, int option, int value) {
+        try {
+            return (int) curl_multi_setopt_int.invokeExact(multi, option, value);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_setopt(MemorySegment multi, int option, long value) {
+        try {
+            return (int) curl_multi_setopt_long.invokeExact(multi, option, value);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_setopt(MemorySegment multi, int option, MemorySegment value) {
+        try {
+            return (int) curl_multi_setopt_ptr.invokeExact(multi, option, value);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
