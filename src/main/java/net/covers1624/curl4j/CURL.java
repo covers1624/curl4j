@@ -1,8 +1,6 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Library;
 import net.covers1624.curl4j.core.LibraryLoader;
-import net.covers1624.curl4j.core.NativeType;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.Arena;
@@ -51,13 +49,13 @@ public class CURL {
     }
 
     /**
-     * Get the {@link Library} handle for libCURL.
+     * Get the raw {@link LibCurl} bindings for the loaded global libCURL.
      * <p>
      * You can use this to lookup functions that are not exposed here if required.
      * <p>
      * This function will initialize curl, making it impossible to override the library name.
      *
-     * @return The {@link Library} for curl.
+     * @return The raw for libCURL.
      */
     public static LibCurl getLibCURL() {
         if (CURL == null) {
@@ -3313,7 +3311,7 @@ public class CURL {
      * @param errornum The CURLcode
      * @return The string.
      */
-    public static String curl_easy_strerror(@NativeType ("CURLcode") int errornum) {
+    public static String curl_easy_strerror(int errornum) {
         return getLibCURL().curl_easy_strerror(errornum);
     }
 

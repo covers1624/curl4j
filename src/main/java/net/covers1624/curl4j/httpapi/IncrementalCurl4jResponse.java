@@ -6,7 +6,6 @@ package net.covers1624.curl4j.httpapi;
 import net.covers1624.curl4j.CURLMsg;
 import net.covers1624.curl4j.CurlWriteCallback;
 import net.covers1624.curl4j.CurlXferInfoCallback;
-import net.covers1624.curl4j.core.Memory;
 import net.covers1624.curl4j.util.*;
 import net.covers1624.quack.net.httpapi.HeaderList;
 import net.covers1624.quack.net.httpapi.WebBody;

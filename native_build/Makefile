@@ -54,20 +54,6 @@ curl_archive=$(cache_dir)/curl-$(curl_version).tar.gz
 curl_build=$(build_dir)/curl
 curl_install=$(install_dir)/curl
 
-libffi_version=3.4.6
-libffi_archive=$(cache_dir)/libffi-$(libffi_version).tar.gz
-libffi_build=$(build_dir)/libffi
-libffi_install=$(install_dir)/libffi
-
-java_version=jdk8u392-ga
-java_archive=$(cache_dir)/jdk-$(java_version).tar.gz
-java_build=$(build_dir)/jdk
-java_install=$(install_dir)/jdk
-
-curl4j_build=$(build_dir)/curl4j
-
-libcurl4j_install=$(install_dir)/libcurl4j
-
 libcurl_install=$(install_dir)/libcurl
 
 # === state ===
@@ -80,7 +66,7 @@ CFLAGS=
 LDFLAGS=
 QUICTLS_ARGS=
 
-all: build-libcurl build-libcurl4j
+all: build-libcurl
 
 # === OS Specific configuration ===
 # Linux
@@ -424,93 +410,6 @@ build-libcurl: $(libcurl_install)
 clean-curl:
 	rm -rf $(curl_build)
 	rm -rf $(curl_install)
-
-# === libffi ===
-$(libffi_archive):
-	@"$(scripts_dir)/download.sh" "https://github.com/libffi/libffi/releases/download/v$(libffi_version)/libffi-$(libffi_version).tar.gz" "$(libffi_archive)"
-
-$(libffi_build): $(libffi_archive)
-	mkdir -p "$(build_dir)"
-	echo "Extracting libffi archive.."
-	tar -xf "$(libffi_archive)" -C "$(build_dir)"
-	mv "$(build_dir)/libffi-$(libffi_version)/" "$(libffi_build)/"
-
-$(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
-	set -e
-	cd "$(libffi_build)"
-	CC=$(C_COMPILER) CFLAGS="$(CFLAGS) -I$(linux_headers)" ./configure \
-		--host=$(HOST) \
-		--prefix="$(libffi_install)" \
-		--disable-docs \
-		--disable-shared \
-		--enable-static \
-		--with-pic
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-
-clean-libffi:
-	rm -rf $(libffi_build)
-	rm -rf $(libffi_install)
-
-setup-libffi: $(libffi_install)
-
-# === openjdk headers ===
-$(java_archive):
-	@"$(scripts_dir)/download.sh" "https://github.com/openjdk/jdk8u-dev/archive/refs/tags/$(java_version).tar.gz" "$(java_archive)"
-
-$(java_build): $(java_archive)
-	mkdir -p "$(build_dir)"
-	echo "Extracting jdk8 src archive.."
-	tar -xf "$(java_archive)" -C "$(build_dir)"
-	mv "$(build_dir)/jdk8u-dev-$(java_version)/" "$(java_build)/"
-
-$(java_install): $(java_build)
-	mkdir -p "$(java_install)/include"
-	cp "$(java_build)/jdk/src/share/javavm/export/"* "$(java_install)/include"
-	# Yes, the linux headers are, in fact, in the solaris directory.. Thanks Oracle :)
-	mkdir -p "$(java_install)/include/linux" && cp "$(java_build)/jdk/src/solaris/javavm/export/"* "$(java_install)/include/linux"
-	mkdir -p "$(java_install)/include/darwin" && cp "$(java_build)/jdk/src/macosx/javavm/export/"* "$(java_install)/include/darwin"
-	mkdir -p "$(java_install)/include/win32" && cp "$(java_build)/jdk/src/windows/javavm/export/"* "$(java_install)/include/win32"
-	# Helpers to include the correct platform *_md.h files on the correct platforms. Why doesn't this already exist?
-	cp "$(curr_dir)/jni_helpers/"* "$(java_install)/include"
-
-clean-java:
-	rm -rf $(java_build)
-	rm -rf $(java_install)
-
-setup-java: $(java_install)
-
-# === curl4j ===
-$(curl4j_build): $(COMPILER_DEPS) $(libffi_install) $(java_install)
-	mkdir -p "$(curl4j_build)"
-	cd "$(curl4j_build)"
-	CC=$(C_COMPILER) cmake \
-		-S "$(root_dir)" \
-		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc)
-	#$(MAKE) install
-
-$(libcurl4j_install): $(curl4j_build)
-	set -e
-	mkdir -p "$(libcurl4j_install)"
-	# Copy licenses
-	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi" && cp "$(libffi_build)/LICENSE" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi/LICENSE"
-ifeq (linux, $(flavour))
-	cp "$(curl4j_build)/libcurl4j.so" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j-$(LIBC).so"
-else ifeq (windows, $(flavour))
-	cp "$(curl4j_build)/libcurl4j.dll" "$(libcurl4j_install)/$(flavour)/$(arch)/curl4j.dll"
-else ifeq (macos, $(flavour))
-	cp "$(curl4j_build)/libcurl4j.dylib" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j.dylib"
-else
-$(error "I don't know where libcurl was installed to on $(flavour)")
-endif
-
-clean-curl4j:
-	rm -rf $(curl4j_build)
-	rm -rf $(libcurl4j_install)
-
-build-libcurl4j: $(libcurl4j_install)
-
 # === Misc ===
 $(linux_headers):
 	mkdir -p "$(linux_headers)"
@@ -523,8 +422,6 @@ $(linux_headers):
 		# Ubuntu GH runners seem to put it in nested toolchain dirs.
 		ln -s /usr/include/$(shell uname -m)-linux-gnu/asm "$(linux_headers)"
 	fi
-
-setup-dev: setup-java setup-libffi
 
 clean-linux:
 	rm -rf "$(linux_headers)"

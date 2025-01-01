@@ -1,12 +1,10 @@
 package net.covers1624.curl4j.util;
 
 import net.covers1624.curl4j.CurlWriteCallback;
-import net.covers1624.curl4j.core.Memory;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.foreign.MemorySegment;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;

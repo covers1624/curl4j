@@ -1,16 +1,13 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.Pointer;
 import net.covers1624.curl4j.util.CurlBindable;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 

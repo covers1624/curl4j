@@ -61,22 +61,14 @@ dependencies {
     testImplementation 'net.covers1624:Quack:0.4.9.77'
 }
 
-compileJava {
-    options.compilerArgs += ['-h', file('src/generated/c')]
-}
-
 test {
     useJUnitPlatform()
 
-    systemProperty('net.covers1624.curl4j.libcurl4j.name', file("native_build/install/libcurl4j/${os}/${arch}/${System.mapLibraryName("curl4j$suffix")}"))
     systemProperty('net.covers1624.curl4j.libcurl.name', file("native_build/install/libcurl/${os}/${arch}/${System.mapLibraryName("curl$suffix")}"))
 }
 
 jar {
     finalizedBy 'signJar'
-    from(file('native_build/install/libcurl4j')) {
-        into 'META-INF/natives/'
-    }
 }
 
 tasks.register('jarWithLibCurl', Jar) {
@@ -84,10 +76,6 @@ tasks.register('jarWithLibCurl', Jar) {
     archiveClassifier = 'libcurl'
 
     from sourceSets.main.output
-
-    from(file('native_build/install/libcurl4j')) {
-        into 'META-INF/natives/'
-    }
 
     from(file('native_build/install/libcurl')) {
         into 'META-INF/natives/'

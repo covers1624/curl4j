@@ -1,7 +1,5 @@
 package net.covers1624.curl4j;
 
-import net.covers1624.curl4j.core.NativeType;
-
 import java.lang.foreign.MemorySegment;
 
 /**
@@ -20,5 +18,5 @@ public interface CurlHeaderCallbackI {
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html">documentation</a>.
      */
-    void onHeader(String header, @NativeType ("void *") MemorySegment userdata);
+    void onHeader(String header, MemorySegment userdata);
 }

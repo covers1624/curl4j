@@ -13,8 +13,6 @@
 !build.gradle
 !settings.gradle
 
-!CMakeLists.txt
-
 !.gitignore
 !.gitmodules
 !.github

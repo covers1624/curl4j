@@ -18,16 +18,6 @@ public class LibraryLoader {
     private static final String LIB_PATH = System.getProperty("net.covers1624.curl4j.lib_path");
     private static final boolean NO_EMBEDDED = Boolean.getBoolean("net.covers1624.curl4j.no_embedded");
 
-    static {
-        loadJNILibrary(System.getProperty("net.covers1624.curl4j.libcurl4j.name", "curl4j"));
-    }
-
-    /**
-     * Called to trigger static init of our own native bindings.
-     */
-    public static void initialize() {
-    }
-
     public static SymbolLookup loadLibrary(String libName, Arena arena) throws UnsatisfiedLinkError {
         // First try absolute path.
         Path libNamePath = Path.of(libName);
@@ -62,50 +52,6 @@ public class LibraryLoader {
         // TODO better error messages, stating where we searched, etc.
         // We tried, just sendit and see what happens!
         return SymbolLookup.libraryLookup(System.mapLibraryName(libName), arena);
-    }
-
-    /**
-     * Load a JNI library.
-     *
-     * @param libName The name or path of the library to load.
-     * @throws UnsatisfiedLinkError If the library was not found.
-     */
-    public static void loadJNILibrary(String libName) throws UnsatisfiedLinkError {
-        // First try as absolute path.
-        if (Paths.get(libName).isAbsolute()) {
-            System.load(libName);
-            return;
-        }
-
-        // Next, try and use the system property extracted dir override.
-        for (String libPath : getLibPaths(libName)) {
-            if (LIB_PATH != null) {
-                Path path = Paths.get(LIB_PATH, libPath);
-                if (Files.exists(path)) {
-                    System.load(path.toAbsolutePath().toString());
-                    return;
-                }
-            }
-        }
-
-        // Try and load embedded
-        if (!NO_EMBEDDED) {
-            for (String libPath : getLibPaths(libName)) {
-                URL url = LibraryLoader.class.getResource("/META-INF/natives/" + libPath);
-                if (url != null) {
-                    Path path = getAsAbsolutePath(url);
-                    if (path == null) {
-                        path = extract(url, libName);
-                    }
-                    System.load(path.toAbsolutePath().toString());
-                    return;
-                }
-            }
-        }
-
-        // TODO better error messages, stating where we searched, etc.
-        // We tried, just sendit and see what happens!
-        System.loadLibrary(libName);
     }
 
     private static String[] getLibPaths(String libName) {
