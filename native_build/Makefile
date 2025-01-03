@@ -14,11 +14,6 @@ cache_dir=$(curr_dir)/cache
 linux_headers=$(install_dir)/linux/include
 
 # === VERSIONS ===
-musl_version=1.2.4
-musl_archive=$(cache_dir)/musl-$(musl_version).tar.gz
-musl_build=$(build_dir)/musl
-musl_install=$(install_dir)/musl
-
 zlib_version=1.3
 zlib_archive=$(cache_dir)/zlib-$(zlib_version).tar.gz
 zlib_build=$(build_dir)/zlib
@@ -87,13 +82,11 @@ all: build-libcurl build-libcurl4j
 ifeq (linux, $(flavour))
 ifeq (x64, $(arch))
 HOST=x86_64-pc-linux-$(LIBC)
-MUSL_CC=gcc
 C_COMPILER=gcc
 QUICTLS_ARGS=linux-x86_64
 else
 HOST=aarch64-pc-linux-$(LIBC)
-MUSL_CC=aarch64-linux-gnu-gcc-10
-C_COMPILER=aarch64-linux-gnu-gcc-10
+C_COMPILER=gcc
 QUICTLS_ARGS=linux-aarch64
 endif
 
@@ -130,33 +123,6 @@ endif
 else
 $(error Unknown Operating System: $(flavour))
 endif
-
-# === musl ===
-ifeq (musl, $(LIBC))
-COMPILER_DEPS=$(musl_install)
-C_COMPILER=$(musl_install)/bin/musl-gcc
-CMAKE_ARGS=-DCMAKE_FIND_ROOT_PATH="$(musl_install)"
-
-$(musl_archive):
-	@"$(scripts_dir)/download.sh" "https://musl.libc.org/releases/musl-$(musl_version).tar.gz" "$(musl_archive)"
-
-$(musl_build): $(musl_archive)
-	mkdir -p "$(build_dir)"
-	echo "Extracting musl archive.."
-	tar -xf "$(musl_archive)" -C "$(build_dir)"
-	mv "$(build_dir)/musl-$(musl_version)/" "$(musl_build)"
-
-$(musl_install): $(musl_build)
-	set -e
-	cd "$(musl_build)"
-	CC="$(MUSL_CC)" ./configure --prefix="$(musl_install)"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-endif
-
-clean-musl:
-	rm -rf "$(musl_build)"
-	rm -rf "$(musl_install)"
 
 # === zlib ===
 $(zlib_archive):
@@ -529,7 +495,7 @@ setup-dev: setup-java setup-libffi
 clean-linux:
 	rm -rf "$(linux_headers)"
 
-clean: clean-linux clean-musl clean-zlib clean-brotli clean-nghttp2 clean-ngtcp2 clean-nghttp3
+clean: clean-linux clean-zlib clean-brotli clean-nghttp2 clean-ngtcp2 clean-nghttp3
 	rm -rf "$(build_dir)"
 	rm -rf "$(install_dir)"
 
