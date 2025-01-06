@@ -137,16 +137,23 @@ $(zlib_build): $(zlib_archive)
 $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
 	set -e
 	cd "$(zlib_build)"
-	CC="$(C_COMPILER)" CFLAGS="-fPIC $(CFLAGS)" \
-		./configure \
-		--static \
-		--prefix="$(zlib_install)"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	CC="$(C_COMPILER)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(zlib_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		$(CMAKE_ARGS)
+	$(MAKE) -j $(nproc) install
+	# We can't make zlib build without shared libraries, so we nuke them.
+	rm "$(zlib_install)"/lib*/*.so* || true
+	rm "$(zlib_install)"/lib*/*.dylib || true
+	rm "$(zlib_install)"/lib*/*.dll.a || true
+	rm "$(zlib_install)"/bin*/*.dll || true
 
 clean-zlib:
 	rm -rf $(zlib_build)
 	rm -rf $(zlib_install)
+
+build-zlib: $(zlib_install)
 
 # === brotli ===
 $(brotli_archive):
