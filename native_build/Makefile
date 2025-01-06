@@ -293,42 +293,6 @@ $(curl_build): $(curl_archive)
 	tar -xf "$(curl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/curl-$(curl_version)/" "$(curl_build)/"
 	cd "$(curl_build)"
-
-# TODO On Linux we use automake, on Windows/Mingw/mac we use cmake.
-#      As of writing this the following issues are present:
-# 		- Windows/Mingw on automake does not emit a libcurl.dll, at all.
-#		- Linux-x64 on cmake works just fine
-#		- Linux-aarch64 on cmake does not link correctly and emits a broken assembly.
-#		  - During OpenSSL static init, several calls to sigsetjmp are made, however, it incorrectly links setjmp.
-#			Ultimately causing a Bus error as execution runs off into fucking narnia.
-ifneq (,$(findstring linux, $(HOST)))
-$(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
-	set -e
-	cd "$(curl_build)"
-	patch -N -p1 -r /dev/null -i "$(patches_dir)/curl/patch-0000-brotli-1.1.0-static.patch"
-	autoreconf -fi
-	# TODO, Required due to the hack required for mingw bellow.
-	rm "$(quictls_install)"/lib*/*.so || true
-	./configure \
-		CC="$(C_COMPILER)" \
-		--host=$(HOST) \
-		--prefix="$(curl_install)" \
-		--with-zlib=$(zlib_install) \
-		--with-brotli=$(brotli_install) \
-		--with-openssl=$(quictls_install) \
-		--with-nghttp2=$(nghttp2_install) \
-		--with-ngtcp2=$(ngtcp2_install) \
-		--with-nghttp3=$(nghttp3_install) \
-		--enable-pthreads \
-		--disable-manual \
-		--disable-static \
-		--without-zstd \
-		--without-librtmp \
-		--without-libidn2 \
-		--without-libpsl
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-else
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
@@ -337,6 +301,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
 	rm "$(quictls_install)"/lib*/*.dll.a || true
 	rm "$(quictls_install)"/lib*/*.dylib || true
+	rm "$(quictls_install)"/lib*/*.so || true
  	# Weird hack for windows, cmake doesn't search the lib64 directory?
  	# Oddly this doesn't occurr on GH runners, only locally and I really don't want to
  	# loose any more sanity reading cmake scripts to figure out why.
@@ -369,7 +334,6 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		-G "Unix Makefiles"
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
-endif
 
 $(libcurl_install): $(curl_install)
 	set -e
