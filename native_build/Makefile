@@ -195,10 +195,10 @@ $(quictls_build): $(quictls_archive)
 	tar -xf "$(quictls_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/openssl-openssl-$(quictls_version)/" "$(quictls_build)/"
 
-$(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
+$(quictls_install): $(COMPILER_DEPS) $(quictls_build)
 	set -e
 	cd "$(quictls_build)"
-	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" WINDRES=$(WINDRES) ./Configure \
 		no-tests \
 		-fpic \
 		--prefix=$(quictls_install) \
