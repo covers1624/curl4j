@@ -207,6 +207,11 @@ $(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
 		$(QUICTLS_ARGS)
 	$(MAKE) -j $(nproc)
 	$(MAKE) install_sw
+	# Weird hack. Sometimes CMake doesn't locate things in the lib, vs lib64 directories correctly.
+    # We just copy the directory. Usually the lib64 dir is symlinked to lib, or vice versa on a real system. (depending on distro)
+	if [ ! -d "$(quictls_install)/lib" ]; then
+		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
+	fi
 
 clean-quictls:
 	rm -rf $(quictls_build)
@@ -256,21 +261,21 @@ $(ngtcp2_build): $(ngtcp2_archive)
 $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 	set -e
 	cd "$(ngtcp2_build)"
-	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--prefix="$(ngtcp2_install)" \
-		--with-pic \
-		--enable-lib-only \
-		--disable-shared \
-		--with-jemalloc=no \
-		--with-openssl \
-		PKG_CONFIG_PATH="$(quictls_install)/lib64/pkgconfig:$(quictls_install)/lib/pkgconfig"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	export OPENSSL_ROOT_DIR=$(quictls_install)
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(ngtcp2_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		-DENABLE_OPENSSL=ON \
+		$(CMAKE_ARGS)
+	$(MAKE) -j $(nproc) install
 
 clean-ngtcp2:
 	rm -rf $(ngtcp2_build)
 	rm -rf $(ngtcp2_install)
+
+build-ngtcp2: $(ngtcp2_install)
 
 # === nghttp3 ===
 $(nghttp3_archive):
@@ -318,12 +323,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 	rm "$(quictls_install)"/lib*/*.dll.a || true
 	rm "$(quictls_install)"/lib*/*.dylib || true
 	rm "$(quictls_install)"/lib*/*.so || true
- 	# Weird hack for windows, cmake doesn't search the lib64 directory?
- 	# Oddly this doesn't occurr on GH runners, only locally and I really don't want to
- 	# loose any more sanity reading cmake scripts to figure out why.
-	if [ ! -d "$(quictls_install)/lib" ]; then
-		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
-	fi
+
 	export CC="$(C_COMPILER)"
 	export CXX="$(CXX_COMPILER)"
 	export LDFLAGS="$(LDFLAGS)"
