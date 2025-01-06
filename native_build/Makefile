@@ -212,6 +212,10 @@ $(quictls_install): $(COMPILER_DEPS) $(quictls_build)
 	if [ ! -d "$(quictls_install)/lib" ]; then
 		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
 	fi
+	# Nuke the dynamic libs so we always use the static libs.
+	rm "$(quictls_install)"/lib*/*.dll.a || true
+	rm "$(quictls_install)"/lib*/*.dylib || true
+	rm "$(quictls_install)"/lib*/*.so || true
 
 clean-quictls:
 	rm -rf $(quictls_build)
@@ -319,12 +323,6 @@ $(curl_build): $(curl_archive)
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
-	# TODO This is a hack. Find a way to nuke this.
-	# 	   This forces curl to link against the .a files instead of the .dll.a files. Thus they are actually static linked in.
-	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
-	rm "$(quictls_install)"/lib*/*.dll.a || true
-	rm "$(quictls_install)"/lib*/*.dylib || true
-	rm "$(quictls_install)"/lib*/*.so || true
 
 	export CC="$(C_COMPILER)"
 	export CXX="$(CXX_COMPILER)"
