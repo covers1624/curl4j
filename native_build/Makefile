@@ -83,10 +83,12 @@ ifeq (linux, $(flavour))
 ifeq (x64, $(arch))
 HOST=x86_64-pc-linux-$(LIBC)
 C_COMPILER=gcc
+CXX_COMPILER=g++
 QUICTLS_ARGS=linux-x86_64
 else
 HOST=aarch64-pc-linux-$(LIBC)
 C_COMPILER=gcc
+CXX_COMPILER=g++
 QUICTLS_ARGS=linux-aarch64
 endif
 
@@ -99,6 +101,7 @@ endif
 
 HOST=x86_64-w64-mingw32
 C_COMPILER=x86_64-w64-mingw32-gcc-posix
+CXX_COMPILER=x86_64-w64-mingw32-g++-posix
 WINDRES=x86_64-w64-mingw32-windres
 CMAKE_ARGS=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
 LDFLAGS=--static -static-libgcc
@@ -107,6 +110,7 @@ QUICTLS_ARGS=mingw64
 # Macos
 else ifeq (macos, $(flavour))
 C_COMPILER=clang
+CXX_COMPILER=clang
 
 ifeq (x64, $(arch))
 HOST=x86_64-apple-darwin20.6.0
@@ -137,7 +141,7 @@ $(zlib_build): $(zlib_archive)
 $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
 	set -e
 	cd "$(zlib_build)"
-	CC="$(C_COMPILER)" cmake \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(zlib_install)" \
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -168,7 +172,7 @@ $(brotli_build): $(brotli_archive)
 $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
 	set -e
 	cd "$(brotli_build)"
-	CC="$(C_COMPILER)" cmake \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(brotli_install)" \
 		-DBUILD_SHARED_LIBS=OFF \
@@ -194,7 +198,7 @@ $(quictls_build): $(quictls_archive)
 $(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
 	set -e
 	cd "$(quictls_build)"
-	CC="$(C_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
 		no-tests \
 		-fpic \
 		--prefix=$(quictls_install) \
@@ -221,7 +225,7 @@ $(nghttp2_build): $(nghttp2_archive)
 $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 	set -e
 	cd "$(nghttp2_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(nghttp2_install)" \
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -252,7 +256,7 @@ $(ngtcp2_build): $(ngtcp2_archive)
 $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 	set -e
 	cd "$(ngtcp2_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(ngtcp2_install)" \
 		--with-pic \
@@ -281,7 +285,7 @@ $(nghttp3_build): $(nghttp3_archive)
 $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
 	set -e
 	cd "$(nghttp3_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(nghttp3_install)" \
 		--disable-shared \
@@ -304,6 +308,7 @@ $(curl_build): $(curl_archive)
 	tar -xf "$(curl_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/curl-$(curl_version)/" "$(curl_build)/"
 	cd "$(curl_build)"
+
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
@@ -320,6 +325,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
 	fi
 	export CC="$(C_COMPILER)"
+	export CXX="$(CXX_COMPILER)"
 	export LDFLAGS="$(LDFLAGS)"
 	export OpenSSL_ROOT=$(quictls_install)
 	export OPENSSL_ROOT_DIR=$(quictls_install)
@@ -385,7 +391,7 @@ $(libffi_build): $(libffi_archive)
 $(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
 	set -e
 	cd "$(libffi_build)"
-	CC=$(C_COMPILER) CFLAGS="$(CFLAGS) -I$(linux_headers)" ./configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS) -I$(linux_headers)" ./configure \
 		--host=$(HOST) \
 		--prefix="$(libffi_install)" \
 		--disable-docs \
@@ -431,7 +437,7 @@ setup-java: $(java_install)
 $(curl4j_build): $(COMPILER_DEPS) $(libffi_install) $(java_install)
 	mkdir -p "$(curl4j_build)"
 	cd "$(curl4j_build)"
-	CC=$(C_COMPILER) cmake \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
 		-S "$(root_dir)" \
 		$(CMAKE_ARGS)
 	$(MAKE) -j $(nproc)
