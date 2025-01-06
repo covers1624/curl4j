@@ -290,18 +290,20 @@ $(nghttp3_build): $(nghttp3_archive)
 $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
 	set -e
 	cd "$(nghttp3_build)"
-	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--prefix="$(nghttp3_install)" \
-		--disable-shared \
-		--with-pic \
-		--enable-lib-only
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(nghttp3_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_LIB_ONLY=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		$(CMAKE_ARGS)
+	$(MAKE) -j $(nproc) install
 
 clean-nghttp3:
 	rm -rf $(nghttp3_build)
 	rm -rf $(nghttp3_install)
+
+build-nghttp3: $(nghttp3_install)
 
 # === curl ===
 $(curl_archive):
