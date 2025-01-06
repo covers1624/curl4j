@@ -221,19 +221,23 @@ $(nghttp2_build): $(nghttp2_archive)
 $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 	set -e
 	cd "$(nghttp2_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--with-pic \
-		--enable-lib-only \
-		--disable-shared \
-		--disable-python-bindings \
-		--prefix="$(nghttp2_install)"
+	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(nghttp2_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_LIB_ONLY=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		-DENABLE_STATIC_LIB=ON \
+		-DENABLE_DOC=OFF \
+  		$(CMAKE_ARGS)
 	$(MAKE) -j $(nproc)
 	$(MAKE) install
 
 clean-nghttp2:
 	rm -rf $(nghttp2_build)
 	rm -rf $(nghttp2_install)
+
+build-nghttp2: $(nghttp2_install)
 
 # === ngtcp2 ===
 $(ngtcp2_archive):
