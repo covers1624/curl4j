@@ -177,13 +177,13 @@ $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
 		-DCMAKE_INSTALL_PREFIX="$(brotli_install)" \
 		-DBUILD_SHARED_LIBS=OFF \
 		$(CMAKE_ARGS)
-	cmake --build . --config Release
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	$(MAKE) -j $(nproc) install
 
 clean-brotli:
 	rm -rf $(brotli_build)
 	rm -rf $(brotli_install)
+
+build-brotli: $(brotli_install)
 
 # === QuicTLS/OpenSSL ===
 $(quictls_archive):
@@ -221,6 +221,8 @@ clean-quictls:
 	rm -rf $(quictls_build)
 	rm -rf $(quictls_install)
 
+build-quictls: $(quictls_install)
+
 # === nghttp2 ===
 $(nghttp2_archive):
 	@"$(scripts_dir)/download.sh" "https://github.com/nghttp2/nghttp2/releases/download/v$(nghttp2_version)/nghttp2-$(nghttp2_version).tar.gz" "$(nghttp2_archive)"
@@ -243,8 +245,7 @@ $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 		-DENABLE_STATIC_LIB=ON \
 		-DENABLE_DOC=OFF \
   		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	$(MAKE) -j $(nproc) install
 
 clean-nghttp2:
 	rm -rf $(nghttp2_build)
@@ -349,8 +350,7 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		-DCURL_USE_LIBSSH2=OFF \
 		$(CMAKE_ARGS) \
 		-G "Unix Makefiles"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	$(MAKE) -j $(nproc) install
 
 $(libcurl_install): $(curl_install)
 	set -e
@@ -398,8 +398,7 @@ $(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
 		--disable-shared \
 		--enable-static \
 		--with-pic
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	$(MAKE) -j $(nproc) install
 
 clean-libffi:
 	rm -rf $(libffi_build)
