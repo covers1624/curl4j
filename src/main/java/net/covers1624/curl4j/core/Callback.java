@@ -158,7 +158,6 @@ public abstract class Callback implements AutoCloseable {
 
     // Invoked by JNI in native land, simply forwards the callback through.
     private void ffi_callback(long ret, long args) throws Throwable {
-        assert delegate != null;
         try {
             delegate.invoke(ret, args);
         } catch (Throwable ex) {

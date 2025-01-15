@@ -3146,7 +3146,9 @@ public class CURL {
      */
     @Nullable
     public static String curl_easy_getinfo_String(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
-        assert (opt & CURLINFO_TYPEMASK) == CURLINFO_STRING;
+        if ((opt & CURLINFO_TYPEMASK) != CURLINFO_STRING) {
+            throw new IllegalArgumentException("Provided 'opt' does not return a string type.");
+        }
 
         try (Memory.Stack stack = Memory.pushStack()) {
             Pointer pointer = stack.mallocPointer();
@@ -3169,7 +3171,10 @@ public class CURL {
      */
     public static long curl_easy_getinfo_long(@NativeType ("CURL *") long curl, @NativeType ("CURLINFO") int opt) {
         boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        boolean isOffT = (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        if (!isLong && !isOffT) {
+            throw new IllegalArgumentException("Provided 'opt' does not return a long type.");
+        }
 
         try (Memory.Stack stack = Memory.pushStack()) {
             Pointer pointer = stack.mallocPointer();
