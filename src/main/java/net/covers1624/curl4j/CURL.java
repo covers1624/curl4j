@@ -241,7 +241,7 @@ public class CURL {
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_LOW_SPEED_TIME.html">documentation</a>.
      */
-    public static final int CURLOPT_LOW_SPEED_TIME = CURLOPTTYPE_LONG + 19;
+    public static final int CURLOPT_LOW_SPEED_TIME = CURLOPTTYPE_LONG + 20;
 
     /**
      * Set the continuation offset.
