@@ -337,6 +337,12 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
 	rm "$(quictls_install)"/lib*/*.dll.a || true
 	rm "$(quictls_install)"/lib*/*.dylib || true
+ 	# Weird hack for windows, cmake doesn't search the lib64 directory?
+ 	# Oddly this doesn't occurr on GH runners, only locally and I really don't want to
+ 	# loose any more sanity reading cmake scripts to figure out why.
+	if [ ! -d "$(quictls_install)/lib" ]; then
+		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
+	fi
 	export CC="$(C_COMPILER)"
 	export LDFLAGS="$(LDFLAGS)"
 	export OpenSSL_ROOT=$(quictls_install)
