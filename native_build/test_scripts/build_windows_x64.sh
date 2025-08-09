@@ -6,7 +6,7 @@ set -e
 
 runInDocker() {
   apt update
-  apt install -y --no-install-recommends curl ca-certificates build-essential cmake pkg-config autoconf autotools-dev automake libtool mingw-w64 wine
+  apt install -y --no-install-recommends curl ca-certificates build-essential cmake ninja-build pkg-config autoconf mingw-w64 wine
   useradd -u 1000 asdf
   PLATFORM=windows_x64 runuser -u asdf make clean
   PLATFORM=windows_x64 runuser -u asdf make build-libcurl

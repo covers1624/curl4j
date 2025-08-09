@@ -145,8 +145,9 @@ $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(zlib_install)" \
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-GNinja \
 		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc) install
+	ninja install
 	# We can't make zlib build without shared libraries, so we nuke them.
 	rm "$(zlib_install)"/lib*/*.so* || true
 	rm "$(zlib_install)"/lib*/*.dylib || true
@@ -176,8 +177,9 @@ $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(brotli_install)" \
 		-DBUILD_SHARED_LIBS=OFF \
+		-GNinja \
 		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc) install
+	ninja install
 
 clean-brotli:
 	rm -rf $(brotli_build)
@@ -244,8 +246,9 @@ $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 		-DENABLE_SHARED_LIB=OFF \
 		-DENABLE_STATIC_LIB=ON \
 		-DENABLE_DOC=OFF \
-  		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc) install
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 clean-nghttp2:
 	rm -rf $(nghttp2_build)
@@ -273,8 +276,9 @@ $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 		-DENABLE_SHARED_LIB=OFF \
 		-DENABLE_OPENSSL=ON \
+		-GNinja \
 		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc) install
+	ninja install
 
 clean-ngtcp2:
 	rm -rf $(ngtcp2_build)
@@ -301,8 +305,9 @@ $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 		-DENABLE_LIB_ONLY=ON \
 		-DENABLE_SHARED_LIB=OFF \
+		-GNinja \
 		$(CMAKE_ARGS)
-	$(MAKE) -j $(nproc) install
+	ninja install
 
 clean-nghttp3:
 	rm -rf $(nghttp3_build)
@@ -349,8 +354,9 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		-DUSE_NGTCP2=ON \
 		-DCURL_USE_LIBSSH2=OFF \
 		$(CMAKE_ARGS) \
-		-G "Unix Makefiles"
-	$(MAKE) -j $(nproc) install
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 $(libcurl_install): $(curl_install)
 	set -e
