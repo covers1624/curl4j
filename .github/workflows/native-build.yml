@@ -50,7 +50,7 @@ jobs:
       - name: "Setup"
         run: |
           apk update
-          apk add git runuser build-base cmake samurai perl linux-headers pkgconf
+          apk add git curl runuser build-base cmake samurai perl linux-headers pkgconf
       - uses: actions/checkout@v4
       - name: Build
         run: |
@@ -133,7 +133,7 @@ jobs:
       - name: "Setup"
         run: |
           apk update
-          apk add git runuser build-base cmake samurai perl linux-headers pkgconf
+          apk add git curl runuser build-base cmake samurai perl linux-headers pkgconf
       - uses: actions/checkout@v4
       - name: Build
         run: |
