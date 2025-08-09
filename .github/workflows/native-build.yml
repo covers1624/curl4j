@@ -129,11 +129,23 @@ jobs:
     runs-on: ubuntu-22.04-arm
     container:
       image: alpine:3.21.0
+      # Mount rw fs over readonly container mount folder.
+      volumes:
+        - /tmp/node20:/__e/node20
     steps:
       - name: "Setup"
         run: |
           apk update
-          apk add git curl runuser build-base cmake samurai perl linux-headers pkgconf
+          apk add git curl
+          apk add runuser build-base cmake samurai perl linux-headers pkgconf
+          
+          # JavaScript actions on arm64 alpine are currently unsupported by GitHub.
+          # However, we can trivially add it by installing node ourselves, and faking not being alpine.
+          apk add nodejs
+          mkdir -p /__e/node20/bin/
+          ln -s /usr/bin/node /__e/node20/bin/
+          ln -s /usr/bin/npm /__e/node20/bin/
+          sed -i 's/ID=alpine/ID=unknown/' /usr/lib/os-release
       - uses: actions/checkout@v4
       - name: Build
         run: |
@@ -151,9 +163,23 @@ jobs:
     needs: build_linux_arm64-musl
     container:
       image: alpine:3.21.0
+      # Mount rw fs over readonly container mount folder.
+      volumes:
+        - /tmp/node20:/__e/node20
     steps:
       - name: "Setup"
-        run: apk update && apk add openjdk8 openjdk11 openjdk17 git
+        run: |
+          apk update
+          apk add git 
+          apk add openjdk8 openjdk11 openjdk17
+          
+          # JavaScript actions on arm64 alpine are currently unsupported by GitHub.
+          # However, we can trivially add it by installing node ourselves, and faking not being alpine.
+          apk add nodejs
+          mkdir -p /__e/node20/bin/
+          ln -s /usr/bin/node /__e/node20/bin/
+          ln -s /usr/bin/npm /__e/node20/bin/
+          sed -i 's/ID=alpine/ID=unknown/' /usr/lib/os-release
       - uses: actions/checkout@v4
       - name: Gradle Cache
         uses: actions/cache@v4
