@@ -44,7 +44,13 @@ jobs:
 
   build_linux_x64-musl:
     runs-on: ubuntu-22.04
+    container:
+      image: alpine:3.21.0
     steps:
+      - name: "Setup"
+        run: |
+          apk update
+          apk add git runuser build-base cmake samurai perl linux-headers pkgconf
       - uses: actions/checkout@v4
       - name: Build
         run: |
@@ -61,7 +67,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build_linux_x64-musl
     container:
-      image: alpine:3.18.5
+      image: alpine:3.21.0
     steps:
       - name: "Setup"
         run: apk update && apk add openjdk8 openjdk11 openjdk17 git
@@ -86,13 +92,9 @@ jobs:
           ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
 
   build_linux_arm64-gnu:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies.
-        run: |
-          sudo apt update
-          sudo apt install gcc-10-aarch64-linux-gnu
       - name: Build
         run: |
           cd native_build
@@ -105,7 +107,7 @@ jobs:
             native_build/install/libcurl*
 
   test_linux_arm64-gnu:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     needs: build_linux_arm64-gnu
     steps:
       - uses: actions/checkout@v4
@@ -119,34 +121,58 @@ jobs:
         with:
           name: linux_arm64-gnu
           path: native_build/install/
-      - uses: uraimo/run-on-arch-action@v2
-        name: Check
-        with:
-          arch: aarch64
-          distro: ubuntu22.04
-          install: apt update && apt install -y openjdk-8-jdk-headless git
-          run: |
-            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64
-            ./gradlew check -si
+      - name: "Check"
+        run: |
+          ./gradlew check -si
 
   build_linux_arm64-musl:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
+    container:
+      image: alpine:3.21.0
     steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies.
+      - name: "Setup"
         run: |
-          sudo apt update
-          sudo apt install gcc-10-aarch64-linux-gnu
+          apk update
+          apk add git runuser build-base cmake samurai perl linux-headers pkgconf
+      - uses: actions/checkout@v4
       - name: Build
         run: |
           cd native_build
-          PLATFORM=linux_arm64 LIBC=musl make build-libcurl4j
+          PLATFORM=linux_arm64 LIBC=musl make
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux_arm64-musl
           path: |
             native_build/install/libcurl*
+
+  test_linux_arm64-musl:
+    runs-on: ubuntu-22.04-arm
+    needs: build_linux_arm64-musl
+    container:
+      image: alpine:3.21.0
+    steps:
+      - name: "Setup"
+        run: apk update && apk add openjdk8 openjdk11 openjdk17 git
+      - uses: actions/checkout@v4
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux_arm64-musl
+          path: native_build/install/
+      - name: "Check"
+        run: |
+          export JDK8=/usr/lib/jvm/java-8-openjdk/
+          export JDK11=/usr/lib/jvm/java-11-openjdk/
+          export JDK17=/usr/lib/jvm/java-17-openjdk/
+          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
+          export LIBC=musl
+          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
 
   build_windows_x64:
     runs-on: ubuntu-22.04
