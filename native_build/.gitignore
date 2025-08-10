@@ -3,6 +3,7 @@
 !jni_helpers/
 !patches/
 !scripts/
+!test_scripts/
 
 !.gitignore
 !Makefile
