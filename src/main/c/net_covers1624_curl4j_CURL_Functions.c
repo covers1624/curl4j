@@ -139,6 +139,10 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mul
     return (jint) ((int (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) runningHandles);
 }
 
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1wait(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong extraFds, jint nExtraFds, jint timeout, jlong numFds) {
+return (jint) ((int (*)(uintptr_t, uintptr_t, unsigned int, int, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) extraFds, (unsigned int) nExtraFds, (int) timeout, (uintptr_t) numFds);
+}
+
 JNIEXPORT jlong JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1info_1read(JNIEnv *env, jclass clazz, jlong func, jlong multi, jlong msgsInQueue) {
     return (jlong) ((uintptr_t (*)(uintptr_t, uintptr_t)) (uintptr_t) func)((uintptr_t) multi, (uintptr_t) msgsInQueue);
 }

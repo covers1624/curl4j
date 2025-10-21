@@ -3469,6 +3469,18 @@ public class CURL {
     }
 
     /**
+     * Poll on the given curl handle until data is available.
+     *
+     * @param multi      The multi handle.
+     * @param timeout    A timeout to wait for.
+     * @param numHandles The number of handles with events.
+     * @return The CURLMcode response.
+     */
+    public static @NativeType ("CURLMcode") int curl_multi_wait(long multi, int timeout, Pointer numHandles) {
+        return ncurl_multi_wait(curl_multi_wait, multi, Memory.NULL, 0, timeout, numHandles.address);
+    }
+
+    /**
      * Read a message from the multi session.
      * <p>
      * See the curl <a href="https://curl.se/libcurl/c/curl_multi_info_read.html">documentation</a>.
@@ -3578,6 +3590,7 @@ public class CURL {
         public static final long curl_multi_add_handle = CURL.getFunction("curl_multi_add_handle");
         public static final long curl_multi_remove_handle = CURL.getFunction("curl_multi_remove_handle");
         public static final long curl_multi_perform = CURL.getFunction("curl_multi_perform");
+        public static final long curl_multi_wait = CURL.getFunction("curl_multi_wait");
         public static final long curl_multi_info_read = CURL.getFunction("curl_multi_info_read");
         public static final long curl_multi_timeout = CURL.getFunction("curl_multi_timeout");
         public static final long curl_multi_setopt = CURL.getFunction("curl_multi_setopt");
@@ -3614,6 +3627,7 @@ public class CURL {
         public static native int ncurl_multi_add_handle(long func, long multi, long curl);
         public static native int ncurl_multi_remove_handle(long func, long multi, long curl);
         public static native int ncurl_multi_perform(long func, long multi, long runningHandlesPtr);
+        public static native int ncurl_multi_wait(long func, long multi, long extraFds, int nExtraFds, int timeout, long numFds);
         public static native long ncurl_multi_info_read(long func, long multi, long msgsInQueuePtr);
         public static native int ncurl_multi_timeout(long func, long multi, long millisecondsPtr);
         public static native int ncurl_multi_setopt(long func, long multi, int opt, long value);

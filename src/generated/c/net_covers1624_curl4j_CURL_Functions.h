@@ -241,6 +241,14 @@ JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1mul
 
 /*
  * Class:     net_covers1624_curl4j_CURL_Functions
+ * Method:    ncurl_multi_wait
+ * Signature: (JJJIIJ)I
+ */
+JNIEXPORT jint JNICALL Java_net_covers1624_curl4j_CURL_00024Functions_ncurl_1multi_1wait
+  (JNIEnv *, jclass, jlong, jlong, jlong, jint, jint, jlong);
+
+/*
+ * Class:     net_covers1624_curl4j_CURL_Functions
  * Method:    ncurl_multi_info_read
  * Signature: (JJJ)J
  */

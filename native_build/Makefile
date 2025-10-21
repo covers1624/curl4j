@@ -246,6 +246,7 @@ $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 		-DENABLE_SHARED_LIB=OFF \
 		-DENABLE_STATIC_LIB=ON \
 		-DENABLE_DOC=OFF \
+		-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 		-GNinja \
 		$(CMAKE_ARGS)
 	ninja install
@@ -276,6 +277,7 @@ $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 		-DENABLE_SHARED_LIB=OFF \
 		-DENABLE_OPENSSL=ON \
+		-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 		-GNinja \
 		$(CMAKE_ARGS)
 	ninja install
