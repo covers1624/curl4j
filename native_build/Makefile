@@ -14,7 +14,7 @@ cache_dir=$(curr_dir)/cache
 linux_headers=$(install_dir)/linux/include
 
 # === VERSIONS ===
-zlib_version=1.3
+zlib_version=1.3.1
 zlib_archive=$(cache_dir)/zlib-$(zlib_version).tar.gz
 zlib_build=$(build_dir)/zlib
 zlib_install=$(install_dir)/zlib
