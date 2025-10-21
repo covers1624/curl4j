@@ -49,7 +49,7 @@ curl_archive=$(cache_dir)/curl-$(curl_version).tar.gz
 curl_build=$(build_dir)/curl
 curl_install=$(install_dir)/curl
 
-libffi_version=3.4.6
+libffi_version=3.5.2
 libffi_archive=$(cache_dir)/libffi-$(libffi_version).tar.gz
 libffi_build=$(build_dir)/libffi
 libffi_install=$(install_dir)/libffi
