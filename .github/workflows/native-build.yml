@@ -34,11 +34,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 23
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
+          java-version: '25'
       - uses: actions/download-artifact@v4
         with:
           name: linux_x64-gnu
@@ -75,9 +75,11 @@ jobs:
       image: alpine:3.21.0
     steps:
       - name: "Setup"
-        run: | 
-          apk update && apk add git
-          apk add openjdk23 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing
+        run: |
+          wget -O /etc/apk/keys/adoptium.rsa.pub https://packages.adoptium.net/artifactory/api/security/keypair/public/repositories/apk
+          echo 'https://packages.adoptium.net/artifactory/apk/alpine/main' >> /etc/apk/repositories
+          apk update
+          apk add git temurin-25-jdk
       - uses: actions/checkout@v4
       - name: Gradle Cache
         uses: actions/cache@v4
@@ -91,10 +93,9 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          export JDK23=/usr/lib/jvm/java-23-openjdk/
-          export JAVA_HOME=/usr/lib/jvm/java-23-openjdk/
+          export JAVA_HOME=/usr/lib/jvm/java-25-temurin/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK23
+          ./gradlew check -si -Porg.gradle.native=false
 
   build_linux_arm64-gnu:
     runs-on: ubuntu-22.04-arm
@@ -174,9 +175,10 @@ jobs:
     steps:
       - name: "Setup"
         run: |
+          wget -O /etc/apk/keys/adoptium.rsa.pub https://packages.adoptium.net/artifactory/api/security/keypair/public/repositories/apk
+          echo 'https://packages.adoptium.net/artifactory/apk/alpine/main' >> /etc/apk/repositories
           apk update
-          apk add git 
-          apk add openjdk8 openjdk11 openjdk17
+          apk add git temurin-25-jdk
           
           # JavaScript actions on arm64 alpine are currently unsupported by GitHub.
           # However, we can trivially add it by installing node ourselves, and faking not being alpine.
@@ -198,12 +200,9 @@ jobs:
           path: native_build/install/
       - name: "Check"
         run: |
-          export JDK8=/usr/lib/jvm/java-8-openjdk/
-          export JDK11=/usr/lib/jvm/java-11-openjdk/
-          export JDK17=/usr/lib/jvm/java-17-openjdk/
-          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
+          export JAVA_HOME=/usr/lib/jvm/java-25-temurin/
           export LIBC=musl
-          ./gradlew check -si -Porg.gradle.native=false -Porg.gradle.java.installations.fromEnv=JDK8,JDK11,JDK17
+          ./gradlew check -si -Porg.gradle.native=false
 
   build_windows_x64:
     runs-on: ubuntu-22.04
@@ -235,11 +234,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 23
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
+          java-version: '25'
       - uses: actions/download-artifact@v4
         with:
           name: windows_x64
@@ -278,11 +277,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 23
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
+          java-version: '25'
           architecture: 'x64'
       - uses: actions/download-artifact@v4
         with:
@@ -322,11 +321,11 @@ jobs:
           path: ~/.gradle
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-
-      - name: Setup Java 23
+      - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
+          java-version: '25'
           architecture: 'aarch64'
       - uses: actions/download-artifact@v4
         with:
