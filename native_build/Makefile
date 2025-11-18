@@ -14,12 +14,7 @@ cache_dir=$(curr_dir)/cache
 linux_headers=$(install_dir)/linux/include
 
 # === VERSIONS ===
-musl_version=1.2.4
-musl_archive=$(cache_dir)/musl-$(musl_version).tar.gz
-musl_build=$(build_dir)/musl
-musl_install=$(install_dir)/musl
-
-zlib_version=1.3
+zlib_version=1.3.1
 zlib_archive=$(cache_dir)/zlib-$(zlib_version).tar.gz
 zlib_build=$(build_dir)/zlib
 zlib_install=$(install_dir)/zlib
@@ -54,6 +49,20 @@ curl_archive=$(cache_dir)/curl-$(curl_version).tar.gz
 curl_build=$(build_dir)/curl
 curl_install=$(install_dir)/curl
 
+libffi_version=3.5.2
+libffi_archive=$(cache_dir)/libffi-$(libffi_version).tar.gz
+libffi_build=$(build_dir)/libffi
+libffi_install=$(install_dir)/libffi
+
+java_version=jdk8u392-ga
+java_archive=$(cache_dir)/jdk-$(java_version).tar.gz
+java_build=$(build_dir)/jdk
+java_install=$(install_dir)/jdk
+
+curl4j_build=$(build_dir)/curl4j
+
+libcurl4j_install=$(install_dir)/libcurl4j
+
 libcurl_install=$(install_dir)/libcurl
 
 # === state ===
@@ -73,13 +82,13 @@ all: build-libcurl
 ifeq (linux, $(flavour))
 ifeq (x64, $(arch))
 HOST=x86_64-pc-linux-$(LIBC)
-MUSL_CC=gcc
 C_COMPILER=gcc
+CXX_COMPILER=g++
 QUICTLS_ARGS=linux-x86_64
 else
 HOST=aarch64-pc-linux-$(LIBC)
-MUSL_CC=aarch64-linux-gnu-gcc-10
-C_COMPILER=aarch64-linux-gnu-gcc-10
+C_COMPILER=gcc
+CXX_COMPILER=g++
 QUICTLS_ARGS=linux-aarch64
 endif
 
@@ -92,6 +101,7 @@ endif
 
 HOST=x86_64-w64-mingw32
 C_COMPILER=x86_64-w64-mingw32-gcc-posix
+CXX_COMPILER=x86_64-w64-mingw32-g++-posix
 WINDRES=x86_64-w64-mingw32-windres
 CMAKE_ARGS=-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32
 LDFLAGS=--static -static-libgcc
@@ -100,6 +110,7 @@ QUICTLS_ARGS=mingw64
 # Macos
 else ifeq (macos, $(flavour))
 C_COMPILER=clang
+CXX_COMPILER=clang
 
 ifeq (x64, $(arch))
 HOST=x86_64-apple-darwin20.6.0
@@ -117,33 +128,6 @@ else
 $(error Unknown Operating System: $(flavour))
 endif
 
-# === musl ===
-ifeq (musl, $(LIBC))
-COMPILER_DEPS=$(musl_install)
-C_COMPILER=$(musl_install)/bin/musl-gcc
-CMAKE_ARGS=-DCMAKE_FIND_ROOT_PATH="$(musl_install)"
-
-$(musl_archive):
-	@"$(scripts_dir)/download.sh" "https://musl.libc.org/releases/musl-$(musl_version).tar.gz" "$(musl_archive)"
-
-$(musl_build): $(musl_archive)
-	mkdir -p "$(build_dir)"
-	echo "Extracting musl archive.."
-	tar -xf "$(musl_archive)" -C "$(build_dir)"
-	mv "$(build_dir)/musl-$(musl_version)/" "$(musl_build)"
-
-$(musl_install): $(musl_build)
-	set -e
-	cd "$(musl_build)"
-	CC="$(MUSL_CC)" ./configure --prefix="$(musl_install)"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-endif
-
-clean-musl:
-	rm -rf "$(musl_build)"
-	rm -rf "$(musl_install)"
-
 # === zlib ===
 $(zlib_archive):
 	@"$(scripts_dir)/download.sh" "https://github.com/madler/zlib/releases/download/v$(zlib_version)/zlib-$(zlib_version).tar.gz" "$(zlib_archive)"
@@ -157,16 +141,24 @@ $(zlib_build): $(zlib_archive)
 $(zlib_install): $(COMPILER_DEPS) $(zlib_build)
 	set -e
 	cd "$(zlib_build)"
-	CC="$(C_COMPILER)" CFLAGS="-fPIC $(CFLAGS)" \
-		./configure \
-		--static \
-		--prefix="$(zlib_install)"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(zlib_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
+	# We can't make zlib build without shared libraries, so we nuke them.
+	rm "$(zlib_install)"/lib*/*.so* || true
+	rm "$(zlib_install)"/lib*/*.dylib || true
+	rm "$(zlib_install)"/lib*/*.dll.a || true
+	rm "$(zlib_install)"/bin*/*.dll || true
 
 clean-zlib:
 	rm -rf $(zlib_build)
 	rm -rf $(zlib_install)
+
+build-zlib: $(zlib_install)
 
 # === brotli ===
 $(brotli_archive):
@@ -181,18 +173,19 @@ $(brotli_build): $(brotli_archive)
 $(brotli_install): $(COMPILER_DEPS) $(brotli_build)
 	set -e
 	cd "$(brotli_build)"
-	CC="$(C_COMPILER)" cmake \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$(brotli_install)" \
 		-DBUILD_SHARED_LIBS=OFF \
+		-GNinja \
 		$(CMAKE_ARGS)
-	cmake --build . --config Release
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	ninja install
 
 clean-brotli:
 	rm -rf $(brotli_build)
 	rm -rf $(brotli_install)
+
+build-brotli: $(brotli_install)
 
 # === QuicTLS/OpenSSL ===
 $(quictls_archive):
@@ -204,10 +197,10 @@ $(quictls_build): $(quictls_archive)
 	tar -xf "$(quictls_archive)" -C "$(build_dir)"
 	mv "$(build_dir)/openssl-openssl-$(quictls_version)/" "$(quictls_build)/"
 
-$(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
+$(quictls_install): $(COMPILER_DEPS) $(quictls_build)
 	set -e
 	cd "$(quictls_build)"
-	CC="$(C_COMPILER)" CFLAGS="-I$(linux_headers)" WINDRES=$(WINDRES) ./Configure \
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" WINDRES=$(WINDRES) ./Configure \
 		no-tests \
 		-fpic \
 		--prefix=$(quictls_install) \
@@ -216,10 +209,21 @@ $(quictls_install): $(COMPILER_DEPS) $(linux_headers) $(quictls_build)
 		$(QUICTLS_ARGS)
 	$(MAKE) -j $(nproc)
 	$(MAKE) install_sw
+	# Weird hack. Sometimes CMake doesn't locate things in the lib, vs lib64 directories correctly.
+    # We just copy the directory. Usually the lib64 dir is symlinked to lib, or vice versa on a real system. (depending on distro)
+	if [ ! -d "$(quictls_install)/lib" ]; then
+		cp -r "$(quictls_install)/lib64" "$(quictls_install)/lib"
+	fi
+	# Nuke the dynamic libs so we always use the static libs.
+	rm "$(quictls_install)"/lib*/*.dll.a || true
+	rm "$(quictls_install)"/lib*/*.dylib || true
+	rm "$(quictls_install)"/lib*/*.so || true
 
 clean-quictls:
 	rm -rf $(quictls_build)
 	rm -rf $(quictls_install)
+
+build-quictls: $(quictls_install)
 
 # === nghttp2 ===
 $(nghttp2_archive):
@@ -234,19 +238,24 @@ $(nghttp2_build): $(nghttp2_archive)
 $(nghttp2_install): $(COMPILER_DEPS) $(nghttp2_build)
 	set -e
 	cd "$(nghttp2_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--with-pic \
-		--enable-lib-only \
-		--disable-shared \
-		--disable-python-bindings \
-		--prefix="$(nghttp2_install)"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(nghttp2_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_LIB_ONLY=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		-DENABLE_STATIC_LIB=ON \
+		-DENABLE_DOC=OFF \
+		-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 clean-nghttp2:
 	rm -rf $(nghttp2_build)
 	rm -rf $(nghttp2_install)
+
+build-nghttp2: $(nghttp2_install)
 
 # === ngtcp2 ===
 $(ngtcp2_archive):
@@ -261,21 +270,23 @@ $(ngtcp2_build): $(ngtcp2_archive)
 $(ngtcp2_install): $(COMPILER_DEPS) $(ngtcp2_build) $(quictls_install)
 	set -e
 	cd "$(ngtcp2_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--prefix="$(ngtcp2_install)" \
-		--with-pic \
-		--enable-lib-only \
-		--disable-shared \
-		--with-jemalloc=no \
-		--with-openssl \
-		PKG_CONFIG_PATH="$(quictls_install)/lib64/pkgconfig:$(quictls_install)/lib/pkgconfig"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	export OPENSSL_ROOT_DIR=$(quictls_install)
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(ngtcp2_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		-DENABLE_OPENSSL=ON \
+		-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 clean-ngtcp2:
 	rm -rf $(ngtcp2_build)
 	rm -rf $(ngtcp2_install)
+
+build-ngtcp2: $(ngtcp2_install)
 
 # === nghttp3 ===
 $(nghttp3_archive):
@@ -290,18 +301,21 @@ $(nghttp3_build): $(nghttp3_archive)
 $(nghttp3_install): $(COMPILER_DEPS) $(nghttp3_build)
 	set -e
 	cd "$(nghttp3_build)"
-	CC="$(C_COMPILER)" CFLAGS="$(CFLAGS)" ./configure \
-		--host=$(HOST) \
-		--prefix="$(nghttp3_install)" \
-		--disable-shared \
-		--with-pic \
-		--enable-lib-only
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS)" cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="$(nghttp3_install)" \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DENABLE_LIB_ONLY=ON \
+		-DENABLE_SHARED_LIB=OFF \
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 clean-nghttp3:
 	rm -rf $(nghttp3_build)
 	rm -rf $(nghttp3_install)
+
+build-nghttp3: $(nghttp3_install)
 
 # === curl ===
 $(curl_archive):
@@ -314,50 +328,12 @@ $(curl_build): $(curl_archive)
 	mv "$(build_dir)/curl-$(curl_version)/" "$(curl_build)/"
 	cd "$(curl_build)"
 
-# TODO On Linux we use automake, on Windows/Mingw/mac we use cmake.
-#      As of writing this the following issues are present:
-# 		- Windows/Mingw on automake does not emit a libcurl.dll, at all.
-#		- Linux-x64 on cmake works just fine
-#		- Linux-aarch64 on cmake does not link correctly and emits a broken assembly.
-#		  - During OpenSSL static init, several calls to sigsetjmp are made, however, it incorrectly links setjmp.
-#			Ultimately causing a Bus error as execution runs off into fucking narnia.
-ifneq (,$(findstring linux, $(HOST)))
 $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
 	set -e
 	cd "$(curl_build)"
-	patch -N -p1 -r /dev/null -i "$(patches_dir)/curl/patch-0000-brotli-1.1.0-static.patch"
-	autoreconf -fi
-	# TODO, Required due to the hack required for mingw bellow.
-	rm "$(quictls_install)"/lib*/*.so || true
-	./configure \
-		CC="$(C_COMPILER)" \
-		--host=$(HOST) \
-		--prefix="$(curl_install)" \
-		--with-zlib=$(zlib_install) \
-		--with-brotli=$(brotli_install) \
-		--with-openssl=$(quictls_install) \
-		--with-nghttp2=$(nghttp2_install) \
-		--with-ngtcp2=$(ngtcp2_install) \
-		--with-nghttp3=$(nghttp3_install) \
-		--enable-pthreads \
-		--disable-manual \
-		--disable-static \
-		--without-zstd \
-		--without-librtmp \
-		--without-libidn2 \
-		--without-libpsl
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-else
-$(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_install) $(nghttp2_install) $(ngtcp2_install) $(nghttp3_install) $(curl_build)
-	set -e
-	cd "$(curl_build)"
-	# TODO This is a hack. Find a way to nuke this.
-	# 	   This forces curl to link against the .a files instead of the .dll.a files. Thus they are actually static linked in.
-	#      However, ngtcp2 requires the .dll.a files to locate and configure itself. So, we delete them here.
-	rm "$(quictls_install)"/lib*/*.dll.a || true
-	rm "$(quictls_install)"/lib*/*.dylib || true
+
 	export CC="$(C_COMPILER)"
+	export CXX="$(CXX_COMPILER)"
 	export LDFLAGS="$(LDFLAGS)"
 	export OpenSSL_ROOT=$(quictls_install)
 	export OPENSSL_ROOT_DIR=$(quictls_install)
@@ -380,10 +356,9 @@ $(curl_install): $(COMPILER_DEPS) $(zlib_install) $(brotli_install) $(quictls_in
 		-DUSE_NGTCP2=ON \
 		-DCURL_USE_LIBSSH2=OFF \
 		$(CMAKE_ARGS) \
-		-G "Unix Makefiles"
-	$(MAKE) -j $(nproc)
-	$(MAKE) install
-endif
+		-GNinja \
+		$(CMAKE_ARGS)
+	ninja install
 
 $(libcurl_install): $(curl_install)
 	set -e
@@ -410,6 +385,92 @@ build-libcurl: $(libcurl_install)
 clean-curl:
 	rm -rf $(curl_build)
 	rm -rf $(curl_install)
+
+# === libffi ===
+$(libffi_archive):
+	@"$(scripts_dir)/download.sh" "https://github.com/libffi/libffi/releases/download/v$(libffi_version)/libffi-$(libffi_version).tar.gz" "$(libffi_archive)"
+
+$(libffi_build): $(libffi_archive)
+	mkdir -p "$(build_dir)"
+	echo "Extracting libffi archive.."
+	tar -xf "$(libffi_archive)" -C "$(build_dir)"
+	mv "$(build_dir)/libffi-$(libffi_version)/" "$(libffi_build)/"
+
+$(libffi_install): $(COMPILER_DEPS) $(libffi_build) $(linux_headers)
+	set -e
+	cd "$(libffi_build)"
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" CFLAGS="$(CFLAGS) -I$(linux_headers)" ./configure \
+		--host=$(HOST) \
+		--prefix="$(libffi_install)" \
+		--disable-docs \
+		--disable-shared \
+		--enable-static \
+		--with-pic
+	$(MAKE) -j $(nproc) install
+
+clean-libffi:
+	rm -rf $(libffi_build)
+	rm -rf $(libffi_install)
+
+setup-libffi: $(libffi_install)
+
+# === openjdk headers ===
+$(java_archive):
+	@"$(scripts_dir)/download.sh" "https://github.com/openjdk/jdk8u-dev/archive/refs/tags/$(java_version).tar.gz" "$(java_archive)"
+
+$(java_build): $(java_archive)
+	mkdir -p "$(build_dir)"
+	echo "Extracting jdk8 src archive.."
+	tar -xf "$(java_archive)" -C "$(build_dir)"
+	mv "$(build_dir)/jdk8u-dev-$(java_version)/" "$(java_build)/"
+
+$(java_install): $(java_build)
+	mkdir -p "$(java_install)/include"
+	cp "$(java_build)/jdk/src/share/javavm/export/"* "$(java_install)/include"
+	# Yes, the linux headers are, in fact, in the solaris directory.. Thanks Oracle :)
+	mkdir -p "$(java_install)/include/linux" && cp "$(java_build)/jdk/src/solaris/javavm/export/"* "$(java_install)/include/linux"
+	mkdir -p "$(java_install)/include/darwin" && cp "$(java_build)/jdk/src/macosx/javavm/export/"* "$(java_install)/include/darwin"
+	mkdir -p "$(java_install)/include/win32" && cp "$(java_build)/jdk/src/windows/javavm/export/"* "$(java_install)/include/win32"
+	# Helpers to include the correct platform *_md.h files on the correct platforms. Why doesn't this already exist?
+	cp "$(curr_dir)/jni_helpers/"* "$(java_install)/include"
+
+clean-java:
+	rm -rf $(java_build)
+	rm -rf $(java_install)
+
+setup-java: $(java_install)
+
+# === curl4j ===
+$(curl4j_build): $(COMPILER_DEPS) $(libffi_install) $(java_install)
+	mkdir -p "$(curl4j_build)"
+	cd "$(curl4j_build)"
+	CC="$(C_COMPILER)" CXX="$(CXX_COMPILER)" cmake \
+		-S "$(root_dir)" \
+		$(CMAKE_ARGS)
+	$(MAKE) -j $(nproc)
+	#$(MAKE) install
+
+$(libcurl4j_install): $(curl4j_build)
+	set -e
+	mkdir -p "$(libcurl4j_install)"
+	# Copy licenses
+	mkdir -p "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi" && cp "$(libffi_build)/LICENSE" "$(libcurl4j_install)/$(flavour)/$(arch)/licenses/libffi/LICENSE"
+ifeq (linux, $(flavour))
+	cp "$(curl4j_build)/libcurl4j.so" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j-$(LIBC).so"
+else ifeq (windows, $(flavour))
+	cp "$(curl4j_build)/libcurl4j.dll" "$(libcurl4j_install)/$(flavour)/$(arch)/curl4j.dll"
+else ifeq (macos, $(flavour))
+	cp "$(curl4j_build)/libcurl4j.dylib" "$(libcurl4j_install)/$(flavour)/$(arch)/libcurl4j.dylib"
+else
+$(error "I don't know where libcurl was installed to on $(flavour)")
+endif
+
+clean-curl4j:
+	rm -rf $(curl4j_build)
+	rm -rf $(libcurl4j_install)
+
+build-libcurl4j: $(libcurl4j_install)
+
 # === Misc ===
 $(linux_headers):
 	mkdir -p "$(linux_headers)"
@@ -426,7 +487,7 @@ $(linux_headers):
 clean-linux:
 	rm -rf "$(linux_headers)"
 
-clean: clean-linux clean-musl clean-zlib clean-brotli clean-nghttp2 clean-ngtcp2 clean-nghttp3
+clean: clean-linux clean-zlib clean-brotli clean-nghttp2 clean-ngtcp2 clean-nghttp3
 	rm -rf "$(build_dir)"
 	rm -rf "$(install_dir)"
 

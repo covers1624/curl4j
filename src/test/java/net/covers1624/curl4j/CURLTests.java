@@ -60,6 +60,10 @@ public class CURLTests extends TestBase {
                 assertEquals(200, curl_easy_getinfo_long(curl, CURLINFO_RESPONSE_CODE).result());
                 assertEquals("127.0.0.1", curl_easy_getinfo_String(curl, CURL.CURLINFO_PRIMARY_IP).result());
                 assertArrayEquals(data, output.bytes());
+
+                // Invalid opt types for curl_easy_getinfo methods
+                assertThrows(IllegalArgumentException.class, () -> curl_easy_getinfo_long(curl, CURLINFO_PRIMARY_IP));
+                assertThrows(IllegalArgumentException.class, () -> curl_easy_getinfo_String(curl, CURLINFO_RESPONSE_CODE));
             }
         } finally {
             curl_easy_cleanup(curl);

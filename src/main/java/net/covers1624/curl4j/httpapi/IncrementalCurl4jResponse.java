@@ -199,12 +199,17 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
 
         try (Arena arena = Arena.ofShared()) {
             MemorySegment nHandles = arena.allocate(ValueLayout.ADDRESS, 1);
+            MemorySegment nEvents = arena.allocate(ValueLayout.ADDRESS, 1);
             // Do work until we are finished, or we paused.
             while (!done && !paused) {
                 int ret = curl_multi_perform(handle.multi, nHandles);
 
                 // curl multi is not healthy.
                 if (ret != CURLM_OK) throw new Curl4jHttpException("Curl multi returned error: " + handle.errorBuffer + "(" + curl_multi_strerror(ret) + ")");
+
+                // TODO real timeout
+                ret = curl_multi_wait(handle.multi, 10000000, nEvents);
+                if (ret != CURLM_OK) throw new Curl4jHttpException("Curl multi wait returned error: " + handle.errorBuffer + "(" + curl_multi_strerror(ret) + ")");
 
                 // curl_multi_perform gives us an out pointer for the number of active curl requests.
                 done = nHandles.get(ValueLayout.JAVA_INT, 0) == 0;

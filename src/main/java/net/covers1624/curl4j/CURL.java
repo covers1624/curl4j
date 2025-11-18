@@ -247,7 +247,7 @@ public class CURL {
      * <p>
      * See the <a href="https://curl.se/libcurl/c/CURLOPT_LOW_SPEED_TIME.html">documentation</a>.
      */
-    public static final int CURLOPT_LOW_SPEED_TIME = CURLOPTTYPE_LONG + 19;
+    public static final int CURLOPT_LOW_SPEED_TIME = CURLOPTTYPE_LONG + 20;
 
     /**
      * Set the continuation offset.
@@ -3240,7 +3240,10 @@ public class CURL {
      */
     public static int curl_easy_getinfo_long(MemorySegment curl, int opt, LongConsumer cons) {
         boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        boolean isOffT = (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        if (!isLong && !isOffT) {
+            throw new IllegalArgumentException("Provided 'opt' does not return a long type.");
+        }
 
         return getLibCURL().curl_easy_getinfo_long(curl, opt, cons);
     }
@@ -3256,7 +3259,10 @@ public class CURL {
      */
     public static int curl_easy_getinfo_long(MemorySegment curl, int opt, long[] result) {
         boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        boolean isOffT = (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
+        if (!isLong && !isOffT) {
+            throw new IllegalArgumentException("Provided 'opt' does not return a long type.");
+        }
 
         return getLibCURL().curl_easy_getinfo_long(curl, opt, result);
     }
@@ -3593,6 +3599,18 @@ public class CURL {
      */
     public static int curl_multi_perform(MemorySegment multi, MemorySegment runningHandles) {
         return getLibCURL().curl_multi_perform(multi, runningHandles);
+    }
+
+    /**
+     * Poll on the given curl handle until data is available.
+     *
+     * @param multi      The multi handle.
+     * @param timeout    A timeout to wait for.
+     * @param numHandles The number of handles with events.
+     * @return The CURLMcode response.
+     */
+    public static int curl_multi_wait(MemorySegment multi, int timeout, MemorySegment numHandles) {
+        return getLibCURL().curl_multi_wait(multi, MemorySegment.NULL, 0, timeout, numHandles);
     }
 
     /**

@@ -80,6 +80,7 @@ public class LibCurl {
     public final MethodHandle curl_multi_add_handle;
     public final MethodHandle curl_multi_remove_handle;
     public final MethodHandle curl_multi_perform;
+    public final MethodHandle curl_multi_wait;
     public final MethodHandle curl_multi_cleanup;
     public final MethodHandle curl_multi_info_read;
     public final MethodHandle curl_multi_strerror;
@@ -139,6 +140,7 @@ public class LibCurl {
         curl_multi_add_handle = linker.link("CURLMcode curl_multi_add_handle(CURLM *multi_handle, CURL *curl_handle);");
         curl_multi_remove_handle = linker.link("CURLMcode curl_multi_remove_handle(CURLM *multi_handle, CURL *curl_handle);");
         curl_multi_perform = linker.link("CURLMcode curl_multi_perform(CURLM *multi_handle, int *running_handles);");
+        curl_multi_wait = linker.link("CURLMcode curl_multi_wait(CURLM *multi_handle, struct curl_waitfd extra_fds[], unsigned int extra_nfds, int timeout_ms, int *ret);");
         curl_multi_cleanup = linker.link("CURLMcode curl_multi_cleanup(CURLM *multi_handle);");
         curl_multi_info_read = linker.link("CURLMsg *curl_multi_info_read(CURLM *multi_handle, int *msgs_in_queue);");
         curl_multi_strerror = linker.link("const char *curl_multi_strerror(CURLMcode);");
@@ -549,6 +551,14 @@ public class LibCurl {
     public final int curl_multi_perform(MemorySegment multi, MemorySegment running_handles) {
         try {
             return (int) curl_multi_perform.invokeExact(multi, running_handles);
+        } catch (Throwable ex) {
+            throw rethrowUnchecked(ex);
+        }
+    }
+
+    public final int curl_multi_wait(MemorySegment multi, MemorySegment extraFds, int extraNFds, int timeoutMs, MemorySegment numHandles) {
+        try {
+            return (int) curl_multi_wait.invokeExact(multi, extraFds, extraNFds, timeoutMs, numHandles);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
