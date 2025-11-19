@@ -105,6 +105,8 @@ public class CLikeSymbolResolver {
     }
 
     private String resolveTypeAlias(String type) {
+        if (type.endsWith("[]")) return "void*";
+
         if (!type.equals("void*") && type.endsWith("*")) {
             return "void*";
         }
@@ -114,6 +116,10 @@ public class CLikeSymbolResolver {
 
     public NameTypePair parseNamePair(String str) {
         str = stripKeywords(str, "struct", "const", "unsigned", "signed");
+        boolean isArray = str.endsWith("[]");
+        if (isArray) {
+            str = str.substring(0, str.length() - 2);
+        }
         int starPos = str.lastIndexOf("*");
         int spacePos = str.lastIndexOf(' ');
 
@@ -127,6 +133,9 @@ public class CLikeSymbolResolver {
             name = str.substring(spacePos + 1);
         } else {
             type = str;
+        }
+        if (isArray) {
+            type += "[]";
         }
 
         return new NameTypePair(type, name);
