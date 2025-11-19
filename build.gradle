@@ -56,14 +56,14 @@ configurations {
 dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     compileOnly 'org.jetbrains:annotations:24.0.1'
-    compileOnly 'net.covers1624:Quack:0.4.10.111'
+    compileOnly 'net.covers1624:Quack:0.4.10.117'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
-    testImplementation 'net.covers1624:Quack:0.4.9.77'
+    testImplementation 'net.covers1624:Quack:0.4.10.117'
 }
 
 test {
