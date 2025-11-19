@@ -381,8 +381,9 @@ public class LibCurl {
     public final int curl_easy_impersonate(MemorySegment curl, String target, int defaultHeaders) {
         if (curl_easy_impersonate == null) throw new NullPointerException("curl_easy_impersonate is not supported with this libcurl.");
 
-        try {
-            return (int) curl_easy_impersonate.invokeExact(curl, target, defaultHeaders);
+        try (Arena arena = Arena.ofShared()) {
+            MemorySegment str = arena.allocateFrom(target);
+            return (int) curl_easy_impersonate.invokeExact(curl, str, defaultHeaders);
         } catch (Throwable ex) {
             throw rethrowUnchecked(ex);
         }
