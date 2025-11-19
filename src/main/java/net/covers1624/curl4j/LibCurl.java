@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
 
+import static net.covers1624.curl4j.CURL.*;
 import static net.covers1624.curl4j.util.ForeignUtils.readNTString;
 import static net.covers1624.curl4j.util.ForeignUtils.rethrowUnchecked;
 
@@ -250,6 +251,7 @@ public class LibCurl {
     }
 
     public final InfoResult<String> curl_easy_getinfo_String(MemorySegment curl, int info) {
+        checkInfoQuery(info, CURLINFO_STRING, "string");
         try (Arena arena = Arena.ofShared()) {
             MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
             int ret = curl_easy_getinfo(curl, info, result);
@@ -262,6 +264,7 @@ public class LibCurl {
     }
 
     public final int curl_easy_getinfo_String(MemorySegment curl, int info, Consumer<String> cons) {
+        checkInfoQuery(info, CURLINFO_STRING, "string");
         try (Arena arena = Arena.ofShared()) {
             MemorySegment result = arena.allocate(ValueLayout.ADDRESS);
             int ret = curl_easy_getinfo(curl, info, result);
@@ -273,7 +276,8 @@ public class LibCurl {
     }
 
     public final int curl_easy_getinfo_String(MemorySegment curl, int info, String[] result) {
-        if (result.length != 1) throw new RuntimeException("Expected array length of 1 got " + result.length);
+        checkInfoQuery(info, CURLINFO_STRING, "string");
+        if (result.length != 1) throw new IllegalArgumentException("Expected array length of 1 got " + result.length);
         try (Arena arena = Arena.ofShared()) {
             MemorySegment resultAddr = arena.allocate(ValueLayout.ADDRESS);
             int ret = curl_easy_getinfo(curl, info, resultAddr);
@@ -285,6 +289,7 @@ public class LibCurl {
     }
 
     public final InfoResult<Long> curl_easy_getinfo_long(MemorySegment curl, int info) {
+        checkInfoQuery(info, CURLINFO_LONG | CURLINFO_OFF_T, "long/off_t");
         try (Arena arena = Arena.ofShared()) {
             MemorySegment result = arena.allocate(ValueLayout.JAVA_LONG);
             int ret = curl_easy_getinfo(curl, info, result);
@@ -297,6 +302,7 @@ public class LibCurl {
     }
 
     public final int curl_easy_getinfo_long(MemorySegment curl, int info, LongConsumer cons) {
+        checkInfoQuery(info, CURLINFO_LONG | CURLINFO_OFF_T, "long/off_t");
         try (Arena arena = Arena.ofShared()) {
             MemorySegment result = arena.allocate(ValueLayout.JAVA_LONG);
             int ret = curl_easy_getinfo(curl, info, result);
@@ -308,7 +314,8 @@ public class LibCurl {
     }
 
     public final int curl_easy_getinfo_long(MemorySegment curl, int info, long[] result) {
-        if (result.length != 1) throw new RuntimeException("Expected array length of 1 got " + result.length);
+        checkInfoQuery(info, CURLINFO_LONG | CURLINFO_OFF_T, "long/off_t");
+        if (result.length != 1) throw new IllegalArgumentException("Expected array length of 1 got " + result.length);
         try (Arena arena = Arena.ofShared()) {
             MemorySegment resultAddr = arena.allocate(ValueLayout.JAVA_LONG);
             int ret = curl_easy_getinfo(curl, info, resultAddr);
@@ -316,6 +323,12 @@ public class LibCurl {
                 result[0] = resultAddr.get(ValueLayout.JAVA_LONG, 0);
             }
             return ret;
+        }
+    }
+
+    private static void checkInfoQuery(int info, int validMask, String desc) {
+        if ((info & validMask) == 0) {
+            throw new IllegalArgumentException("Provided info 0x" + Integer.toHexString(info) + " does not support " + desc + " access.");
         }
     }
 

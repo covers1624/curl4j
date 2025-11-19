@@ -3170,11 +3170,11 @@ public class CURL {
      * This function has overloads for specific CURLINFO types for ease of use. See bellow.
      *
      * @param curl  The CURL handle.
-     * @param opt   The info to select.
+     * @param info   The info to select.
      * @param value Pointer to store the value in.
      */
-    public static int curl_easy_getinfo(MemorySegment curl, int opt, MemorySegment value) {
-        return getLibCURL().curl_easy_setopt(curl, opt, value);
+    public static int curl_easy_getinfo(MemorySegment curl, int info, MemorySegment value) {
+        return getLibCURL().curl_easy_setopt(curl, info, value);
     }
 
     /**
@@ -3218,15 +3218,12 @@ public class CURL {
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
-     * @param opt  The info to select.
+     * @param info  The info to select.
      * @return The result containing the exit code and the long result.
      * The long result will only be present if curl returns {@link #CURLE_OK}.
      */
-    public static InfoResult<Long> curl_easy_getinfo_long(MemorySegment curl, int opt) {
-        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        assert isLong || (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
-
-        return getLibCURL().curl_easy_getinfo_long(curl, opt);
+    public static InfoResult<Long> curl_easy_getinfo_long(MemorySegment curl, int info) {
+        return getLibCURL().curl_easy_getinfo_long(curl, info);
     }
 
     /**
@@ -3234,18 +3231,12 @@ public class CURL {
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl The CURL handle.
-     * @param opt  The info to select.
+     * @param info  The info to select.
      * @param cons The consumer to accept the long. Will only be called if the result is {@link #CURLE_OK}
      * @return The curl exit code.
      */
-    public static int curl_easy_getinfo_long(MemorySegment curl, int opt, LongConsumer cons) {
-        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        boolean isOffT = (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
-        if (!isLong && !isOffT) {
-            throw new IllegalArgumentException("Provided 'opt' does not return a long type.");
-        }
-
-        return getLibCURL().curl_easy_getinfo_long(curl, opt, cons);
+    public static int curl_easy_getinfo_long(MemorySegment curl, int info, LongConsumer cons) {
+        return getLibCURL().curl_easy_getinfo_long(curl, info, cons);
     }
 
     /**
@@ -3253,18 +3244,12 @@ public class CURL {
      * {@link #CURLINFO_LONG} or {@link #CURLINFO_OFF_T} types.
      *
      * @param curl   The CURL handle.
-     * @param opt    The info to select.
+     * @param info   The info to select.
      * @param result A single sized array to store the result in. This will only be filled if the result is {@link #CURLE_OK}.
      * @return The curl exit code.
      */
-    public static int curl_easy_getinfo_long(MemorySegment curl, int opt, long[] result) {
-        boolean isLong = (opt & CURLINFO_TYPEMASK) == CURLINFO_LONG;
-        boolean isOffT = (opt & CURLINFO_TYPEMASK) == CURLINFO_OFF_T;
-        if (!isLong && !isOffT) {
-            throw new IllegalArgumentException("Provided 'opt' does not return a long type.");
-        }
-
-        return getLibCURL().curl_easy_getinfo_long(curl, opt, result);
+    public static int curl_easy_getinfo_long(MemorySegment curl, int info, long[] result) {
+        return getLibCURL().curl_easy_getinfo_long(curl, info, result);
     }
 
     /**
