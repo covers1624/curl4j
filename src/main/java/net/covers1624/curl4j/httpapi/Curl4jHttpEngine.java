@@ -19,8 +19,8 @@ public class Curl4jHttpEngine implements HttpEngine, AutoCloseable {
 
     private static boolean CURL_GLOBAL_INIT = false;
 
-    private final HandlePool<CurlHandle> CURL_HANDLES = new HandlePool<>(CurlHandle::create);
-    private final HandlePool<CurlMultiHandle> MULTI_HANDLES = new HandlePool<>(CurlMultiHandle::createMulti);
+    private final HandlePool<CurlHandle> CURL_HANDLES = new HandlePool<>(arena -> CurlHandle.of(CURL.curl_easy_init(), arena));
+    private final HandlePool<CurlMultiHandle> MULTI_HANDLES = new HandlePool<>(arena -> CurlMultiHandle.of(CURL.curl_easy_init(), CURL.curl_multi_init(), arena));
 
     private final @Nullable CABundle caBundle;
     public final @Nullable String impersonate;

@@ -8,9 +8,11 @@ import net.covers1624.quack.util.Duration;
 
 import java.lang.foreign.Arena;
 import java.lang.ref.Cleaner;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -25,8 +27,9 @@ import java.util.function.Supplier;
  */
 final class HandlePool<T> implements AutoCloseable {
 
-    private final Supplier<T> factory;
+    private final Function<Arena, T> factory;
     private final LinkedList<Entry> entries = new LinkedList<>();
+    private final Cleaner cleaner = Cleaner.create();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread th = new Thread(r);
                 th.setName("Handle Pool Cleaner");
@@ -40,11 +43,11 @@ final class HandlePool<T> implements AutoCloseable {
      *
      * @param factory The factory to create new instances.
      */
-    public HandlePool(Supplier<T> factory) {
+    public HandlePool(Function<Arena, T> factory) {
         this(factory, Duration.minutes(1), Duration.minutes(5));
     }
 
-    public HandlePool(Supplier<T> factory, Duration pollTime, Duration liveTime) {
+    public HandlePool(Function<Arena, T> factory, Duration pollTime, Duration liveTime) {
         this.factory = factory;
         executor.scheduleAtFixedRate(() -> clean(liveTime), pollTime.time, pollTime.time, pollTime.unit);
     }
@@ -58,7 +61,9 @@ final class HandlePool<T> implements AutoCloseable {
         synchronized (entries) {
             Entry entry = entries.poll();
             if (entry == null) {
-                entry = new Entry(factory.get());
+                Arena arena = Arena.ofConfined();
+                entry = new Entry(arena, factory.apply(arena));
+                cleaner.register(entry, arena::close);
             }
             entry.lastUsed = System.currentTimeMillis();
             return entry;
@@ -82,25 +87,39 @@ final class HandlePool<T> implements AutoCloseable {
     public void close() {
         executor.shutdownNow();
         synchronized (entries) {
+            entries.forEach(Entry::dispose);
             entries.clear();
         }
     }
 
+    @SuppressWarnings ("resource")
     private void clean(Duration liveTime) {
         long lt = liveTime.unit.toMillis(liveTime.time);
         synchronized (entries) {
             long currTime = System.currentTimeMillis();
-            entries.removeIf(entry -> entry.lastUsed + lt > currTime);
+            for (Iterator<Entry> iterator = entries.iterator(); iterator.hasNext(); ) {
+                Entry entry = iterator.next();
+                if (entry.lastUsed + lt > currTime) {
+                    iterator.remove();
+                    entry.dispose();
+                }
+            }
         }
     }
 
     public final class Entry implements AutoCloseable {
 
-        public T handle;
+        private final Arena arena;
+        public final T handle;
         private long lastUsed;
 
-        private Entry(T handle) {
+        private Entry(Arena arena, T handle) {
+            this.arena = arena;
             this.handle = handle;
+        }
+
+        void dispose() {
+            arena.close();
         }
 
         @Override
