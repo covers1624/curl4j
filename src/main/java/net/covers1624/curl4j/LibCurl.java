@@ -29,7 +29,8 @@ public class LibCurl {
             .addAlias("CURLINFO", "int")
             .addAlias("CURLMcode", "int")
             .addAlias("CURLMoption", "int")
-            .addAlias("curl_off_t", "jlong");
+            .addAlias("curl_off_t", "jlong")
+            .addAlias("CURLMSG", "int");
 
     public static final CLikeStructParser STRUCT_PARSER = new CLikeStructParser(SYMBOL_RESOLVER);
 
