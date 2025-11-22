@@ -61,7 +61,7 @@ final class HandlePool<T> implements AutoCloseable {
         synchronized (entries) {
             Entry entry = entries.poll();
             if (entry == null) {
-                Arena arena = Arena.ofConfined();
+                Arena arena = Arena.ofShared();
                 entry = new Entry(arena, factory.apply(arena));
                 cleaner.register(entry, arena::close);
             }
