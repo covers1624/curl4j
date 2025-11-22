@@ -65,7 +65,7 @@ class IncrementalCurl4jResponse extends Curl4jEngineResponse {
             // and we can't partially consume.
             growBuffer(rs - buffer.remaining());
         }
-        buf.asSlice(buffer.position()).copyFrom(ptr);
+        buf.asSlice(buffer.position()).copyFrom(ptr.reinterpret(rs));
         buffer.position(buffer.position() + rs);
         return rs;
     });
